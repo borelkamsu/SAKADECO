@@ -8,10 +8,12 @@ import memoize from "memoizee";
 import connectMongo from "connect-mongo";
 import { storage } from "./storage";
 
-// Check if we're in development mode without Replit environment
-const isDevelopment = process.env.NODE_ENV === 'development' && !process.env.REPLIT_DOMAINS;
+// Check if we're in development mode or production without Replit
+const isDevelopment = process.env.NODE_ENV === 'development';
+const isProductionWithoutReplit = process.env.NODE_ENV === 'production' && !process.env.REPLIT_DOMAINS;
 
-if (!isDevelopment && !process.env.REPLIT_DOMAINS) {
+// Only require REPLIT_DOMAINS if we're in production with Replit Auth enabled
+if (process.env.NODE_ENV === 'production' && process.env.REPLIT_DOMAINS && !process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
 }
 
@@ -82,16 +84,16 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Skip Replit Auth setup in development mode
-  if (isDevelopment) {
-    console.log("⚠️  Skipping Replit Auth setup for development");
+  // Skip Replit Auth setup in development mode or production without Replit
+  if (isDevelopment || isProductionWithoutReplit) {
+    console.log("⚠️  Skipping Replit Auth setup for development/production without Replit");
     
     passport.serializeUser((user: Express.User, cb) => cb(null, user));
     passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
-    // Mock auth endpoints for development
+    // Mock auth endpoints for development/production without Replit
     app.get("/api/login", (req, res) => {
-      res.json({ message: "Auth disabled in development mode" });
+      res.json({ message: "Auth disabled in this environment" });
     });
 
     app.get("/api/callback", (req, res) => {
