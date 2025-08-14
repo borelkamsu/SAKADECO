@@ -135,23 +135,25 @@ export default function HomePage() {
             {services.map((service) => {
               const IconComponent = service.icon;
               return (
-                <Card key={service.name} className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-gold/30">
-                  <CardHeader className="text-center">
-                    <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-${service.color}/20 flex items-center justify-center group-hover:bg-${service.color}/40 transition-colors`}>
-                      <IconComponent className={`text-${service.color} text-2xl`} />
-                    </div>
-                    <CardTitle className="font-playfair text-xl">{service.name}</CardTitle>
-                    <p className="text-gray-600">{service.description}</p>
-                  </CardHeader>
-                  <CardContent>
-                    <p className={`text-sm italic text-${service.color} text-center mb-4`}>
-                      « {service.tagline} »
-                    </p>
-                    <Button asChild className={`w-full bg-${service.color} hover:bg-${service.color}/90 text-white`}>
-                      <Link href={service.path}>Découvrir</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                <Link key={service.name} href={service.path} className="block">
+                  <Card className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-gold/30 cursor-pointer h-full">
+                    <CardHeader className="text-center">
+                      <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-${service.color}/20 flex items-center justify-center group-hover:bg-${service.color}/40 transition-colors`}>
+                        <IconComponent className={`text-${service.color} text-2xl`} />
+                      </div>
+                      <CardTitle className="font-playfair text-xl">{service.name}</CardTitle>
+                      <p className="text-gray-600">{service.description}</p>
+                    </CardHeader>
+                    <CardContent>
+                      <p className={`text-sm italic text-${service.color} text-center mb-4`}>
+                        « {service.tagline} »
+                      </p>
+                      <div className={`w-full bg-${service.color} hover:bg-${service.color}/90 text-white text-center py-2 px-4 rounded-md transition-colors`}>
+                        Découvrir
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               );
             })}
           </div>

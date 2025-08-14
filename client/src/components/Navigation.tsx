@@ -123,14 +123,14 @@ export default function Navigation() {
                 </Link>
               </motion.div>
 
-              {/* SKD Shop */}
+              {/* Boutique */}
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.15 }}
               >
                 <Link href="/shop" className={`relative text-gray-700 hover:text-gold transition-colors duration-300 font-medium ${location === "/shop" ? "text-gold" : ""}`}>
-                  SKD Shop
+                  Boutique
                   {location === "/shop" && (
                     <motion.div
                       layoutId="activeTab"
@@ -185,11 +185,49 @@ export default function Navigation() {
                 </DropdownMenu>
               </motion.div>
 
-              {/* À propos */}
+              {/* Nos Thèmes */}
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.25 }}
+              >
+                <Link href="/themes" className={`relative text-gray-700 hover:text-gold transition-colors duration-300 font-medium ${location === "/themes" ? "text-gold" : ""}`}>
+                  Nos Thèmes
+                  {location === "/themes" && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-gold to-yellow-500"
+                      initial={false}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                </Link>
+              </motion.div>
+
+              {/* Nos Réalisations */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <Link href="/realisations" className={`relative text-gray-700 hover:text-gold transition-colors duration-300 font-medium ${location === "/realisations" ? "text-gold" : ""}`}>
+                  Nos Réalisations
+                  {location === "/realisations" && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-gold to-yellow-500"
+                      initial={false}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                </Link>
+              </motion.div>
+
+              {/* À propos */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.35 }}
               >
                 <Link href="/about" className={`relative text-gray-700 hover:text-gold transition-colors duration-300 font-medium ${location === "/about" ? "text-gold" : ""}`}>
                   À propos
@@ -208,7 +246,7 @@ export default function Navigation() {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
               >
                 <Link href="/contact" className={`relative text-gray-700 hover:text-gold transition-colors duration-300 font-medium ${location === "/contact" ? "text-gold" : ""}`}>
                   Contact
@@ -228,7 +266,7 @@ export default function Navigation() {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: 0.35 }}
+                  transition={{ duration: 0.5, delay: 0.45 }}
                 >
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -259,7 +297,7 @@ export default function Navigation() {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: 0.35 }}
+                  transition={{ duration: 0.5, delay: 0.45 }}
                 >
                   <a href="/api/login" className="flex items-center space-x-1 lg:space-x-2 bg-gradient-to-r from-gold to-yellow-500 text-white px-4 py-2 rounded-lg hover:from-yellow-500 hover:to-gold transition-all duration-300 font-medium">
                     <User className="h-4 w-4" />
@@ -300,7 +338,7 @@ export default function Navigation() {
                       className="block p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      <div className="font-medium text-gray-900">SKD Shop</div>
+                      <div className="font-medium text-gray-900">Boutique</div>
                     </Link>
 
                     {/* SKD Group Mobile */}
@@ -323,6 +361,22 @@ export default function Navigation() {
                         </Link>
                       ))}
                     </div>
+
+                    <Link 
+                      href="/themes" 
+                      className="block p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <div className="font-medium text-gray-900">Nos Thèmes</div>
+                    </Link>
+
+                    <Link 
+                      href="/realisations" 
+                      className="block p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <div className="font-medium text-gray-900">Nos Réalisations</div>
+                    </Link>
 
                     <Link 
                       href="/about" 

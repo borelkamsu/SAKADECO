@@ -16,6 +16,7 @@ import Co from "@/pages/Co";
 import Checkout from "@/pages/Checkout";
 import Contact from "@/pages/Contact";
 import About from "@/pages/About";
+import Themes from "@/pages/Themes";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/checkout" component={Checkout} />
       <Route path="/contact" component={Contact} />
       <Route path="/about" component={About} />
+      <Route path="/themes" component={Themes} />
       <Route component={NotFound} />
     </Switch>
   );
