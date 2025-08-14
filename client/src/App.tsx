@@ -17,6 +17,8 @@ import Checkout from "@/pages/Checkout";
 import Contact from "@/pages/Contact";
 import About from "@/pages/About";
 import Themes from "@/pages/Themes";
+import AdminLogin from "@/pages/AdminLogin";
+import AdminDashboard from "@/pages/AdminDashboard";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -35,6 +37,8 @@ function Router() {
       <Route path="/contact" component={Contact} />
       <Route path="/about" component={About} />
       <Route path="/themes" component={Themes} />
+      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

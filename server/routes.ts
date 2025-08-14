@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
 import { z } from "zod";
+import adminRoutes from "./routes/admin";
 
 // Validation schemas for MongoDB
 const insertProductSchema = z.object({
@@ -529,6 +530,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       info: "Webhook will be configured when payment system is integrated"
     });
   });
+
+  // Admin routes
+  app.use('/api/admin', adminRoutes);
 
   const httpServer = createServer(app);
   return httpServer;
