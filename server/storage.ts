@@ -1,21 +1,12 @@
-import {
-  User,
-  Order,
-  OrderItem,
-  Rental,
-  Quote,
-  NewsletterSubscription,
-  Review,
-  GalleryItem,
-  type IUser,
-  type IOrder,
-  type IOrderItem,
-  type IRental,
-  type IQuote,
-  type INewsletterSubscription,
-  type IReview,
-  type IGalleryItem
-} from "./models";
+// Import models from their individual files
+import { User, type IUser } from "./models/User";
+import { Order, type IOrder } from "./models/Order";
+import { OrderItem, type IOrderItem } from "./models/OrderItem";
+import { Rental, type IRental } from "./models/Rental";
+import { Quote, type IQuote } from "./models/Quote";
+import { NewsletterSubscription, type INewsletterSubscription } from "./models/NewsletterSubscription";
+import { Review, type IReview } from "./models/Review";
+import { GalleryItem, type IGalleryItem } from "./models/GalleryItem";
 import { db } from "./db";
 
 // Type definitions for compatibility
