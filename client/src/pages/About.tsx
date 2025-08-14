@@ -1,12 +1,12 @@
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Phone, Heart, Sparkles, Target } from "lucide-react";
+import { Calendar, MapPin, Phone, Heart, Target } from "lucide-react";
 
 export default function About() {
   const values = [
     {
-      icon: Sparkles,
+      icon: Heart,
       title: "Créativité",
       description: "Chaque projet est unique, chaque détail a du sens."
     },

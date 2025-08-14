@@ -5,7 +5,6 @@ import {
   Truck, 
   Heart, 
   Globe, 
-  Sparkles, 
   Award,
   Clock,
   Shield
@@ -61,11 +60,9 @@ export function Features() {
     <div className="space-y-8">
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-4">
-          <Sparkles className="h-6 w-6 text-gold" />
           <h2 className="text-3xl font-playfair font-bold text-gray-800 dark:text-gray-100">
             Pourquoi choisir SakaDeco ?
           </h2>
-          <Sparkles className="h-6 w-6 text-gold" />
         </div>
         <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
           Une expérience unique alliant créativité, qualité et personnalisation 

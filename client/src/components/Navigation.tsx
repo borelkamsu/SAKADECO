@@ -9,7 +9,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu, User, LogOut, Sparkles, Phone, Mail, X, ChevronDown } from "lucide-react";
+import { Menu, User, LogOut, Phone, Mail, X, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,7 +50,7 @@ export default function Navigation() {
   return (
     <>
       {/* Top Bar with Contact Info */}
-      <div className="fixed top-0 w-full bg-gradient-to-r from-gold/90 to-yellow-500/90 text-white text-sm z-50">
+      <div className="fixed top-0 w-full bg-gradient-to-r from-gold to-yellow-500 text-white text-sm z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-8">
             <div className="flex items-center space-x-4 lg:space-x-6">
@@ -65,7 +65,6 @@ export default function Navigation() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <Sparkles className="h-3 w-3 animate-pulse" />
               <span className="font-medium hidden sm:inline">Bordeaux Métropole</span>
               <span className="font-medium sm:hidden">Bordeaux</span>
             </div>

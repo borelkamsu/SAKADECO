@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, Sparkles } from "lucide-react";
+import { Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -57,7 +57,6 @@ export function Newsletter() {
             Promotions et nouveaux produits
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1">
-            <Sparkles className="h-4 w-4" />
             Soyez les premiers au courant
           </p>
         </div>

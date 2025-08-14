@@ -4,7 +4,7 @@ import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingBag, Palette, Handshake, Star, Home, Users, Phone, MapPin, ArrowRight, Sparkles } from "lucide-react";
+import { ShoppingBag, Palette, Handshake, Star, Home, Users, Phone, MapPin, ArrowRight } from "lucide-react";
 import { Newsletter } from "@/components/Newsletter";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import { GalleryShowcase } from "@/components/GalleryShowcase";
@@ -73,12 +73,7 @@ export default function HomePage() {
       <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gold/20 via-white to-pink-50"></div>
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')] bg-cover bg-center opacity-10"></div>
-        <div className="absolute top-10 left-10 animate-float">
-          <Sparkles className="h-8 w-8 text-gold" />
-        </div>
-        <div className="absolute bottom-20 right-20 animate-float" style={{ animationDelay: '1s' }}>
-          <Sparkles className="h-6 w-6 text-pink-400" />
-        </div>
+
         
         <div className="relative z-10 text-center max-w-5xl mx-auto px-6">
           <div className="mb-8">
@@ -107,7 +102,6 @@ export default function HomePage() {
             </Button>
             <Button asChild variant="outline" size="lg" className="border-2 border-gold text-gold hover:bg-gold hover:text-white px-10 py-6 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
               <Link to="/contact">
-                <Sparkles className="mr-2 h-5 w-5" />
                 Demander un devis
               </Link>
             </Button>
@@ -327,7 +321,7 @@ export default function HomePage() {
 
             <Card className="text-center p-6 border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white dark:bg-gray-800">
               <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="text-white h-8 w-8" />
+                <Phone className="text-white h-8 w-8" />
               </div>
               <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">Devis gratuit</h4>
               <p className="text-gray-600 dark:text-gray-400 mb-4">Estimation personnalisée</p>
@@ -338,7 +332,6 @@ export default function HomePage() {
           <div className="text-center">
             <Button asChild size="lg" className="bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-500 hover:to-gold text-white px-12 py-6 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
               <Link to="/contact">
-                <Sparkles className="mr-2 h-5 w-5" />
                 Demander un devis gratuit
               </Link>
             </Button>
