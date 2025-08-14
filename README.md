@@ -1,222 +1,217 @@
-# SakaDeco Group - Site Web Complet
+# 🌟 SKD - Site Web de Décoration et Événements
 
-Site web professionnel pour SAKADECO Group avec 6 pôles d'activité : décoration d'événements, personnalisation de produits, location de matériel, organisation d'événements, décoration intérieure et coordination business.
+Site web professionnel pour SKD, spécialisé dans la décoration d'événements, la vente de produits et la location d'équipements.
 
-## 🚀 Démarrage Rapide
+## 🚀 Déploiement sur Render
 
-### Prérequis
+### ✅ Site en ligne
+**URL de production :** https://sakadeco-api.onrender.com
+
+### 🏗️ Architecture
+- **Frontend** : React + TypeScript + Tailwind CSS
+- **Backend** : Express.js + Node.js
+- **Base de données** : MongoDB Atlas
+- **Hébergement** : Render (Backend + Frontend unifiés)
+
+## 📋 Prérequis
+
 - Node.js 18+ 
-- PostgreSQL (automatiquement configuré sur Replit)
+- npm ou yarn
+- Compte MongoDB Atlas
+- Compte Render (gratuit)
 
-### Installation et Lancement
+## 🛠️ Installation locale
 
 ```bash
-# 1. Installer les dépendances
+# Cloner le repository
+git clone https://github.com/borelkamsu/SAKADECO.git
+cd SAKADECO
+
+# Installer les dépendances
 npm install
 
-# 2. Configurer la base de données
-npm run db:push
+# Créer le fichier .env
+cp .env.example .env
 
-# 3. Lancer le projet
+# Configurer les variables d'environnement
+DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/SDK
+SESSION_SECRET=votre_secret_tres_long
+NODE_ENV=development
+
+# Lancer en développement
 npm run dev
 ```
 
-Le site sera accessible sur `http://localhost:5000` (ou sur votre URL Replit).
+## 🌐 Déploiement sur Render
 
-## 🏗️ Architecture du Projet
-
-### Structure des Dossiers
-```
-├── client/src/           # Frontend React + TypeScript
-│   ├── components/       # Composants réutilisables
-│   ├── pages/           # Pages de l'application
-│   ├── hooks/           # Hooks React personnalisés
-│   └── lib/             # Utilitaires et configuration
-├── server/              # Backend Express + TypeScript
-│   ├── routes.ts        # Routes API
-│   ├── storage.ts       # Interface de stockage
-│   └── db.ts           # Configuration base de données
-├── shared/              # Types et schémas partagés
-│   └── schema.ts        # Schémas Drizzle ORM
-└── package.json         # Configuration du projet
-```
-
-### Technologies Utilisées
-- **Frontend**: React 18, TypeScript, Tailwind CSS, Shadcn/UI
-- **Backend**: Express.js, TypeScript
-- **Base de données**: PostgreSQL avec Drizzle ORM
-- **Authentification**: Replit Auth
-- **Build**: Vite
-- **Styling**: Tailwind CSS avec thème personnalisé
-
-## 🎨 Fonctionnalités
-
-### 6 Pôles d'Activité
-1. **SKD Shop** - Ballons, fleurs & accessoires
-2. **SKD Créa** - Personnalisation & papeterie  
-3. **SKD Rent** - Location de matériel festif
-4. **SKD Events** - Décoration d'événements
-5. **SKD Home** - Décoration intérieure & Home organizing
-6. **SKD & Co** - Organisation d'événements
-
-### Composants Modernes
-- **Newsletter** - Inscription à la newsletter
-- **Avis Clients** - Témoignages et évaluations
-- **Galerie** - Showcase des réalisations
-- **Personnalisation** - Configurateur de produits
-- **Réservation** - Système de location
-- **Contact** - Formulaires de devis
-
-## 📊 Base de Données
-
-### Tables Principales
-- `users` - Utilisateurs et profils
-- `products` - Catalogue produits
-- `orders` - Commandes et suivi
-- `rentals` - Locations de matériel
-- `quotes` - Devis personnalisés
-- `reviews` - Avis clients
-- `newsletter_subscriptions` - Abonnements newsletter
-- `gallery_items` - Portfolio d'images
-
-### Migration
+### 1. Préparer le projet
 ```bash
-# Appliquer les changements de schéma
-npm run db:push
-
-# Génerer les types TypeScript
-npm run db:generate
+# Commiter tous les changements
+git add .
+git commit -m "✨ Prêt pour déploiement Render"
+git push origin main
 ```
 
-## 🛠️ Scripts Disponibles
+### 2. Créer un service sur Render
+
+1. **Aller sur** [render.com](https://render.com)
+2. **Créer un compte** (gratuit)
+3. **Cliquer "New +"** → **"Web Service"**
+4. **Connecter GitHub** et sélectionner le repository
+
+### 3. Configuration du service
+
+| Paramètre | Valeur |
+|-----------|--------|
+| **Name** | `sakadeco-api` |
+| **Environment** | `Node` |
+| **Region** | `Frankfurt (EU Central)` |
+| **Branch** | `main` |
+| **Build Command** | `npm install --include=dev && npm run build` |
+| **Start Command** | `npm start` |
+| **Plan** | `Free` |
+
+### 4. Variables d'environnement
+
+Dans "Environment Variables", ajouter :
+
+| Variable | Valeur |
+|----------|--------|
+| `NODE_ENV` | `production` |
+| `DATABASE_URL` | `mongodb+srv://username:password@cluster.mongodb.net/SDK?retryWrites=true&w=majority` |
+| `SESSION_SECRET` | `un_secret_tres_long_et_complexe_123456789` |
+| `PORT` | `10000` |
+
+### 5. Déployer
+- Cliquer sur **"Create Web Service"**
+- Attendre **2-3 minutes** pour le déploiement
+
+## 🧪 Tests de déploiement
+
+Une fois déployé, tester :
+
+```bash
+# Health check
+curl https://sakadeco-api.onrender.com/api/health
+
+# Produits
+curl https://sakadeco-api.onrender.com/api/products
+
+# Page d'accueil
+curl https://sakadeco-api.onrender.com
+```
+
+## 📁 Structure du projet
+
+```
+SAKADECO/
+├── client/                 # Frontend React
+│   ├── src/
+│   │   ├── components/     # Composants UI
+│   │   ├── pages/         # Pages de l'application
+│   │   └── lib/           # Utilitaires
+│   └── index.html
+├── server/                # Backend Express
+│   ├── routes.ts          # Routes API
+│   ├── models.ts          # Modèles MongoDB
+│   ├── storage.ts         # Opérations base de données
+│   └── index.ts           # Point d'entrée serveur
+├── render.yaml            # Configuration Render
+├── package.json           # Dépendances et scripts
+└── README.md              # Documentation
+```
+
+## 🔧 Scripts disponibles
 
 ```bash
 # Développement
-npm run dev          # Lance le serveur de développement
+npm run dev              # Serveur de développement
+npm run build            # Build production
+npm run start            # Serveur production
 
 # Base de données
-npm run db:push      # Applique les changements de schéma
-npm run db:generate  # Génère les types TypeScript
-npm run db:studio    # Interface admin Drizzle Studio
-
-# Build
-npm run build        # Build de production
-npm start           # Lance la version de production
+npm run test-db          # Test connexion MongoDB
+npm run seed              # Peupler la base de données
 ```
 
-## 🎯 API Endpoints
+## 🌟 Fonctionnalités
 
-### Produits
-- `GET /api/products` - Liste des produits
-- `GET /api/products/:id` - Détail d'un produit
-- `POST /api/products` - Créer un produit (admin)
+### 🛍️ Boutique
+- Catalogue de produits
+- Filtrage par catégorie
+- Système de panier
+- Personnalisation des produits
 
-### Commandes
-- `GET /api/orders` - Historique des commandes
-- `POST /api/orders` - Créer une commande
+### 🎉 Événements
+- Services de décoration
+- Galerie de réalisations
+- Devis personnalisés
+- Réservation d'événements
 
-### Location
-- `GET /api/rentals/availability` - Vérifier disponibilité
-- `POST /api/rentals` - Créer une réservation
+### 📦 Location
+- Équipements disponibles
+- Tarification journalière
+- Système de réservation
+- Gestion des disponibilités
 
-### Newsletter
-- `POST /api/newsletter/subscribe` - S'abonner à la newsletter
-- `GET /api/newsletter` - Liste des abonnés (admin)
+### 📞 Contact
+- Formulaire de contact
+- Newsletter
+- Témoignages clients
+- Informations de contact
 
-### Avis
-- `GET /api/reviews` - Avis publiés
-- `POST /api/reviews` - Soumettre un avis
+## 🔒 Sécurité
 
-### Galerie
-- `GET /api/gallery` - Images de la galerie
-- `POST /api/gallery` - Ajouter une image (admin)
+- **HTTPS** automatique sur Render
+- **Variables d'environnement** sécurisées
+- **Validation des données** avec Zod
+- **Sessions sécurisées** avec MongoDB
 
-## 🔧 Configuration
+## 📊 Monitoring
 
-### Variables d'Environnement
-```bash
-# Base de données (automatique sur Replit)
-DATABASE_URL=postgresql://...
-PGHOST=...
-PGPORT=...
-PGUSER=...
-PGPASSWORD=...
-PGDATABASE=...
+- **Logs en temps réel** sur Render Dashboard
+- **Health checks** automatiques
+- **Redémarrage automatique** en cas d'erreur
+- **Métriques de performance**
 
-# Environnement
-NODE_ENV=development
-```
+## 🚀 Déploiement automatique
 
-### Thème et Couleurs
-Le projet utilise un système de couleurs personnalisé pour chaque pôle :
-- **Gold** (`#D4AF37`) - Couleur principale
-- **SKD Shop** (`#F8BBD9`) - Rose pâle
-- **SKD Créa** (`#E1BEE7`) - Violet pâle
-- **SKD Rent** (`#B8E6D2`) - Vert menthe
-- **SKD Events** (`#FFF2B3`) - Jaune pâle
-- **SKD Home** (`#FCDAB7`) - Orange pâle
-- **SKD Co** (`#AED9F5`) - Bleu pâle
+- **GitHub Integration** : Déploiement automatique à chaque push
+- **Build cache** : Optimisation des temps de build
+- **Rollback** : Possibilité de revenir à une version précédente
 
-## 🚀 Déploiement sur Replit
+## 🆘 Dépannage
 
-1. Fork ou importer le projet sur Replit
-2. Les variables d'environnement seront automatiquement configurées
-3. Cliquer sur "Run" pour lancer le projet
-4. La base de données PostgreSQL sera automatiquement provisionnée
+### Problèmes courants
 
-## 📱 Responsive Design
+1. **Build échoue**
+   - Vérifier la commande de build
+   - S'assurer que toutes les dépendances sont installées
 
-Le site est entièrement responsive et optimisé pour :
-- 📱 Mobile (320px+)
-- 📱 Tablet (768px+)
-- 💻 Desktop (1024px+)
-- 🖥️ Large screens (1440px+)
+2. **Base de données non connectée**
+   - Vérifier `DATABASE_URL` dans les variables d'environnement
+   - Contrôler les paramètres MongoDB Atlas
 
-## 🎨 Personnalisation
+3. **Variables d'environnement manquantes**
+   - Vérifier toutes les variables requises
+   - Redéployer après modification
 
-### Ajouter un Nouveau Service
-1. Modifier `client/src/pages/Home.tsx` - Ajouter dans le tableau `services`
-2. Créer la page dans `client/src/pages/`
-3. Ajouter la route dans `client/src/App.tsx`
-4. Définir les couleurs dans `client/src/index.css`
+### Support
 
-### Modifier le Thème
-Les couleurs sont définies dans `client/src/index.css` avec les variables CSS custom properties.
+- **Logs Render** : Dashboard Render → Logs
+- **Documentation** : [docs.render.com](https://docs.render.com)
+- **GitHub Issues** : [Repository Issues](https://github.com/borelkamsu/SAKADECO/issues)
 
-## 🤝 Contribution
+## 📈 Évolutions futures
 
-1. Fork le projet
-2. Créer une branche feature (`git checkout -b feature/AmazingFeature`)
-3. Commit les changements (`git commit -m 'Add some AmazingFeature'`)
-4. Push sur la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrir une Pull Request
-
-## 📄 Licence
-
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
-
-## 👤 Contact
-
-**Pajusly** - Fondatrice SakaDeco Group
-- 📞 06 88 00 39 28
-- 📍 Bordeaux Métropole
-- ✉️ Contact via le formulaire du site
+- [ ] Système d'authentification complet
+- [ ] Paiements en ligne (Stripe)
+- [ ] Dashboard administrateur
+- [ ] Notifications email
+- [ ] Application mobile
 
 ---
 
-## 🔄 Changelog
+**🎉 Votre site SKD est maintenant en ligne et opérationnel !**
 
-### Version 2.0 - Janvier 2025
-- ✅ Design moderne inspiré de M&Paillettes
-- ✅ Nouveaux composants : Newsletter, Avis, Galerie
-- ✅ Interface améliorée avec animations
-- ✅ Système de base de données complet
-- ✅ API REST complète
-- ✅ Responsive design optimisé
-
-### Version 1.0 - Décembre 2024
-- ✅ Site initial avec 6 pôles d'activité
-- ✅ Système d'authentification
-- ✅ Catalogue produits
-- ✅ Système de commandes
-- ✅ Interface d'administration
+**URL :** https://sakadeco-api.onrender.com

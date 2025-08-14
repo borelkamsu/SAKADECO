@@ -8,7 +8,7 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <main className="pt-30">
+      <main className="pt-24">
         {children}
       </main>
       
