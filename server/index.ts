@@ -52,13 +52,21 @@ app.use((req, res, next) => {
     // Don't throw the error to prevent server crash
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  // Setup static file serving for production (Render)
+  if (app.get("env") === "production") {
+    // Serve static files from the dist directory
+    app.use(express.static('dist'));
+    
+    // Serve index.html for all non-API routes (SPA routing)
+    app.get('*', (req, res) => {
+      if (!req.path.startsWith('/api')) {
+        res.sendFile('dist/index.html', { root: process.cwd() });
+      }
+    });
+  } else {
+    // Development: setup vite
     await setupVite(app, server);
   }
-  // In production, Vercel handles static files, we only serve APIs
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.
