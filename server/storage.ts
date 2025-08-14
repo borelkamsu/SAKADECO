@@ -1,6 +1,5 @@
 import {
   User,
-  Product,
   Order,
   OrderItem,
   Rental,
@@ -9,7 +8,6 @@ import {
   Review,
   GalleryItem,
   type IUser,
-  type IProduct,
   type IOrder,
   type IOrderItem,
   type IRental,
@@ -22,7 +20,6 @@ import { db } from "./db";
 
 // Type definitions for compatibility
 export type User = IUser;
-export type Product = IProduct;
 export type Order = IOrder;
 export type OrderItem = IOrderItem;
 export type Rental = IRental;
@@ -30,6 +27,26 @@ export type Quote = IQuote;
 export type NewsletterSubscription = INewsletterSubscription;
 export type Review = IReview;
 export type GalleryItem = IGalleryItem;
+
+// Product type definition (to avoid conflicts with new Product model)
+export interface IProduct {
+  _id: string;
+  name: string;
+  description?: string;
+  price: number;
+  category: string;
+  subcategory?: string;
+  imageUrl?: string;
+  isCustomizable?: boolean;
+  isRentable?: boolean;
+  stockQuantity?: number;
+  dailyRentalPrice?: number;
+  customizationOptions?: any;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type Product = IProduct;
 
 // Helper function to check database connection
 const checkConnection = () => {
