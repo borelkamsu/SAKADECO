@@ -19,7 +19,7 @@ import {
   Calendar,
   MapPin
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 
 export default function Themes() {
   const themes = [
@@ -220,7 +220,7 @@ export default function Themes() {
             {themes.map((theme) => {
               const IconComponent = theme.icon;
               return (
-                <Link key={theme.id} to={`/shop?theme=${theme.id}`} className="block">
+                                 <Link key={theme.id} href={`/shop?theme=${theme.id}`} className="block">
                   <Card className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-gold/30 cursor-pointer h-full overflow-hidden">
                     <div className="aspect-video overflow-hidden">
                       <img 
@@ -279,18 +279,18 @@ export default function Themes() {
             qui reflète parfaitement votre style et vos goûts.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-500 hover:to-gold text-white px-8 py-4 text-lg font-semibold rounded-full">
-              <Link to="/shop">
-                <Gift className="mr-2 h-5 w-5" />
-                Découvrir nos produits
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="border-2 border-gold text-gold hover:bg-gold hover:text-white px-8 py-4 text-lg font-semibold rounded-full">
-              <Link to="/contact">
-                <Calendar className="mr-2 h-5 w-5" />
-                Demander un devis
-              </Link>
-            </Button>
+                         <Button asChild size="lg" className="bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-500 hover:to-gold text-white px-8 py-4 text-lg font-semibold rounded-full">
+               <Link href="/shop">
+                 <Gift className="mr-2 h-5 w-5" />
+                 Découvrir nos produits
+               </Link>
+             </Button>
+             <Button asChild variant="outline" size="lg" className="border-2 border-gold text-gold hover:bg-gold hover:text-white px-8 py-4 text-lg font-semibold rounded-full">
+               <Link href="/contact">
+                 <Calendar className="mr-2 h-5 w-5" />
+                 Demander un devis
+               </Link>
+             </Button>
           </div>
         </div>
       </section>
