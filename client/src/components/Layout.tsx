@@ -50,6 +50,7 @@ export default function Layout({ children }: LayoutProps) {
                 <li><span className="text-gold mr-2">📞</span> 06 88 00 39 28</li>
                 <li><span className="text-gold mr-2">📍</span> Bordeaux Métropole</li>
                 <li><span className="text-gold mr-2">🕐</span> Sur rendez-vous</li>
+                <li><a href="/orders" className="hover:text-gold transition-colors">📦 Mes commandes</a></li>
               </ul>
             </div>
             

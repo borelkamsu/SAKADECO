@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import ImageWithFallback from "@/components/ImageWithFallback";
 
+
 interface Product {
   _id: string;
   name: string;
@@ -64,6 +65,7 @@ export default function ProductDetail() {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
+
   // Extract product ID from URL
   const productId = location.split('/')[2]; // /shop/{id}
 
@@ -99,19 +101,40 @@ export default function ProductDetail() {
     setIsAddingToCart(true);
     
     try {
-      // Here you would typically add to cart logic
-      console.log('Adding to cart:', {
+      // Préparer l'article pour le panier
+      const cartItem = {
         productId: product._id,
-        quantity,
-        customizations,
-        customMessage
-      });
+        name: product.name,
+        price: product.price,
+        quantity: quantity,
+        image: product.mainImageUrl,
+        isRental: false,
+        customizations: customizations,
+        customMessage: customMessage
+      };
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Récupérer le panier existant
+      const existingCart = localStorage.getItem('cart');
+      const cartItems = existingCart ? JSON.parse(existingCart) : [];
+
+      // Vérifier si le produit est déjà dans le panier
+      const existingItemIndex = cartItems.findIndex((item: any) => 
+        item.productId === product._id && !item.isRental
+      );
+
+      if (existingItemIndex >= 0) {
+        // Mettre à jour la quantité
+        cartItems[existingItemIndex].quantity += quantity;
+      } else {
+        // Ajouter le nouvel article
+        cartItems.push(cartItem);
+      }
+
+      // Sauvegarder le panier
+      localStorage.setItem('cart', JSON.stringify(cartItems));
       
-      // Show success message
-      alert('Produit ajouté au panier !');
+      // Notifier le CartIcon que le panier a été mis à jour
+      window.dispatchEvent(new Event('cartUpdated'));
       
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -122,86 +145,149 @@ export default function ProductDetail() {
   };
 
   const renderCustomizationOption = (optionKey: string, option: any) => {
-    const { type, label, required, options, placeholder, maxLength } = option;
     const currentValue = customizations[optionKey];
 
-    switch (type) {
-      case 'checkbox':
-        return (
-          <div key={optionKey} className="flex items-center space-x-2">
-            <Checkbox
-              id={optionKey}
-              checked={currentValue as boolean || false}
-              onCheckedChange={(checked) => handleCustomizationChange(optionKey, checked)}
-            />
-            <Label htmlFor={optionKey} className="text-sm font-medium">
-              {label}
-            </Label>
-            {required && <span className="text-red-500">*</span>}
-          </div>
-        );
-
-      case 'dropdown':
-        return (
-          <div key={optionKey} className="space-y-2">
-            <Label className="text-sm font-medium">
-              {label}
-              {required && <span className="text-red-500">*</span>}
-            </Label>
-            <Select
-              value={currentValue as string || ""}
-              onValueChange={(value) => handleCustomizationChange(optionKey, value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={`Choisir ${label.toLowerCase()}`} />
-              </SelectTrigger>
-              <SelectContent>
-                {options?.map((value: string) => (
-                  <SelectItem key={value} value={value}>
-                    {value}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        );
-
-      case 'text':
-        return (
-          <div key={optionKey} className="space-y-2">
-            <Label className="text-sm font-medium">
-              {label}
-              {required && <span className="text-red-500">*</span>}
-            </Label>
-            <Input
-              placeholder={placeholder}
-              maxLength={maxLength}
-              value={currentValue as string || ""}
-              onChange={(e) => handleCustomizationChange(optionKey, e.target.value)}
-            />
-          </div>
-        );
-
-      case 'textarea':
-        return (
-          <div key={optionKey} className="space-y-2">
-            <Label className="text-sm font-medium">
-              {label}
-              {required && <span className="text-red-500">*</span>}
-            </Label>
-            <Textarea
-              placeholder={placeholder}
-              maxLength={maxLength}
-              value={currentValue as string || ""}
-              onChange={(e) => handleCustomizationChange(optionKey, e.target.value)}
-              rows={3}
-            />
-          </div>
-        );
-
-      default:
-        return null;
+    // Handle new format (simple array of values)
+    if (Array.isArray(option)) {
+      return (
+        <div key={optionKey} className="space-y-2">
+          <Label className="text-sm font-medium capitalize">
+            {optionKey.replace(/_/g, ' ')}
+          </Label>
+          <Select
+            value={currentValue as string || ""}
+            onValueChange={(value) => handleCustomizationChange(optionKey, value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={`Choisir ${optionKey.replace(/_/g, ' ')}`} />
+            </SelectTrigger>
+            <SelectContent>
+              {option.map((value: string) => (
+                <SelectItem key={value} value={value}>
+                  {value}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      );
     }
+
+    // Handle old format (object with type, label, etc.)
+    if (option && typeof option === 'object' && 'type' in option) {
+      const { type, label, required, options, placeholder, maxLength } = option;
+
+      switch (type) {
+        case 'checkbox':
+          return (
+            <div key={optionKey} className="flex items-center space-x-2">
+              <Checkbox
+                id={optionKey}
+                checked={currentValue as boolean || false}
+                onCheckedChange={(checked) => handleCustomizationChange(optionKey, checked)}
+              />
+              <Label htmlFor={optionKey} className="text-sm font-medium">
+                {label}
+              </Label>
+              {required && <span className="text-red-500">*</span>}
+            </div>
+          );
+
+        case 'dropdown':
+          return (
+            <div key={optionKey} className="space-y-2">
+              <Label className="text-sm font-medium">
+                {label}
+                {required && <span className="text-red-500">*</span>}
+              </Label>
+              <Select
+                value={currentValue as string || ""}
+                onValueChange={(value) => handleCustomizationChange(optionKey, value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={`Choisir ${label.toLowerCase()}`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {options?.map((value: string) => (
+                    <SelectItem key={value} value={value}>
+                      {value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          );
+
+        case 'text':
+          return (
+            <div key={optionKey} className="space-y-2">
+              <Label className="text-sm font-medium">
+                {label}
+                {required && <span className="text-red-500">*</span>}
+              </Label>
+              <Input
+                placeholder={placeholder}
+                maxLength={maxLength}
+                value={currentValue as string || ""}
+                onChange={(e) => handleCustomizationChange(optionKey, e.target.value)}
+              />
+            </div>
+          );
+
+        case 'textarea':
+          return (
+            <div key={optionKey} className="space-y-2">
+              <Label className="text-sm font-medium">
+                {label}
+                {required && <span className="text-red-500">*</span>}
+              </Label>
+              <Textarea
+                placeholder={placeholder}
+                maxLength={maxLength}
+                value={currentValue as string || ""}
+                onChange={(e) => handleCustomizationChange(optionKey, e.target.value)}
+                rows={3}
+              />
+            </div>
+          );
+
+        default:
+          return null;
+      }
+    }
+
+    // Handle other formats for backward compatibility
+    if (typeof option === 'boolean') {
+      return (
+        <div key={optionKey} className="flex items-center space-x-2">
+          <Checkbox
+            id={optionKey}
+            checked={currentValue as boolean || false}
+            onCheckedChange={(checked) => handleCustomizationChange(optionKey, checked)}
+          />
+          <Label htmlFor={optionKey} className="text-sm font-medium capitalize">
+            {optionKey.replace(/_/g, ' ')}
+          </Label>
+        </div>
+      );
+    }
+
+    if (typeof option === 'string') {
+      return (
+        <div key={optionKey} className="space-y-2">
+          <Label className="text-sm font-medium capitalize">
+            {optionKey.replace(/_/g, ' ')}
+          </Label>
+          <Input
+            placeholder={option}
+            value={currentValue as string || ""}
+            onChange={(e) => handleCustomizationChange(optionKey, e.target.value)}
+          />
+        </div>
+      );
+    }
+
+    return null;
   };
 
   const allImages = product ? [product.mainImageUrl, ...product.additionalImages] : [];
@@ -341,9 +427,16 @@ export default function ProductDetail() {
                   {product.description}
                 </p>
                 <div className="flex items-center space-x-4">
-                  <span className="text-3xl font-bold text-skd-shop">
-                    {product.price.toFixed(2)}€
-                  </span>
+                  <div>
+                    <span className="text-3xl font-bold text-skd-shop">
+                      {(product.price * quantity).toFixed(2)}€
+                    </span>
+                    {quantity > 1 && (
+                      <span className="text-sm text-gray-500 ml-2">
+                        ({product.price.toFixed(2)}€ l'unité)
+                      </span>
+                    )}
+                  </div>
                   {product.isRentable && product.dailyRentalPrice && (
                     <span className="text-sm text-gray-500">
                       ou {product.dailyRentalPrice.toFixed(2)}€/jour
@@ -363,8 +456,18 @@ export default function ProductDetail() {
                 </span>
               </div>
 
+
+
               {/* Customization Options */}
-              {product.isCustomizable && product.customizationOptions && (
+              {(() => {
+                console.log('🔍 Debug - Product customization check:', {
+                  isCustomizable: product.isCustomizable,
+                  customizationOptions: product.customizationOptions,
+                  hasOptions: !!product.customizationOptions,
+                  optionsKeys: product.customizationOptions ? Object.keys(product.customizationOptions) : []
+                });
+                return product.isCustomizable && product.customizationOptions;
+              })() && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
@@ -408,11 +511,23 @@ export default function ProductDetail() {
                       </div>
                     </div>
 
+                    {/* Price Display */}
+                    <div className="text-center mb-4">
+                      <span className="text-2xl font-bold text-gray-900">
+                        {(product.price * quantity).toFixed(2)}€
+                      </span>
+                      {quantity > 1 && (
+                        <span className="text-sm text-gray-500 ml-2">
+                          ({product.price.toFixed(2)}€ l'unité)
+                        </span>
+                      )}
+                    </div>
+
                     {/* Add to Cart Button */}
                     <Button
                       onClick={handleAddToCart}
-                      disabled={isAddingToCart || product.stockQuantity === 0}
-                      className="w-full bg-skd-shop hover:bg-skd-shop/90 text-white"
+                      disabled={isAddingToCart}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold shadow-lg"
                       size="lg"
                     >
                       {isAddingToCart ? (
@@ -423,7 +538,7 @@ export default function ProductDetail() {
                       ) : (
                         <>
                           <ShoppingCart className="w-5 h-5 mr-2" />
-                          Ajouter au panier - {(product.price * quantity).toFixed(2)}€
+                          Ajouter au panier
                         </>
                       )}
                     </Button>
@@ -440,6 +555,8 @@ export default function ProductDetail() {
           </div>
         </div>
       </section>
+      
+
     </Layout>
   );
 }

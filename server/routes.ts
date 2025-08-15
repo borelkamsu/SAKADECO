@@ -5,6 +5,7 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { db } from "./db";
 import { z } from "zod";
 import adminRoutes from "./routes/admin";
+import paymentRoutes from "./routes/payment";
 
 // Validation schemas for MongoDB
 const insertProductSchema = z.object({
@@ -156,6 +157,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simple image upload endpoint - no auth required
+  app.post('/api/upload-images', async (req, res) => {
+    try {
+      const multer = await import('multer');
+      const path = await import('path');
+      
+      // Configure multer for image upload
+      const storage = multer.default.diskStorage({
+        destination: (req, file, cb) => {
+          cb(null, 'uploads/products/');
+        },
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+          cb(null, 'product-' + uniqueSuffix + path.default.extname(file.originalname));
+        }
+      });
+      
+      const upload = multer.default({ 
+        storage: storage,
+        limits: {
+          fileSize: 5 * 1024 * 1024 // 5MB limit
+        },
+        fileFilter: (req, file, cb) => {
+          if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+          } else {
+            cb(new Error('Only image files are allowed'));
+          }
+        }
+      });
+      
+      // Handle the upload
+      upload.array('images', 10)(req, res, (err) => {
+        if (err) {
+          console.error('Upload error:', err);
+          return res.status(400).json({ 
+            message: 'Erreur lors de l\'upload des images',
+            error: err.message 
+          });
+        }
+        
+        if (!req.files || req.files.length === 0) {
+          return res.status(400).json({ message: 'Aucune image fournie' });
+        }
+        
+        const imageUrls = (req.files as Express.Multer.File[]).map(file => {
+          return `/uploads/products/${file.filename}`;
+        });
+        
+        res.json({
+          message: 'Images uploadées avec succès',
+          imageUrls,
+          filenames: (req.files as Express.Multer.File[]).map(file => file.filename)
+        });
+      });
+    } catch (error) {
+      console.error('Erreur upload images:', error);
+      res.status(500).json({ 
+        message: 'Erreur lors de l\'upload des images',
+        error: error.message 
+      });
+    }
+  });
+
   // Create test images for all products - public endpoint
   app.post('/api/create-test-images', async (req, res) => {
     try {
@@ -208,6 +273,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Erreur lors de la création des images de test:', error);
+      res.status(500).json({
+        error: error.message,
+        stack: error.stack
+      });
+    }
+  });
+
+  // Force create test images for all products
+  app.post('/api/force-create-images', async (req, res) => {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      const uploadDir = 'uploads/products/';
+      if (!fs.default.existsSync(uploadDir)) {
+        fs.default.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      // Créer une image de test simple (1x1 pixel PNG en base64)
+      const testImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+      const testImageBuffer = Buffer.from(testImageBase64, 'base64');
+
+      // Récupérer tous les produits de la base de données
+      const { Product } = await import('./models/Product');
+      const products = await Product.find({});
+      
+      const createdImages = [];
+      const updatedProducts = [];
+
+      for (const product of products) {
+        // Créer une image de test pour chaque produit
+        const testImageName = `product-${product._id}-test.jpg`;
+        const filePath = path.default.join(uploadDir, testImageName);
+        
+        // Toujours créer l'image (forcer la création)
+        fs.default.writeFileSync(filePath, testImageBuffer);
+        createdImages.push(testImageName);
+
+        // Mettre à jour le produit avec l'image de test
+        product.mainImageUrl = `/uploads/products/${testImageName}`;
+        await product.save();
+        updatedProducts.push(product.name);
+      }
+
+      res.json({
+        message: 'Images de test créées et produits mis à jour avec succès',
+        createdImages,
+        updatedProducts,
+        totalCreated: createdImages.length,
+        totalProducts: products.length
+      });
+    } catch (error) {
+      console.error('Erreur lors de la création forcée des images:', error);
       res.status(500).json({
         error: error.message,
         stack: error.stack
@@ -746,6 +864,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin routes
   app.use('/api/admin', adminRoutes);
+  
+  // Payment routes
+  app.use('/api/payment', paymentRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

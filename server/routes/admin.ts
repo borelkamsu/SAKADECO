@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { Admin } from '../models/Admin';
 import { Product } from '../models/Product';
+import Order from '../models/Order';
 import { adminAuth, AdminRequest, requireSuperAdmin } from '../middleware/adminAuth';
 import upload from '../middleware/upload';
 
@@ -99,7 +100,7 @@ router.post('/products', adminAuth, async (req: AdminRequest, res: Response) => 
       subcategory,
       mainImageUrl,
       additionalImages: additionalImages || [],
-      isCustomizable: isCustomizable === 'true',
+      isCustomizable: isCustomizable === 'true' || isCustomizable === true,
       isRentable: isRentable === 'true',
       stockQuantity: parseInt(stockQuantity) || 0,
       dailyRentalPrice: dailyRentalPrice ? parseFloat(dailyRentalPrice) : undefined,
@@ -401,6 +402,92 @@ router.post('/setup', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Erreur création admin:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// Get all orders (admin)
+router.get('/orders', adminAuth, async (req: AdminRequest, res: Response) => {
+  try {
+    const orders = await Order.find({})
+      .populate('items.product')
+      .populate('user')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      orders: orders.map(order => ({
+        _id: order._id,
+        user: order.user,
+        items: order.items,
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+        paymentMethod: order.paymentMethod,
+        subtotal: order.subtotal,
+        tax: order.tax,
+        shipping: order.shipping,
+        total: order.total,
+        shippingAddress: order.shippingAddress,
+        billingAddress: order.billingAddress,
+        isRental: order.isRental,
+        stripeSessionId: order.stripeSessionId,
+        stripePaymentIntentId: order.stripePaymentIntentId,
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt
+      }))
+    });
+  } catch (error) {
+    console.error('Erreur récupération commandes admin:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// Get order details (admin)
+router.get('/orders/:orderId', adminAuth, async (req: AdminRequest, res: Response) => {
+  try {
+    const { orderId } = req.params;
+    
+    const order = await Order.findById(orderId)
+      .populate('items.product')
+      .populate('user');
+
+    if (!order) {
+      return res.status(404).json({ message: 'Commande non trouvée' });
+    }
+
+    res.json({ order });
+  } catch (error) {
+    console.error('Erreur récupération commande admin:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// Update order status (admin)
+router.put('/orders/:orderId/status', adminAuth, async (req: AdminRequest, res: Response) => {
+  try {
+    const { orderId } = req.params;
+    const { status, paymentStatus } = req.body;
+
+    const order = await Order.findById(orderId);
+    
+    if (!order) {
+      return res.status(404).json({ message: 'Commande non trouvée' });
+    }
+
+    if (status) order.status = status;
+    if (paymentStatus) order.paymentStatus = paymentStatus;
+
+    await order.save();
+
+    res.json({ 
+      message: 'Statut de commande mis à jour',
+      order: {
+        _id: order._id,
+        status: order.status,
+        paymentStatus: order.paymentStatus
+      }
+    });
+  } catch (error) {
+    console.error('Erreur mise à jour statut commande:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface ImageWithFallbackProps {
   src: string;
@@ -20,11 +20,17 @@ const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   const [imgSrc, setImgSrc] = useState(src);
   const [hasError, setHasError] = useState(false);
 
+  // Reset state when src changes
+  useEffect(() => {
+    setImgSrc(src);
+    setHasError(false);
+  }, [src]);
+
   const defaultFallback = `data:image/svg+xml;base64,${btoa(`
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100%" height="100%" fill="#f3f4f6"/>
-      <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="16" fill="#6b7280" text-anchor="middle" dy=".3em">
-        Image non disponible
+      <rect width="100%" height="100%" fill="#f8fafc"/>
+      <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle" dy=".3em">
+        Chargement...
       </text>
     </svg>
   `)}`;

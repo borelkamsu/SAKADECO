@@ -13,12 +13,8 @@ import { Plus, Trash2, Save, ArrowLeft, X } from "lucide-react";
 import ImageUpload from "@/components/ImageUpload";
 
 interface CustomizationOption {
-  type: 'dropdown' | 'checkbox' | 'text' | 'textarea';
   label: string;
-  required: boolean;
-  options?: string[];
-  placeholder?: string;
-  maxLength?: number;
+  values: string[];
 }
 
 export default function AdminAddProduct() {
@@ -56,12 +52,36 @@ export default function AdminAddProduct() {
     setCustomizationOptions(prev => ({
       ...prev,
       [optionKey]: {
-        type: 'dropdown',
         label: '',
-        required: false,
-        options: []
+        values: ['', '', ''] // 3 valeurs par défaut
       }
     }));
+    
+    // Automatically enable customization when adding options
+    if (!formData.isCustomizable) {
+      handleInputChange('isCustomizable', true);
+    }
+  };
+
+  // Transform customization options to the expected format before sending
+  const transformCustomizationOptions = () => {
+    const transformed: any = {};
+    
+    Object.entries(customizationOptions).forEach(([key, option]) => {
+      if (option.label.trim()) {
+        // Use the label as the key for better readability
+        const optionKey = option.label.toLowerCase().replace(/\s+/g, '_');
+        
+        // Filter out empty values
+        const validValues = option.values.filter(value => value.trim() !== '');
+        
+        if (validValues.length > 0) {
+          transformed[optionKey] = validValues;
+        }
+      }
+    });
+    
+    return transformed;
   };
 
   const updateCustomizationOption = (key: string, field: keyof CustomizationOption, value: any) => {
@@ -83,16 +103,13 @@ export default function AdminAddProduct() {
   };
 
   const addOptionValue = (optionKey: string) => {
-    const newValue = prompt("Entrez la valeur de l'option:");
-    if (newValue) {
-      setCustomizationOptions(prev => ({
-        ...prev,
-        [optionKey]: {
-          ...prev[optionKey],
-          options: [...(prev[optionKey].options || []), newValue]
-        }
-      }));
-    }
+    setCustomizationOptions(prev => ({
+      ...prev,
+      [optionKey]: {
+        ...prev[optionKey],
+        values: [...prev[optionKey].values, '']
+      }
+    }));
   };
 
   const removeOptionValue = (optionKey: string, valueIndex: number) => {
@@ -100,7 +117,17 @@ export default function AdminAddProduct() {
       ...prev,
       [optionKey]: {
         ...prev[optionKey],
-        options: prev[optionKey].options?.filter((_, index) => index !== valueIndex)
+        values: prev[optionKey].values.filter((_, index) => index !== valueIndex)
+      }
+    }));
+  };
+
+  const updateOptionValue = (optionKey: string, valueIndex: number, value: string) => {
+    setCustomizationOptions(prev => ({
+      ...prev,
+      [optionKey]: {
+        ...prev[optionKey],
+        values: prev[optionKey].values.map((v, index) => index === valueIndex ? value : v)
       }
     }));
   };
@@ -126,8 +153,17 @@ export default function AdminAddProduct() {
           ...formData,
           mainImageUrl,
           additionalImages,
-          customizationOptions
+          isCustomizable: Object.keys(customizationOptions).length > 0 || formData.isCustomizable,
+          customizationOptions: transformCustomizationOptions()
         })
+      });
+
+      // Debug log
+      console.log('🔍 Debug - Sending product data:', {
+        formDataIsCustomizable: formData.isCustomizable,
+        hasCustomizationOptions: Object.keys(customizationOptions).length > 0,
+        finalIsCustomizable: Object.keys(customizationOptions).length > 0 || formData.isCustomizable,
+        customizationOptions: transformCustomizationOptions()
       });
 
       if (!response.ok) {
@@ -315,97 +351,54 @@ export default function AdminAddProduct() {
                       </Button>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label>Type d'option</Label>
-                        <Select
-                          value={option.type}
-                          onValueChange={(value: any) => updateCustomizationOption(key, 'type', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="dropdown">Menu déroulant</SelectItem>
-                            <SelectItem value="checkbox">Cases à cocher</SelectItem>
-                            <SelectItem value="text">Champ texte</SelectItem>
-                            <SelectItem value="textarea">Zone de texte</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label>Libellé</Label>
-                        <Input
-                          value={option.label}
-                          onChange={(e) => updateCustomizationOption(key, 'label', e.target.value)}
-                          placeholder="ex: Couleur, Taille, Thème..."
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`required-${key}`}
-                        checked={option.required}
-                        onCheckedChange={(checked) => updateCustomizationOption(key, 'required', checked)}
+                    <div>
+                      <Label>Libellé de l'option</Label>
+                      <Input
+                        value={option.label}
+                        onChange={(e) => updateCustomizationOption(key, 'label', e.target.value)}
+                        placeholder="ex: Couleur, Taille, Thème, Style..."
+                        className="mb-4"
                       />
-                      <Label htmlFor={`required-${key}`}>Option obligatoire</Label>
                     </div>
 
-                    {(option.type === 'dropdown' || option.type === 'checkbox') && (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label>Valeurs disponibles</Label>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => addOptionValue(key)}
-                          >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Ajouter une valeur
-                          </Button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {option.options?.map((value, index) => (
-                            <Badge key={index} variant="secondary" className="flex items-center space-x-1">
-                              <span>{value}</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label>Valeurs disponibles</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addOptionValue(key)}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Ajouter une valeur
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                        {option.values.map((value, index) => (
+                          <div key={index} className="flex items-center space-x-2">
+                            <Input
+                              value={value}
+                              onChange={(e) => updateOptionValue(key, index, e.target.value)}
+                              placeholder={`Valeur ${index + 1}`}
+                              className="flex-1"
+                            />
+                            {option.values.length > 1 && (
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => removeOptionValue(key, index)}
-                                className="h-auto p-0 ml-1"
+                                className="h-auto p-1"
                               >
                                 <X className="w-3 h-3" />
                               </Button>
-                            </Badge>
-                          ))}
-                        </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    )}
-
-                    {(option.type === 'text' || option.type === 'textarea') && (
-                      <div className="space-y-2">
-                        <div>
-                          <Label>Placeholder</Label>
-                          <Input
-                            value={option.placeholder || ''}
-                            onChange={(e) => updateCustomizationOption(key, 'placeholder', e.target.value)}
-                            placeholder="ex: Entrez votre message..."
-                          />
-                        </div>
-                        <div>
-                          <Label>Longueur maximale</Label>
-                          <Input
-                            type="number"
-                            value={option.maxLength || ''}
-                            onChange={(e) => updateCustomizationOption(key, 'maxLength', parseInt(e.target.value) || undefined)}
-                            placeholder="ex: 500"
-                          />
-                        </div>
-                      </div>
-                    )}
+                    </div>
                   </div>
                 ))}
               </CardContent>

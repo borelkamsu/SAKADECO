@@ -1,6 +1,6 @@
 // Import models from their individual files
 import { User, type IUser } from "./models/User";
-import { Order, type IOrder } from "./models/Order";
+import OrderModel from "./models/Order";
 import { OrderItem, type IOrderItem } from "./models/OrderItem";
 import { Rental, type IRental } from "./models/Rental";
 import { Quote, type IQuote } from "./models/Quote";
@@ -11,6 +11,22 @@ import { db } from "./db";
 
 // Type definitions for compatibility
 export type User = IUser;
+// Order type definition (to avoid conflicts with new Order model)
+export interface IOrder {
+  _id: string;
+  user?: string;
+  items: any[];
+  status: string;
+  paymentStatus: string;
+  total: number;
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  createdAt: Date;
+  updatedAt: Date;
+  isRental: boolean;
+}
+
 export type Order = IOrder;
 export type OrderItem = IOrderItem;
 export type Rental = IRental;

@@ -116,12 +116,14 @@ export default function Shop() {
                 >
                   <CardHeader className="p-0">
                     <div className="aspect-square overflow-hidden rounded-t-lg">
-                      <ImageWithFallback 
+                      <img 
                         src={product.mainImageUrl}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        width={400}
-                        height={400}
+                        onError={(e) => {
+                          console.log('Image failed to load:', product.mainImageUrl);
+                          e.currentTarget.style.display = 'none';
+                        }}
                       />
                     </div>
                   </CardHeader>

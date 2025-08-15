@@ -32,17 +32,10 @@ export default function ImageUpload({
         formData.append('images', file);
       });
 
-      const token = localStorage.getItem('adminToken');
-      const headers: Record<string, string> = {};
+
       
-      // Only add Authorization header if token exists and not in development
-      if (token && process.env.NODE_ENV !== 'development') {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      const response = await fetch('/api/admin/upload-images', {
+      const response = await fetch('/api/upload-images', {
         method: 'POST',
-        headers,
         body: formData
       });
 

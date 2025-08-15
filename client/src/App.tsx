@@ -26,6 +26,10 @@ import AdminEditProduct from "@/pages/AdminEditProduct";
 import AdminOrders from "@/pages/AdminOrders";
 import AdminUsers from "@/pages/AdminUsers";
 import ProductDetail from "@/pages/ProductDetail";
+import Orders from "@/pages/Orders";
+import PaymentSuccess from "@/pages/PaymentSuccess";
+import PaymentCancel from "@/pages/PaymentCancel";
+import CartPage from "@/pages/CartPage";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -36,6 +40,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/shop" component={Shop} />
       <Route path="/shop/:id" component={ProductDetail} />
+      <Route path="/cart" component={CartPage} />
       <Route path="/crea" component={Crea} />
       <Route path="/rent" component={Rent} />
       <Route path="/events" component={Events} />
@@ -44,7 +49,10 @@ function Router() {
       <Route path="/checkout" component={Checkout} />
       <Route path="/contact" component={Contact} />
       <Route path="/about" component={About} />
-                   <Route path="/themes" component={Themes} />
+      <Route path="/orders" component={Orders} />
+      <Route path="/payment/success" component={PaymentSuccess} />
+      <Route path="/payment/cancel" component={PaymentCancel} />
+      <Route path="/themes" component={Themes} />
              <Route path="/admin/login" component={AdminLogin} />
              <Route path="/admin/dashboard" component={AdminDashboard} />
              <Route path="/admin/products" component={AdminProducts} />

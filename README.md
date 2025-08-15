@@ -1,6 +1,15 @@
 # 🌟 SKD - Site Web de Décoration et Événements
 
-Site web professionnel pour SKD, spécialisé dans la décoration d'événements, la vente de produits et la location d'équipements.
+Site web professionnel pour SKD, spécialisé dans la décoration d'événements, la vente de produits, la location d'équipements et le paiement en ligne avec Stripe.
+
+## ✨ Nouvelles Fonctionnalités
+
+- 💳 **Paiement sécurisé** avec Stripe Checkout
+- 📦 **Gestion des commandes** complète
+- 👨‍💼 **Interface administrateur** avancée
+- 🎨 **Personnalisation des produits** (couleurs, tailles)
+- 🖼️ **Upload d'images** automatique
+- 📱 **Design responsive** moderne
 
 ## 🚀 Déploiement sur Render
 
@@ -81,6 +90,9 @@ Dans "Environment Variables", ajouter :
 | `DATABASE_URL` | `mongodb+srv://username:password@cluster.mongodb.net/SDK?retryWrites=true&w=majority` |
 | `SESSION_SECRET` | `un_secret_tres_long_et_complexe_123456789` |
 | `PORT` | `10000` |
+| `STRIPE_PUBLIC_KEY` | `pk_test_votre_cle_publique` |
+| `STRIPE_SECRET_KEY` | `sk_test_votre_cle_secrete` |
+| `STRIPE_WEBHOOK_SECRET` | `whsec_votre_webhook_secret` |
 
 ### 5. Déployer
 - Cliquer sur **"Create Web Service"**
