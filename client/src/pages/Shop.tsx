@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingBag, Plus } from "lucide-react";
+import ImageWithFallback from "@/components/ImageWithFallback";
 
 // Define Product type for frontend
 interface Product {
@@ -115,10 +116,12 @@ export default function Shop() {
                 >
                   <CardHeader className="p-0">
                     <div className="aspect-square overflow-hidden rounded-t-lg">
-                      <img 
-                        src={product.mainImageUrl || "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&h=300&fit=crop"}
+                      <ImageWithFallback 
+                        src={product.mainImageUrl}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        width={400}
+                        height={400}
                       />
                     </div>
                   </CardHeader>

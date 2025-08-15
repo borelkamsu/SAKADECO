@@ -23,6 +23,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
+import ImageWithFallback from "@/components/ImageWithFallback";
 
 interface Product {
   _id: string;
@@ -261,10 +262,12 @@ export default function ProductDetail() {
             <div className="space-y-4">
               {/* Main Image */}
               <div className="aspect-square overflow-hidden rounded-lg border-2 border-gray-200 relative">
-                <img 
-                  src={currentImage || "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"}
+                <ImageWithFallback 
+                  src={currentImage}
                   alt={product.name}
                   className="w-full h-full object-cover"
+                  width={600}
+                  height={600}
                 />
                 
                 {/* Navigation arrows */}
@@ -303,10 +306,12 @@ export default function ProductDetail() {
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <img
+                      <ImageWithFallback
                         src={image}
                         alt={`${product.name} - Image ${index + 1}`}
                         className="w-full h-full object-cover"
+                        width={150}
+                        height={150}
                       />
                     </button>
                   ))}
