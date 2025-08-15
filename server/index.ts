@@ -74,11 +74,11 @@ app.use((req, res, next) => {
       }
     });
   } else {
+    // Development: serve uploaded files BEFORE vite setup
+    app.use('/uploads', express.static('uploads'));
+    
     // Development: setup vite
     await setupVite(app, server);
-    
-    // Serve uploaded files in development
-    app.use('/uploads', express.static('uploads'));
   }
 
     // ALWAYS serve the app on the port specified in the environment variable PORT
