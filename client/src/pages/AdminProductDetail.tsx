@@ -222,7 +222,7 @@ export default function AdminProductDetail() {
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = "https://via.placeholder.com/600x600?text=Image+non+disponible";
+                    target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%23f3f4f6'/%3E%3Ctext x='300' y='300' text-anchor='middle' dy='.3em' fill='%236b7280' font-size='24'%3EImage non disponible%3C/text%3E%3C/svg%3E";
                   }}
                 />
               </div>
