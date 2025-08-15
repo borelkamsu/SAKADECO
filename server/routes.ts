@@ -143,104 +143,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { category } = req.query;
       console.log('📦 Fetching products...', category ? `Category: ${category}` : 'All categories');
       
-      // Always return mock data for now to avoid database issues
-      console.log('⚠️ Using mock data to avoid database issues');
-      const mockProducts = [
-        {
-          _id: "mock-1",
-          name: "Ballons de Fête Colorés",
-          description: "Lot de 50 ballons de fête multicolores de haute qualité, parfaits pour toutes vos célébrations. Ballons en latex naturel, résistants et durables.",
-          price: 25.99,
-          category: "shop",
-          subcategory: "ballons",
-          imageUrl: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&h=300&fit=crop",
-          isCustomizable: true,
-          isRentable: false,
-          stockQuantity: 100,
-          customizationOptions: {
-            colors: ["rouge", "bleu", "vert", "jaune", "rose", "orange", "violet"],
-            sizes: ["petit", "moyen", "grand"],
-            text: true
-          }
-        },
-        {
-          _id: "mock-2", 
-          name: "Bouquet de Roses Premium",
-          description: "Magnifique bouquet de 12 roses rouges fraîches, arrangées avec soin et accompagnées de verdure. Idéal pour les occasions romantiques et les événements spéciaux.",
-          price: 89.99,
-          category: "shop",
-          subcategory: "fleurs",
-          imageUrl: "https://images.unsplash.com/photo-1562690868-60bbe7293e94?w=400&h=300&fit=crop",
-          isCustomizable: true,
-          isRentable: false,
-          stockQuantity: 25,
-          customizationOptions: {
-            colors: ["rouge", "blanc", "rose", "jaune", "orange"],
-            arrangements: ["classique", "moderne", "romantique"],
-            message: true
-          }
-        },
-        {
-          _id: "mock-3",
-          name: "Arche de Ballons Événementielle",
-          description: "Arche de ballons professionnelle pour vos événements. Installation complète avec support métallique, ballons de qualité et service de montage inclus.",
-          price: 299.99,
-          category: "events",
-          subcategory: "décoration",
-          imageUrl: "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=400&h=300&fit=crop",
-          isCustomizable: true,
-          isRentable: true,
-          stockQuantity: 5,
-          dailyRentalPrice: 150.00,
-          customizationOptions: {
-            colors: ["thème personnalisé", "couleurs de votre choix"],
-            tailles: ["3m", "4m", "5m"],
-            styles: ["classique", "moderne", "fantaisie"]
-          }
-        },
-        {
-          _id: "mock-4",
-          name: "Pack Décoration Mariage Complet",
-          description: "Pack complet de décoration pour mariage incluant : guirlandes, photobooth, centre de table, accessoires photo et service de décoration personnalisée.",
-          price: 599.99,
-          category: "events",
-          subcategory: "mariage",
-          imageUrl: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400&h=300&fit=crop",
-          isCustomizable: true,
-          isRentable: true,
-          stockQuantity: 3,
-          dailyRentalPrice: 250.00,
-          customizationOptions: {
-            thèmes: ["romantique", "moderne", "vintage", "bohème", "élégant"],
-            couleurs: ["personnalisées selon vos goûts"],
-            services: ["installation", "démontage", "coordination"]
-          }
-        },
-        {
-          _id: "mock-5",
-          name: "Éclairage LED Professionnel",
-          description: "Kit d'éclairage LED professionnel pour événements. Inclut projecteurs, spots colorés, contrôleur DMX et service d'installation technique.",
-          price: 799.99,
-          category: "rent",
-          subcategory: "éclairage",
-          imageUrl: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=300&fit=crop",
-          isCustomizable: false,
-          isRentable: true,
-          stockQuantity: 8,
-          dailyRentalPrice: 120.00
-        }
-      ];
-      
-      const filteredProducts = category 
-        ? mockProducts.filter(p => p.category === category)
-        : mockProducts;
+      // Check if database is connected
+      if (db.connection.readyState === 1) {
+        console.log('✅ Database connected, fetching real products');
+        const { Product } = await import('./models/Product');
         
-      console.log(`✅ Returning ${filteredProducts.length} mock products`);
-      res.json(filteredProducts);
+        const query: any = {};
+        if (category) {
+          query.category = category;
+        }
+        
+        const products = await Product.find(query).sort({ createdAt: -1 });
+        console.log(`📦 Found ${products.length} products in database`);
+        
+        res.json(products);
+      } else {
+        console.log('⚠️ Database not connected, using mock data');
+        // Mock products with new structure
+        const mockProducts = [
+          {
+            _id: "mock-1",
+            name: "Ballons de Fête Colorés",
+            description: "Lot de 50 ballons de fête multicolores de haute qualité, parfaits pour toutes vos célébrations. Ballons en latex naturel, résistants et durables.",
+            price: 25.99,
+            category: "shop",
+            subcategory: "ballons",
+            mainImageUrl: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&h=300&fit=crop",
+            additionalImages: [
+              "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop",
+              "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=400&h=300&fit=crop"
+            ],
+            isCustomizable: true,
+            isRentable: false,
+            stockQuantity: 100,
+            dailyRentalPrice: undefined,
+            customizationOptions: {
+              "couleurs": {
+                type: "dropdown",
+                label: "Couleurs disponibles",
+                required: true,
+                options: ["rouge", "bleu", "vert", "jaune", "rose", "orange", "violet"]
+              },
+              "taille": {
+                type: "dropdown",
+                label: "Taille des ballons",
+                required: false,
+                options: ["petit", "moyen", "grand"]
+              },
+              "message": {
+                type: "text",
+                label: "Message personnalisé",
+                required: false,
+                placeholder: "Entrez votre message...",
+                maxLength: 50
+              }
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          },
+          {
+            _id: "mock-2",
+            name: "Décoration de Table Élégante",
+            description: "Set complet de décoration de table pour événements spéciaux. Inclut nappes, serviettes, bougies et accessoires décoratifs.",
+            price: 89.99,
+            category: "shop",
+            subcategory: "décoration",
+            mainImageUrl: "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=400&h=300&fit=crop",
+            additionalImages: [
+              "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop"
+            ],
+            isCustomizable: true,
+            isRentable: true,
+            stockQuantity: 25,
+            dailyRentalPrice: 15.00,
+            customizationOptions: {
+              "thème": {
+                type: "dropdown",
+                label: "Thème de décoration",
+                required: true,
+                options: ["romantique", "moderne", "vintage", "naturel", "luxe"]
+              },
+              "couleurs": {
+                type: "checkbox",
+                label: "Couleurs préférées",
+                required: false,
+                options: ["blanc", "rose", "doré", "argenté", "vert"]
+              },
+              "message": {
+                type: "textarea",
+                label: "Instructions spéciales",
+                required: false,
+                placeholder: "Décrivez vos préférences...",
+                maxLength: 200
+              }
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        ];
+        
+        const filteredProducts = category 
+          ? mockProducts.filter(p => p.category === category)
+          : mockProducts;
+        
+        res.json(filteredProducts);
+      }
     } catch (error) {
       console.error("❌ Error fetching products:", error);
-      
-      // Check if it's a database connection error
       if ((error as any).message && (error as any).message.includes('Database not connected')) {
         res.status(503).json({ 
           message: "Service temporairement indisponible - Problème de connexion à la base de données",
@@ -257,14 +266,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/products/:id', async (req, res) => {
     try {
-      const product = await storage.getProduct(req.params.id);
-      if (!product) {
-        return res.status(404).json({ message: "Product not found" });
+      const { id } = req.params;
+      console.log('📦 Fetching product:', id);
+      
+      // Check if database is connected
+      if (db.connection.readyState === 1) {
+        console.log('✅ Database connected, fetching real product');
+        const { Product } = await import('./models/Product');
+        
+        const product = await Product.findById(id);
+        if (!product) {
+          return res.status(404).json({ message: 'Product not found' });
+        }
+        
+        console.log('📦 Found product:', product.name);
+        res.json(product);
+      } else {
+        console.log('⚠️ Database not connected, using mock data');
+        // Return mock product for testing
+        const mockProduct = {
+          _id: id,
+          name: "Ballons de Fête Colorés",
+          description: "Lot de 50 ballons de fête multicolores de haute qualité, parfaits pour toutes vos célébrations. Ballons en latex naturel, résistants et durables.",
+          price: 25.99,
+          category: "shop",
+          subcategory: "ballons",
+          mainImageUrl: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&h=300&fit=crop",
+          additionalImages: [
+            "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=400&h=300&fit=crop"
+          ],
+          isCustomizable: true,
+          isRentable: false,
+          stockQuantity: 100,
+          dailyRentalPrice: undefined,
+          customizationOptions: {
+            "couleurs": {
+              type: "dropdown",
+              label: "Couleurs disponibles",
+              required: true,
+              options: ["rouge", "bleu", "vert", "jaune", "rose", "orange", "violet"]
+            },
+            "taille": {
+              type: "dropdown",
+              label: "Taille des ballons",
+              required: false,
+              options: ["petit", "moyen", "grand"]
+            },
+            "message": {
+              type: "text",
+              label: "Message personnalisé",
+              required: false,
+              placeholder: "Entrez votre message...",
+              maxLength: 50
+            }
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        res.json(mockProduct);
       }
-      res.json(product);
     } catch (error) {
-      console.error("Error fetching product:", error);
-      res.status(500).json({ message: "Failed to fetch product" });
+      console.error('Error fetching product:', error);
+      res.status(500).json({ message: 'Error fetching product' });
     }
   });
 

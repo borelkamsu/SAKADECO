@@ -73,7 +73,7 @@ router.get('/profile', adminAuth, async (req: AdminRequest, res: Response) => {
   }
 });
 
-// Create Product
+// Create product
 router.post('/products', adminAuth, async (req: AdminRequest, res: Response) => {
   try {
     const {
@@ -82,7 +82,8 @@ router.post('/products', adminAuth, async (req: AdminRequest, res: Response) => 
       price,
       category,
       subcategory,
-      imageUrl,
+      mainImageUrl,
+      additionalImages,
       isCustomizable,
       isRentable,
       stockQuantity,
@@ -90,34 +91,26 @@ router.post('/products', adminAuth, async (req: AdminRequest, res: Response) => 
       customizationOptions
     } = req.body;
 
-    // Validation
-    if (!name || !description || !price || !category || !subcategory || !imageUrl) {
-      return res.status(400).json({ message: 'Tous les champs obligatoires doivent être remplis' });
-    }
-
     const product = new Product({
       name,
       description,
       price: parseFloat(price),
       category,
       subcategory,
-      imageUrl,
-      isCustomizable: Boolean(isCustomizable),
-      isRentable: Boolean(isRentable),
+      mainImageUrl,
+      additionalImages: additionalImages || [],
+      isCustomizable: isCustomizable === 'true',
+      isRentable: isRentable === 'true',
       stockQuantity: parseInt(stockQuantity) || 0,
       dailyRentalPrice: dailyRentalPrice ? parseFloat(dailyRentalPrice) : undefined,
       customizationOptions: customizationOptions || {}
     });
 
     await product.save();
-
-    res.status(201).json({
-      message: 'Produit créé avec succès',
-      product
-    });
+    res.status(201).json(product);
   } catch (error) {
-    console.error('Erreur création produit:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
+    console.error('Error creating product:', error);
+    res.status(500).json({ message: 'Error creating product', error: error.message });
   }
 });
 
@@ -177,50 +170,45 @@ router.get('/products/:id', adminAuth, async (req: AdminRequest, res: Response) 
 // Update product
 router.put('/products/:id', adminAuth, async (req: AdminRequest, res: Response) => {
   try {
+    const { id } = req.params;
     const {
       name,
       description,
       price,
       category,
       subcategory,
-      imageUrl,
+      mainImageUrl,
+      additionalImages,
       isCustomizable,
       isRentable,
       stockQuantity,
       dailyRentalPrice,
-      customizationOptions,
-      isActive
+      customizationOptions
     } = req.body;
 
-    const product = await Product.findById(req.params.id);
-    
+    const product = await Product.findByIdAndUpdate(id, {
+      name,
+      description,
+      price: parseFloat(price),
+      category,
+      subcategory,
+      mainImageUrl,
+      additionalImages: additionalImages || [],
+      isCustomizable: isCustomizable === 'true',
+      isRentable: isRentable === 'true',
+      stockQuantity: parseInt(stockQuantity) || 0,
+      dailyRentalPrice: dailyRentalPrice ? parseFloat(dailyRentalPrice) : undefined,
+      customizationOptions: customizationOptions || {}
+    }, { new: true });
+
     if (!product) {
-      return res.status(404).json({ message: 'Produit non trouvé' });
+      return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Update fields
-    if (name) product.name = name;
-    if (description) product.description = description;
-    if (price) product.price = parseFloat(price);
-    if (category) product.category = category;
-    if (subcategory) product.subcategory = subcategory;
-    if (imageUrl) product.imageUrl = imageUrl;
-    if (typeof isCustomizable === 'boolean') product.isCustomizable = isCustomizable;
-    if (typeof isRentable === 'boolean') product.isRentable = isRentable;
-    if (stockQuantity !== undefined) product.stockQuantity = parseInt(stockQuantity);
-    if (dailyRentalPrice !== undefined) product.dailyRentalPrice = dailyRentalPrice ? parseFloat(dailyRentalPrice) : undefined;
-    if (customizationOptions) product.customizationOptions = customizationOptions;
-    if (typeof isActive === 'boolean') product.isActive = isActive;
-
-    await product.save();
-
-    res.json({
-      message: 'Produit mis à jour avec succès',
-      product
-    });
+    res.json(product);
   } catch (error) {
-    console.error('Erreur mise à jour produit:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
+    console.error('Error updating product:', error);
+    res.status(500).json({ message: 'Error updating product', error: error.message });
   }
 });
 
@@ -264,13 +252,13 @@ router.get('/dashboard', adminAuth, async (req: AdminRequest, res: Response) => 
   }
 });
 
-// Upload image route
-router.post('/upload-image', adminAuth, (req: AdminRequest, res: Response, next) => {
-  upload.single('image')(req, res, (err) => {
+// Upload multiple images
+router.post('/upload-images', adminAuth, (req: AdminRequest, res: Response, next) => {
+  upload.array('images', 10)(req, res, (err) => {
     if (err) {
       console.error('Multer error:', err);
       return res.status(400).json({ 
-        message: 'Erreur lors de l\'upload de l\'image',
+        message: 'Erreur lors de l\'upload des images',
         error: err.message 
       });
     }
@@ -278,37 +266,30 @@ router.post('/upload-image', adminAuth, (req: AdminRequest, res: Response, next)
   });
 }, async (req: AdminRequest, res: Response) => {
   try {
-    console.log('Upload image request received');
-    console.log('File:', req.file);
-    console.log('Headers:', req.headers);
+    console.log('Upload images request received');
+    console.log('Files:', req.files);
     
-    if (!req.file) {
-      console.log('No file provided');
+    if (!req.files || req.files.length === 0) {
+      console.log('No files provided');
       return res.status(400).json({ message: 'Aucune image fournie' });
     }
-
-    console.log('File uploaded successfully:', req.file.filename);
-    console.log('File path:', req.file.path);
-
-    // Construire l'URL de l'image
-    const imageUrl = `/uploads/products/${req.file.filename}`;
     
-    console.log('Image URL:', imageUrl);
+    const imageUrls = (req.files as Express.Multer.File[]).map(file => {
+      console.log('File uploaded successfully:', file.filename);
+      return `/uploads/products/${file.filename}`;
+    });
+    
+    console.log('Image URLs:', imageUrls);
     
     res.json({
-      message: 'Image uploadée avec succès',
-      imageUrl,
-      filename: req.file.filename
+      message: 'Images uploadées avec succès',
+      imageUrls,
+      filenames: (req.files as Express.Multer.File[]).map(file => file.filename)
     });
   } catch (error) {
-    console.error('Erreur upload image:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
+    console.error('Erreur upload images:', error);
     res.status(500).json({ 
-      message: 'Erreur lors de l\'upload de l\'image',
+      message: 'Erreur lors de l\'upload des images',
       error: error.message 
     });
   }

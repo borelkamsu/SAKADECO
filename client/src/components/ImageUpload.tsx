@@ -1,168 +1,158 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { X, Upload, Image as ImageIcon } from "lucide-react";
 
 interface ImageUploadProps {
-  onImageUpload: (imageUrl: string) => void;
-  currentImageUrl?: string;
+  onImagesUploaded: (imageUrls: string[]) => void;
+  multiple?: boolean;
+  maxImages?: number;
   className?: string;
 }
 
-export default function ImageUpload({ onImageUpload, currentImageUrl, className }: ImageUploadProps) {
+export default function ImageUpload({ 
+  onImagesUploaded, 
+  multiple = false, 
+  maxImages = 10,
+  className = "" 
+}: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Vérifier le type de fichier
-    if (!file.type.startsWith('image/')) {
-      alert('Veuillez sélectionner une image valide');
-      return;
-    }
-
-    // Vérifier la taille (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('L\'image doit faire moins de 5MB');
-      return;
-    }
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
     setIsUploading(true);
 
     try {
-      // Créer un FormData
       const formData = new FormData();
-      formData.append('image', file);
+      Array.from(files).forEach((file) => {
+        formData.append('images', file);
+      });
 
-      // Récupérer le token admin
       const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('Token admin non trouvé');
-      }
-
-      // Upload l'image
-      const response = await fetch('/api/admin/upload-image', {
+      const response = await fetch('/api/admin/upload-images', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
-        body: formData,
+        body: formData
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors de l\'upload');
+        throw new Error('Upload failed');
       }
 
-      const data = await response.json();
-      
-      // Mettre à jour la prévisualisation
-      setPreviewUrl(data.imageUrl);
-      
-      // Notifier le parent
-      onImageUpload(data.imageUrl);
-      
+      const result = await response.json();
+      const newImages = [...uploadedImages, ...result.imageUrls];
+      setUploadedImages(newImages);
+      onImagesUploaded(newImages);
     } catch (error) {
-      console.error('Erreur upload:', error);
-      alert('Erreur lors de l\'upload de l\'image');
+      console.error('Upload error:', error);
+      alert('Erreur lors de l\'upload des images');
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleRemoveImage = () => {
-    setPreviewUrl(null);
-    onImageUpload('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+  const removeImage = (index: number) => {
+    const newImages = uploadedImages.filter((_, i) => i !== index);
+    setUploadedImages(newImages);
+    onImagesUploaded(newImages);
   };
 
-  const handleClickUpload = () => {
-    fileInputRef.current?.click();
-  };
+  const canUploadMore = multiple ? uploadedImages.length < maxImages : uploadedImages.length === 0;
 
   return (
-    <div className={className}>
-      <Card>
-        <CardContent className="p-4">
-          {previewUrl ? (
-            <div className="space-y-4">
-              <div className="relative">
+    <div className={`space-y-4 ${className}`}>
+      {/* Upload Button */}
+      {canUploadMore && (
+        <Card className="border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors">
+          <CardContent className="p-6">
+            <div className="text-center">
+              <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  {multiple 
+                    ? `Cliquez pour sélectionner jusqu'à ${maxImages} images`
+                    : 'Cliquez pour sélectionner une image'
+                  }
+                </p>
+                <p className="text-xs text-gray-500">
+                  PNG, JPG, GIF jusqu'à 5MB
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="mt-4"
+              >
+                {isUploading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+                    Upload en cours...
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    Sélectionner {multiple ? 'des images' : 'une image'}
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple={multiple}
+        accept="image/*"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+
+      {/* Uploaded Images Preview */}
+      {uploadedImages.length > 0 && (
+        <div className="space-y-4">
+          <h4 className="text-sm font-medium text-gray-700">
+            Images uploadées ({uploadedImages.length})
+          </h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {uploadedImages.map((imageUrl, index) => (
+              <div key={index} className="relative group">
                 <img
-                  src={previewUrl}
-                  alt="Prévisualisation"
-                  className="w-full h-48 object-cover rounded-lg"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "https://via.placeholder.com/400x300?text=Image+non+disponible";
-                  }}
+                  src={imageUrl}
+                  alt={`Image ${index + 1}`}
+                  className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
                 />
                 <Button
                   type="button"
                   variant="destructive"
                   size="sm"
-                  className="absolute top-2 right-2"
-                  onClick={handleRemoveImage}
+                  onClick={() => removeImage(index)}
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="w-3 h-3" />
                 </Button>
+                {index === 0 && (
+                  <div className="absolute bottom-2 left-2">
+                    <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                      Principal
+                    </span>
+                  </div>
+                )}
               </div>
-              <div className="text-center">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClickUpload}
-                  disabled={isUploading}
-                >
-                  {isUploading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
-                  ) : (
-                    <Upload className="h-4 w-4 mr-2" />
-                  )}
-                  {isUploading ? 'Upload en cours...' : 'Changer l\'image'}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center space-y-4">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
-                <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-4">
-                  Cliquez pour sélectionner une image ou glissez-déposez
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClickUpload}
-                  disabled={isUploading}
-                >
-                  {isUploading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
-                  ) : (
-                    <Upload className="h-4 w-4 mr-2" />
-                  )}
-                  {isUploading ? 'Upload en cours...' : 'Sélectionner une image'}
-                </Button>
-              </div>
-              <p className="text-sm text-gray-500">
-                Formats acceptés: JPG, PNG, GIF • Taille max: 5MB
-              </p>
-            </div>
-          )}
-          
-          <Input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-        </CardContent>
-      </Card>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

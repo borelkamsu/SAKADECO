@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,17 +14,28 @@ interface Product {
   price: number;
   category: string;
   subcategory?: string;
-  imageUrl?: string;
+  mainImageUrl: string;
+  additionalImages: string[];
   isCustomizable: boolean;
   isRentable: boolean;
   stockQuantity: number;
   dailyRentalPrice?: number;
-  customizationOptions?: any;
+  customizationOptions?: {
+    [key: string]: {
+      type: 'dropdown' | 'checkbox' | 'text' | 'textarea';
+      label: string;
+      required: boolean;
+      options?: string[];
+      placeholder?: string;
+      maxLength?: number;
+    };
+  };
   createdAt: string;
   updatedAt: string;
 }
 
 export default function Shop() {
+  const [, setLocation] = useLocation();
   const { data: allProducts, isLoading, error } = useQuery<Product[]>({
     queryKey: ["products"],
     queryFn: async () => {
@@ -96,36 +108,63 @@ export default function Shop() {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {products.map((product: Product) => (
-                <Card key={product._id} className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-skd-shop/30">
-                  <div className="aspect-square overflow-hidden rounded-t-lg">
-                    <img 
-                      src={product.imageUrl || "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg font-playfair">{product.name}</CardTitle>
-                    {product.subcategory && (
-                      <Badge variant="secondary" className="w-fit text-xs">
-                        {product.subcategory}
-                      </Badge>
-                    )}
+                <Card 
+                  key={product._id} 
+                  className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-skd-shop/30 cursor-pointer"
+                  onClick={() => setLocation(`/shop/${product._id}`)}
+                >
+                  <CardHeader className="p-0">
+                    <div className="aspect-square overflow-hidden rounded-t-lg">
+                      <img 
+                        src={product.mainImageUrl || "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&h=300&fit=crop"}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">{product.description}</p>
-                    <div className="flex justify-between items-center">
+                  <CardContent className="p-4">
+                    <CardTitle className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
+                      {product.name}
+                    </CardTitle>
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      {product.description}
+                    </p>
+                    <div className="flex items-center justify-between mb-3">
                       <span className="text-xl font-bold text-skd-shop">
                         {product.price.toFixed(2)}€
                       </span>
-                      <Button size="sm" className="bg-skd-shop hover:bg-skd-shop/90 text-white">
-                        <Plus className="w-4 h-4 mr-1" />
-                        Ajouter
+                      <div className="flex space-x-1">
+                        {product.isCustomizable && (
+                          <Badge variant="secondary" className="text-xs">
+                            Personnalisable
+                          </Badge>
+                        )}
+                        {product.isRentable && (
+                          <Badge variant="outline" className="text-xs">
+                            Location
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">
+                        {product.stockQuantity > 0 
+                          ? `${product.stockQuantity} en stock` 
+                          : 'Rupture de stock'
+                        }
+                      </span>
+                      <Button 
+                        size="sm" 
+                        className="bg-skd-shop hover:bg-skd-shop/90 text-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLocation(`/shop/${product._id}`);
+                        }}
+                      >
+                        <ShoppingBag className="w-4 h-4 mr-1" />
+                        Voir détails
                       </Button>
                     </div>
-                    {product.isCustomizable && (
-                      <p className="text-xs text-skd-shop mt-2 font-medium">✨ Personnalisable</p>
-                    )}
                   </CardContent>
                 </Card>
               ))}

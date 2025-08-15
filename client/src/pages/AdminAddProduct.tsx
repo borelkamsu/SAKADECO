@@ -1,197 +1,171 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Package, 
-  ArrowLeft, 
-  Save, 
-  Plus, 
-  X
-} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2, Save, ArrowLeft, X } from "lucide-react";
 import ImageUpload from "@/components/ImageUpload";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface CustomizationOption {
-  type: string;
-  values: string[];
+  type: 'dropdown' | 'checkbox' | 'text' | 'textarea';
+  label: string;
+  required: boolean;
+  options?: string[];
+  placeholder?: string;
+  maxLength?: number;
 }
 
 export default function AdminAddProduct() {
   const [, setLocation] = useLocation();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mainImageUrl, setMainImageUrl] = useState("");
+  const [additionalImages, setAdditionalImages] = useState<string[]>([]);
+  const [customizationOptions, setCustomizationOptions] = useState<Record<string, CustomizationOption>>({});
 
-  // Form state
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
     category: "",
     subcategory: "",
-    imageUrl: "",
     isCustomizable: false,
     isRentable: false,
     stockQuantity: "",
-    dailyRentalPrice: "",
-    isActive: true
+    dailyRentalPrice: ""
   });
 
-  // Customization options
-  const [customizationOptions, setCustomizationOptions] = useState<CustomizationOption[]>([]);
-  const [newOptionType, setNewOptionType] = useState("");
-  const [newOptionValues, setNewOptionValues] = useState("");
-
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleImagesUploaded = (imageUrls: string[]) => {
+    if (imageUrls.length > 0) {
+      setMainImageUrl(imageUrls[0]);
+      setAdditionalImages(imageUrls.slice(1));
+    }
   };
 
   const addCustomizationOption = () => {
-    if (!newOptionType || !newOptionValues) return;
-
-    const values = newOptionValues.split(',').map(v => v.trim()).filter(v => v);
-    
-    setCustomizationOptions(prev => [...prev, {
-      type: newOptionType,
-      values
-    }]);
-
-    setNewOptionType("");
-    setNewOptionValues("");
+    const optionKey = `option_${Date.now()}`;
+    setCustomizationOptions(prev => ({
+      ...prev,
+      [optionKey]: {
+        type: 'dropdown',
+        label: '',
+        required: false,
+        options: []
+      }
+    }));
   };
 
-  const removeCustomizationOption = (index: number) => {
-    setCustomizationOptions(prev => prev.filter((_, i) => i !== index));
+  const updateCustomizationOption = (key: string, field: keyof CustomizationOption, value: any) => {
+    setCustomizationOptions(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [field]: value
+      }
+    }));
+  };
+
+  const removeCustomizationOption = (key: string) => {
+    setCustomizationOptions(prev => {
+      const newOptions = { ...prev };
+      delete newOptions[key];
+      return newOptions;
+    });
+  };
+
+  const addOptionValue = (optionKey: string) => {
+    const newValue = prompt("Entrez la valeur de l'option:");
+    if (newValue) {
+      setCustomizationOptions(prev => ({
+        ...prev,
+        [optionKey]: {
+          ...prev[optionKey],
+          options: [...(prev[optionKey].options || []), newValue]
+        }
+      }));
+    }
+  };
+
+  const removeOptionValue = (optionKey: string, valueIndex: number) => {
+    setCustomizationOptions(prev => ({
+      ...prev,
+      [optionKey]: {
+        ...prev[optionKey],
+        options: prev[optionKey].options?.filter((_, index) => index !== valueIndex)
+      }
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError("");
-    setSuccess("");
+    if (!mainImageUrl) {
+      alert("Veuillez uploader au moins une image principale");
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem("adminToken");
-      if (!token) {
-        setLocation("/admin/login");
-        return;
-      }
-
-      // Build customization options object
-      const customizationOptionsObj: any = {};
-      customizationOptions.forEach(option => {
-        customizationOptionsObj[option.type] = option.values;
-      });
-
-      const response = await fetch("/api/admin/products", {
-        method: "POST",
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch('/api/admin/products', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           ...formData,
-          price: parseFloat(formData.price),
-          stockQuantity: parseInt(formData.stockQuantity),
-          dailyRentalPrice: formData.dailyRentalPrice ? parseFloat(formData.dailyRentalPrice) : undefined,
-          customizationOptions: customizationOptionsObj
-        }),
+          mainImageUrl,
+          additionalImages,
+          customizationOptions
+        })
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.message || "Erreur lors de la création du produit");
+        throw new Error('Erreur lors de la création du produit');
       }
 
-      setSuccess("Produit créé avec succès !");
-      
-      // Reset form after 2 seconds
-      setTimeout(() => {
-        setLocation("/admin/products");
-      }, 2000);
-
+      alert('Produit créé avec succès !');
+      setLocation('/admin/products');
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Erreur lors de la création du produit");
+      console.error('Error:', error);
+      alert('Erreur lors de la création du produit');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const getCategoryLabel = (category: string) => {
-    const categories = {
-      shop: "Boutique",
-      events: "Événements",
-      rent: "Location",
-      crea: "Création",
-      home: "Maison",
-      co: "Co"
-    };
-    return categories[category as keyof typeof categories] || category;
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setLocation("/admin/products")}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Retour</span>
-              </Button>
-              <div className="w-8 h-8 bg-gradient-to-r from-gold to-yellow-500 rounded-lg flex items-center justify-center">
-                <Package className="h-5 w-5 text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-900">
-                Ajouter un Produit
-              </h1>
-            </div>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              onClick={() => setLocation('/admin/products')}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour
+            </Button>
+            <h1 className="text-2xl font-bold text-gray-900">Ajouter un produit</h1>
           </div>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Alerts */}
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
-          {success && (
-            <Alert className="border-green-200 bg-green-50">
-              <AlertDescription className="text-green-800">{success}</AlertDescription>
-            </Alert>
-          )}
-
+        <form onSubmit={handleSubmit} className="space-y-8">
           {/* Basic Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Informations de Base</CardTitle>
+              <CardTitle>Informations de base</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -200,8 +174,7 @@ export default function AdminAddProduct() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    placeholder="Ex: Bouquet de roses personnalisé"
+                    onChange={(e) => handleInputChange('name', e.target.value)}
                     required
                   />
                 </div>
@@ -211,204 +184,256 @@ export default function AdminAddProduct() {
                     id="price"
                     type="number"
                     step="0.01"
-                    min="0"
                     value={formData.price}
-                    onChange={(e) => handleInputChange("price", e.target.value)}
-                    placeholder="29.99"
+                    onChange={(e) => handleInputChange('price', e.target.value)}
                     required
                   />
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="description">Description *</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange("description", e.target.value)}
-                  placeholder="Description détaillée du produit..."
-                  rows={4}
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="category">Catégorie *</Label>
-                  <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
+                  <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner une catégorie" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="shop">Boutique</SelectItem>
-                      <SelectItem value="events">Événements</SelectItem>
                       <SelectItem value="rent">Location</SelectItem>
-                      <SelectItem value="crea">Création</SelectItem>
+                      <SelectItem value="events">Événements</SelectItem>
                       <SelectItem value="home">Maison</SelectItem>
                       <SelectItem value="co">Co</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="subcategory">Sous-catégorie *</Label>
+                  <Label htmlFor="subcategory">Sous-catégorie</Label>
                   <Input
                     id="subcategory"
                     value={formData.subcategory}
-                    onChange={(e) => handleInputChange("subcategory", e.target.value)}
-                    placeholder="Ex: Fleurs, Décoration, etc."
-                    required
+                    onChange={(e) => handleInputChange('subcategory', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="stockQuantity">Quantité en stock</Label>
+                  <Input
+                    id="stockQuantity"
+                    type="number"
+                    value={formData.stockQuantity}
+                    onChange={(e) => handleInputChange('stockQuantity', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="dailyRentalPrice">Prix de location/jour (€)</Label>
+                  <Input
+                    id="dailyRentalPrice"
+                    type="number"
+                    step="0.01"
+                    value={formData.dailyRentalPrice}
+                    onChange={(e) => handleInputChange('dailyRentalPrice', e.target.value)}
                   />
                 </div>
               </div>
-
               <div>
-                <Label>Image du produit *</Label>
-                <ImageUpload
-                  onImageUpload={(imageUrl) => handleInputChange("imageUrl", imageUrl)}
-                  currentImageUrl={formData.imageUrl}
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  rows={4}
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* Stock and Rental */}
+          {/* Images */}
           <Card>
             <CardHeader>
-              <CardTitle>Stock et Location</CardTitle>
+              <CardTitle>Images du produit</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="stockQuantity">Quantité en stock *</Label>
-                  <Input
-                    id="stockQuantity"
-                    type="number"
-                    min="0"
-                    value={formData.stockQuantity}
-                    onChange={(e) => handleInputChange("stockQuantity", e.target.value)}
-                    placeholder="10"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="dailyRentalPrice">Prix de location par jour (€)</Label>
-                  <Input
-                    id="dailyRentalPrice"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.dailyRentalPrice}
-                    onChange={(e) => handleInputChange("dailyRentalPrice", e.target.value)}
-                    placeholder="15.00"
-                    disabled={!formData.isRentable}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="isRentable"
-                    checked={formData.isRentable}
-                    onCheckedChange={(checked) => handleInputChange("isRentable", checked)}
-                  />
-                  <Label htmlFor="isRentable">Disponible à la location</Label>
-                </div>
-              </div>
+            <CardContent>
+              <ImageUpload
+                onImagesUploaded={handleImagesUploaded}
+                multiple={true}
+                maxImages={10}
+              />
             </CardContent>
           </Card>
 
-          {/* Customization Options */}
+          {/* Options */}
           <Card>
             <CardHeader>
-              <CardTitle>Options de Personnalisation</CardTitle>
+              <CardTitle>Options du produit</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-2">
                 <Switch
                   id="isCustomizable"
                   checked={formData.isCustomizable}
-                  onCheckedChange={(checked) => handleInputChange("isCustomizable", checked)}
+                  onCheckedChange={(checked) => handleInputChange('isCustomizable', checked)}
                 />
                 <Label htmlFor="isCustomizable">Produit personnalisable</Label>
               </div>
-
-              {formData.isCustomizable && (
-                <div className="space-y-4">
-                  {/* Existing options */}
-                  {customizationOptions.map((option, index) => (
-                    <div key={index} className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-1">
-                        <span className="font-medium">{option.type}:</span>
-                        <span className="ml-2 text-gray-600">{option.values.join(', ')}</span>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeCustomizationOption(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-
-                  {/* Add new option */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <Input
-                      placeholder="Type (ex: Couleurs, Tailles)"
-                      value={newOptionType}
-                      onChange={(e) => setNewOptionType(e.target.value)}
-                    />
-                    <Input
-                      placeholder="Valeurs (séparées par des virgules)"
-                      value={newOptionValues}
-                      onChange={(e) => setNewOptionValues(e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={addCustomizationOption}
-                      disabled={!newOptionType || !newOptionValues}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Ajouter
-                    </Button>
-                  </div>
-                </div>
-              )}
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isRentable"
+                  checked={formData.isRentable}
+                  onCheckedChange={(checked) => handleInputChange('isRentable', checked)}
+                />
+                <Label htmlFor="isRentable">Produit disponible à la location</Label>
+              </div>
             </CardContent>
           </Card>
 
+          {/* Customization Options */}
+          {formData.isCustomizable && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  Options de personnalisation
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addCustomizationOption}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Ajouter une option
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {Object.entries(customizationOptions).map(([key, option]) => (
+                  <div key={key} className="border rounded-lg p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">Option de personnalisation</h4>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => removeCustomizationOption(key)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Type d'option</Label>
+                        <Select
+                          value={option.type}
+                          onValueChange={(value: any) => updateCustomizationOption(key, 'type', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="dropdown">Menu déroulant</SelectItem>
+                            <SelectItem value="checkbox">Cases à cocher</SelectItem>
+                            <SelectItem value="text">Champ texte</SelectItem>
+                            <SelectItem value="textarea">Zone de texte</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Libellé</Label>
+                        <Input
+                          value={option.label}
+                          onChange={(e) => updateCustomizationOption(key, 'label', e.target.value)}
+                          placeholder="ex: Couleur, Taille, Thème..."
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`required-${key}`}
+                        checked={option.required}
+                        onCheckedChange={(checked) => updateCustomizationOption(key, 'required', checked)}
+                      />
+                      <Label htmlFor={`required-${key}`}>Option obligatoire</Label>
+                    </div>
+
+                    {(option.type === 'dropdown' || option.type === 'checkbox') && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label>Valeurs disponibles</Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addOptionValue(key)}
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Ajouter une valeur
+                          </Button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {option.options?.map((value, index) => (
+                            <Badge key={index} variant="secondary" className="flex items-center space-x-1">
+                              <span>{value}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeOptionValue(key, index)}
+                                className="h-auto p-0 ml-1"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {(option.type === 'text' || option.type === 'textarea') && (
+                      <div className="space-y-2">
+                        <div>
+                          <Label>Placeholder</Label>
+                          <Input
+                            value={option.placeholder || ''}
+                            onChange={(e) => updateCustomizationOption(key, 'placeholder', e.target.value)}
+                            placeholder="ex: Entrez votre message..."
+                          />
+                        </div>
+                        <div>
+                          <Label>Longueur maximale</Label>
+                          <Input
+                            type="number"
+                            value={option.maxLength || ''}
+                            onChange={(e) => updateCustomizationOption(key, 'maxLength', parseInt(e.target.value) || undefined)}
+                            placeholder="ex: 500"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Submit Button */}
-          <div className="flex justify-end space-x-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setLocation("/admin/products")}
-            >
-              Annuler
-            </Button>
+          <div className="flex justify-end">
             <Button
               type="submit"
-              disabled={isLoading}
-              className="bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-500 hover:to-gold text-white"
+              disabled={isSubmitting}
+              className="bg-blue-600 hover:bg-blue-700"
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Création...
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Création en cours...
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4 mr-2" />
+                  <Save className="w-4 h-4 mr-2" />
                   Créer le produit
                 </>
               )}
             </Button>
           </div>
         </form>
-      </main>
+      </div>
     </div>
   );
 }

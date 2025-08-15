@@ -1,32 +1,32 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IProduct extends mongoose.Document {
+export interface IProduct extends Document {
   name: string;
-  description: string;
+  description?: string;
   price: number;
-  category: 'shop' | 'events' | 'rent' | 'crea' | 'home' | 'co';
-  subcategory: string;
-  imageUrl: string;
+  category: string;
+  subcategory?: string;
+  mainImageUrl: string; // Image principale
+  additionalImages: string[]; // Images supplémentaires pour la galerie
   isCustomizable: boolean;
   isRentable: boolean;
   stockQuantity: number;
   dailyRentalPrice?: number;
   customizationOptions: {
-    sizes?: string[];
-    colors?: string[];
-    shapes?: string[];
-    materials?: string[];
-    themes?: string[];
-    text?: boolean;
-    message?: boolean;
-    arrangements?: string[];
+    [key: string]: {
+      type: 'dropdown' | 'checkbox' | 'text' | 'textarea';
+      label: string;
+      required: boolean;
+      options?: string[]; // Pour les dropdowns et checkboxes
+      placeholder?: string; // Pour les champs texte
+      maxLength?: number;
+    };
   };
-  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const productSchema = new mongoose.Schema<IProduct>({
+const ProductSchema = new Schema<IProduct>({
   name: {
     type: String,
     required: true,
@@ -34,7 +34,7 @@ const productSchema = new mongoose.Schema<IProduct>({
   },
   description: {
     type: String,
-    required: true
+    trim: true
   },
   price: {
     type: Number,
@@ -44,17 +44,19 @@ const productSchema = new mongoose.Schema<IProduct>({
   category: {
     type: String,
     required: true,
-    enum: ['shop', 'events', 'rent', 'crea', 'home', 'co']
+    enum: ['shop', 'rent', 'events', 'home', 'co']
   },
   subcategory: {
     type: String,
-    required: true,
     trim: true
   },
-  imageUrl: {
+  mainImageUrl: {
     type: String,
     required: true
   },
+  additionalImages: [{
+    type: String
+  }],
   isCustomizable: {
     type: Boolean,
     default: false
@@ -65,30 +67,37 @@ const productSchema = new mongoose.Schema<IProduct>({
   },
   stockQuantity: {
     type: Number,
-    required: true,
-    min: 0,
-    default: 0
+    default: 0,
+    min: 0
   },
   dailyRentalPrice: {
     type: Number,
     min: 0
   },
   customizationOptions: {
-    sizes: [String],
-    colors: [String],
-    shapes: [String],
-    materials: [String],
-    themes: [String],
-    text: Boolean,
-    message: Boolean,
-    arrangements: [String]
-  },
-  isActive: {
-    type: Boolean,
-    default: true
+    type: Map,
+    of: {
+      type: {
+        type: String,
+        enum: ['dropdown', 'checkbox', 'text', 'textarea'],
+        required: true
+      },
+      label: {
+        type: String,
+        required: true
+      },
+      required: {
+        type: Boolean,
+        default: false
+      },
+      options: [String], // Pour les dropdowns et checkboxes
+      placeholder: String, // Pour les champs texte
+      maxLength: Number
+    },
+    default: {}
   }
 }, {
   timestamps: true
 });
 
-export const Product = mongoose.model<IProduct>('Product', productSchema);
+export const Product = mongoose.model<IProduct>('Product', ProductSchema);

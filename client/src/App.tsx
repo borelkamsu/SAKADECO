@@ -25,6 +25,7 @@ import AdminProductDetail from "@/pages/AdminProductDetail";
 import AdminEditProduct from "@/pages/AdminEditProduct";
 import AdminOrders from "@/pages/AdminOrders";
 import AdminUsers from "@/pages/AdminUsers";
+import ProductDetail from "@/pages/ProductDetail";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -34,6 +35,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/shop" component={Shop} />
+      <Route path="/shop/:id" component={ProductDetail} />
       <Route path="/crea" component={Crea} />
       <Route path="/rent" component={Rent} />
       <Route path="/events" component={Events} />
