@@ -23,6 +23,8 @@ import AdminProducts from "@/pages/AdminProducts";
 import AdminAddProduct from "@/pages/AdminAddProduct";
 import AdminProductDetail from "@/pages/AdminProductDetail";
 import AdminEditProduct from "@/pages/AdminEditProduct";
+import AdminOrders from "@/pages/AdminOrders";
+import AdminUsers from "@/pages/AdminUsers";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -47,6 +49,8 @@ function Router() {
              <Route path="/admin/products/add" component={AdminAddProduct} />
              <Route path="/admin/products/:id" component={AdminProductDetail} />
              <Route path="/admin/products/:id/edit" component={AdminEditProduct} />
+             <Route path="/admin/orders" component={AdminOrders} />
+             <Route path="/admin/users" component={AdminUsers} />
       <Route component={NotFound} />
     </Switch>
   );
