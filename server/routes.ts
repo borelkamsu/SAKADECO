@@ -129,7 +129,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Create missing product images
+  // List all products with their image URLs
+  app.get('/api/products-images', async (req, res) => {
+    try {
+      const { Product } = await import('./models/Product');
+      const products = await Product.find({});
+      
+      const productsWithImages = products.map(product => ({
+        id: product._id,
+        name: product.name,
+        mainImageUrl: product.mainImageUrl,
+        additionalImages: product.additionalImages || [],
+        hasMainImage: !!product.mainImageUrl,
+        hasAdditionalImages: product.additionalImages && product.additionalImages.length > 0
+      }));
+      
+      res.json({
+        totalProducts: products.length,
+        products: productsWithImages
+      });
+    } catch (error) {
+      console.error('Error fetching products with images:', error);
+      res.status(500).json({
+        error: error.message
+      });
+    }
+  });
+
+  // Create missing product images - public endpoint
   app.post('/api/create-missing-images', async (req, res) => {
     try {
       const fs = await import('fs');
