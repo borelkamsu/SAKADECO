@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { Admin } from '../models/Admin';
 import { Product } from '../models/Product';
 import { adminAuth, AdminRequest, requireSuperAdmin } from '../middleware/adminAuth';
+import upload from '../middleware/upload';
 
 const router = Router();
 
@@ -260,6 +261,27 @@ router.get('/dashboard', adminAuth, async (req: AdminRequest, res: Response) => 
   } catch (error) {
     console.error('Erreur récupération stats:', error);
     res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// Upload image route
+router.post('/upload-image', adminAuth, upload.single('image'), async (req: AdminRequest, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Aucune image fournie' });
+    }
+
+    // Construire l'URL de l'image
+    const imageUrl = `/uploads/products/${req.file.filename}`;
+    
+    res.json({
+      message: 'Image uploadée avec succès',
+      imageUrl,
+      filename: req.file.filename
+    });
+  } catch (error) {
+    console.error('Erreur upload image:', error);
+    res.status(500).json({ message: 'Erreur lors de l\'upload de l\'image' });
   }
 });
 

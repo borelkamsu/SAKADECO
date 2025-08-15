@@ -12,9 +12,9 @@ import {
   ArrowLeft, 
   Save, 
   Plus, 
-  X,
-  Image as ImageIcon
+  X
 } from "lucide-react";
+import ImageUpload from "@/components/ImageUpload";
 import {
   Select,
   SelectContent,
@@ -262,25 +262,11 @@ export default function AdminAddProduct() {
               </div>
 
               <div>
-                <Label htmlFor="imageUrl">URL de l'image *</Label>
-                <div className="flex space-x-2">
-                  <Input
-                    id="imageUrl"
-                    value={formData.imageUrl}
-                    onChange={(e) => handleInputChange("imageUrl", e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => window.open(formData.imageUrl, '_blank')}
-                    disabled={!formData.imageUrl}
-                  >
-                    <ImageIcon className="h-4 w-4" />
-                  </Button>
-                </div>
+                <Label>Image du produit *</Label>
+                <ImageUpload
+                  onImageUpload={(imageUrl) => handleInputChange("imageUrl", imageUrl)}
+                  currentImageUrl={formData.imageUrl}
+                />
               </div>
             </CardContent>
           </Card>

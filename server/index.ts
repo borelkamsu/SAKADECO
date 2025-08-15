@@ -38,10 +38,17 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Connect to MongoDB (non-blocking)
-  connectDB().catch(console.error);
-  
-  const server = await registerRoutes(app);
+  try {
+    console.log("🚀 Starting SakaDeco server...");
+    console.log("📊 Environment:", process.env.NODE_ENV);
+    console.log("🔌 Database URL:", process.env.DATABASE_URL ? "Configured" : "Missing");
+    
+    // Connect to MongoDB (non-blocking)
+    connectDB().catch(console.error);
+    
+    console.log("🛣️  Registering routes...");
+    const server = await registerRoutes(app);
+    console.log("✅ Routes registered successfully");
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -57,6 +64,9 @@ app.use((req, res, next) => {
     // Serve static files from the dist directory
     app.use(express.static('dist'));
     
+    // Serve uploaded files
+    app.use('/uploads', express.static('uploads'));
+    
     // Serve index.html for all non-API routes (SPA routing)
     app.get('*', (req, res) => {
       if (!req.path.startsWith('/api')) {
@@ -66,18 +76,28 @@ app.use((req, res, next) => {
   } else {
     // Development: setup vite
     await setupVite(app, server);
+    
+    // Serve uploaded files in development
+    app.use('/uploads', express.static('uploads'));
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+    // ALWAYS serve the app on the port specified in the environment variable PORT
+    // Other ports are firewalled. Default to 5000 if not specified.
+    // this serves both the API and the client.
+    // It is the only port that is not firewalled.
+    const port = parseInt(process.env.PORT || '5000', 10);
+    console.log("🌐 Starting server on port:", port);
+    
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`serving on port ${port}`);
+      console.log("🎉 Server started successfully!");
+    });
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    process.exit(1);
+  }
 })();
