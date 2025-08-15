@@ -19,6 +19,8 @@ import About from "@/pages/About";
 import Themes from "@/pages/Themes";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
+import AdminProducts from "@/pages/AdminProducts";
+import AdminAddProduct from "@/pages/AdminAddProduct";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -36,9 +38,11 @@ function Router() {
       <Route path="/checkout" component={Checkout} />
       <Route path="/contact" component={Contact} />
       <Route path="/about" component={About} />
-      <Route path="/themes" component={Themes} />
-      <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin/dashboard" component={AdminDashboard} />
+                   <Route path="/themes" component={Themes} />
+             <Route path="/admin/login" component={AdminLogin} />
+             <Route path="/admin/dashboard" component={AdminDashboard} />
+             <Route path="/admin/products" component={AdminProducts} />
+             <Route path="/admin/products/add" component={AdminAddProduct} />
       <Route component={NotFound} />
     </Switch>
   );
