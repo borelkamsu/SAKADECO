@@ -263,4 +263,53 @@ router.get('/dashboard', adminAuth, async (req: AdminRequest, res: Response) => 
   }
 });
 
+// Temporary route to create admin (remove in production)
+router.post('/setup', async (req: Request, res: Response) => {
+  try {
+    const { secret } = req.body;
+    
+    // Simple security check
+    if (secret !== 'sakadeco-setup-2024') {
+      return res.status(401).json({ message: 'Secret invalide' });
+    }
+
+    // Check if admin already exists
+    const existingAdmin = await Admin.findOne({ email: 'admin@sdk.com' });
+    
+    if (existingAdmin) {
+      return res.json({ 
+        message: 'Administrateur existe déjà',
+        admin: {
+          email: existingAdmin.email,
+          name: existingAdmin.name,
+          role: existingAdmin.role
+        }
+      });
+    }
+
+    // Create new admin
+    const admin = new Admin({
+      email: 'admin@sdk.com',
+      password: 'Admin123!',
+      name: 'Administrateur SakaDeco',
+      role: 'super_admin',
+      isActive: true
+    });
+
+    await admin.save();
+
+    res.json({
+      message: 'Administrateur créé avec succès',
+      admin: {
+        email: admin.email,
+        name: admin.name,
+        role: admin.role
+      }
+    });
+  } catch (error) {
+    console.error('Erreur création admin:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
 export default router;
