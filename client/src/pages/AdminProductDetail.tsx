@@ -24,14 +24,21 @@ interface Product {
   price: number;
   category: string;
   subcategory: string;
-  imageUrl: string;
+  mainImageUrl: string;
+  additionalImages: string[];
   isCustomizable: boolean;
   isRentable: boolean;
   stockQuantity: number;
   dailyRentalPrice?: number;
-  isActive: boolean;
   customizationOptions?: {
-    [key: string]: string[];
+    [key: string]: {
+      type: 'dropdown' | 'checkbox' | 'text' | 'textarea';
+      label: string;
+      required: boolean;
+      options?: string[];
+      placeholder?: string;
+      maxLength?: number;
+    };
   };
   createdAt: string;
   updatedAt: string;
@@ -216,15 +223,15 @@ export default function AdminProductDetail() {
           <Card>
             <CardContent className="p-0">
               <div className="aspect-square bg-gray-200 rounded-t-lg overflow-hidden">
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%23f3f4f6'/%3E%3Ctext x='300' y='300' text-anchor='middle' dy='.3em' fill='%236b7280' font-size='24'%3EImage non disponible%3C/text%3E%3C/svg%3E";
-                  }}
-                />
+                                 <img
+                   src={product.mainImageUrl}
+                   alt={product.name}
+                   className="w-full h-full object-cover"
+                   onError={(e) => {
+                     const target = e.target as HTMLImageElement;
+                     target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%23f3f4f6'/%3E%3Ctext x='300' y='300' text-anchor='middle' dy='.3em' fill='%236b7280' font-size='24'%3EImage non disponible%3C/text%3E%3C/svg%3E";
+                   }}
+                 />
               </div>
             </CardContent>
           </Card>
@@ -290,33 +297,50 @@ export default function AdminProductDetail() {
               </CardContent>
             </Card>
 
-            {/* Customization Options */}
-            {product.isCustomizable && product.customizationOptions && Object.keys(product.customizationOptions).length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Settings className="h-5 w-5" />
-                    <span>Options de Personnalisation</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {Object.entries(product.customizationOptions).map(([type, values]) => (
-                      <div key={type} className="p-3 bg-gray-50 rounded-lg">
-                        <h5 className="font-medium text-gray-900 mb-2">{type}</h5>
-                        <div className="flex flex-wrap gap-2">
-                          {values.map((value, index) => (
-                            <Badge key={index} variant="outline">
-                              {value}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                         {/* Customization Options */}
+             {product.isCustomizable && product.customizationOptions && Object.keys(product.customizationOptions).length > 0 && (
+               <Card>
+                 <CardHeader>
+                   <CardTitle className="flex items-center space-x-2">
+                     <Settings className="h-5 w-5" />
+                     <span>Options de Personnalisation</span>
+                   </CardTitle>
+                 </CardHeader>
+                 <CardContent>
+                   <div className="space-y-3">
+                     {Object.entries(product.customizationOptions).map(([key, option]) => (
+                       <div key={key} className="p-3 bg-gray-50 rounded-lg">
+                         <div className="flex items-center justify-between mb-2">
+                           <h5 className="font-medium text-gray-900">{option.label}</h5>
+                           <Badge variant="outline" className="text-xs">
+                             {option.type}
+                           </Badge>
+                         </div>
+                         {option.type === 'dropdown' || option.type === 'checkbox' ? (
+                           <div className="flex flex-wrap gap-2">
+                             {option.options?.map((value, index) => (
+                               <Badge key={index} variant="secondary" className="text-xs">
+                                 {value}
+                               </Badge>
+                             ))}
+                           </div>
+                         ) : (
+                           <div className="text-sm text-gray-600">
+                             {option.placeholder && <p>Placeholder: {option.placeholder}</p>}
+                             {option.maxLength && <p>Longueur max: {option.maxLength} caractères</p>}
+                           </div>
+                         )}
+                         {option.required && (
+                           <Badge variant="destructive" className="text-xs mt-2">
+                             Obligatoire
+                           </Badge>
+                         )}
+                       </div>
+                     ))}
+                   </div>
+                 </CardContent>
+               </Card>
+             )}
 
             {/* Product Status */}
             <Card>
@@ -328,12 +352,12 @@ export default function AdminProductDetail() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Statut</span>
-                    <Badge variant={product.isActive ? "default" : "secondary"}>
-                      {product.isActive ? "Actif" : "Inactif"}
-                    </Badge>
-                  </div>
+                                     <div className="flex justify-between items-center">
+                     <span className="text-gray-600">Statut</span>
+                     <Badge variant="default">
+                       Actif
+                     </Badge>
+                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Créé le</span>
                     <span className="text-sm text-gray-500">

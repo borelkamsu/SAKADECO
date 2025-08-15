@@ -29,12 +29,12 @@ interface Product {
   price: number;
   category: string;
   subcategory: string;
-  imageUrl: string;
+  mainImageUrl: string;
+  additionalImages: string[];
   isCustomizable: boolean;
   isRentable: boolean;
   stockQuantity: number;
   dailyRentalPrice?: number;
-  isActive: boolean;
   createdAt: string;
 }
 
@@ -224,15 +224,15 @@ export default function AdminProducts() {
           {products.map((product) => (
             <Card key={product._id} className="hover:shadow-lg transition-shadow">
               <div className="aspect-video bg-gray-200 rounded-t-lg overflow-hidden">
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='200' y='150' text-anchor='middle' dy='.3em' fill='%236b7280' font-size='16'%3EImage non disponible%3C/text%3E%3C/svg%3E";
-                  }}
-                />
+                                 <img
+                   src={product.mainImageUrl}
+                   alt={product.name}
+                   className="w-full h-full object-cover"
+                   onError={(e) => {
+                     const target = e.target as HTMLImageElement;
+                     target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='200' y='150' text-anchor='middle' dy='.3em' fill='%236b7280' font-size='16'%3EImage non disponible%3C/text%3E%3C/svg%3E";
+                   }}
+                 />
               </div>
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">

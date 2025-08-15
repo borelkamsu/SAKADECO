@@ -31,17 +31,17 @@ interface Order {
     email: string;
     phone?: string;
   };
-  items: Array<{
-    product: {
-      name: string;
-      price: number;
-      imageUrl: string;
-    };
-    quantity: number;
-    customizationOptions?: {
-      [key: string]: string;
-    };
-  }>;
+     items: Array<{
+     product: {
+       name: string;
+       price: number;
+       mainImageUrl: string;
+     };
+     quantity: number;
+     customizationOptions?: {
+       [key: string]: string;
+     };
+   }>;
   totalAmount: number;
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
@@ -290,15 +290,15 @@ export default function AdminOrders() {
                   <div className="space-y-2">
                     {order.items.map((item, index) => (
                       <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <img
-                          src={item.product.imageUrl}
-                          alt={item.product.name}
-                          className="w-12 h-12 object-cover rounded"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23f3f4f6'/%3E%3Ctext x='24' y='24' text-anchor='middle' dy='.3em' fill='%236b7280' font-size='10'%3EImage%3C/text%3E%3C/svg%3E";
-                          }}
-                        />
+                                                 <img
+                           src={item.product.mainImageUrl}
+                           alt={item.product.name}
+                           className="w-12 h-12 object-cover rounded"
+                           onError={(e) => {
+                             const target = e.target as HTMLImageElement;
+                             target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23f3f4f6'/%3E%3Ctext x='24' y='24' text-anchor='middle' dy='.3em' fill='%236b7280' font-size='10'%3EImage%3C/text%3E%3C/svg%3E";
+                           }}
+                         />
                         <div className="flex-1">
                           <h4 className="font-medium">{item.product.name}</h4>
                           <p className="text-sm text-gray-600">
