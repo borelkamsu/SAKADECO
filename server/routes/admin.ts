@@ -265,14 +265,35 @@ router.get('/dashboard', adminAuth, async (req: AdminRequest, res: Response) => 
 });
 
 // Upload image route
-router.post('/upload-image', adminAuth, upload.single('image'), async (req: AdminRequest, res: Response) => {
+router.post('/upload-image', adminAuth, (req: AdminRequest, res: Response, next) => {
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      console.error('Multer error:', err);
+      return res.status(400).json({ 
+        message: 'Erreur lors de l\'upload de l\'image',
+        error: err.message 
+      });
+    }
+    next();
+  });
+}, async (req: AdminRequest, res: Response) => {
   try {
+    console.log('Upload image request received');
+    console.log('File:', req.file);
+    console.log('Headers:', req.headers);
+    
     if (!req.file) {
+      console.log('No file provided');
       return res.status(400).json({ message: 'Aucune image fournie' });
     }
 
+    console.log('File uploaded successfully:', req.file.filename);
+    console.log('File path:', req.file.path);
+
     // Construire l'URL de l'image
     const imageUrl = `/uploads/products/${req.file.filename}`;
+    
+    console.log('Image URL:', imageUrl);
     
     res.json({
       message: 'Image uploadée avec succès',
@@ -281,7 +302,38 @@ router.post('/upload-image', adminAuth, upload.single('image'), async (req: Admi
     });
   } catch (error) {
     console.error('Erreur upload image:', error);
-    res.status(500).json({ message: 'Erreur lors de l\'upload de l\'image' });
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    res.status(500).json({ 
+      message: 'Erreur lors de l\'upload de l\'image',
+      error: error.message 
+    });
+  }
+});
+
+// Test upload directory
+router.get('/test-upload-dir', adminAuth, async (req: AdminRequest, res: Response) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    
+    const uploadDir = 'uploads/products/';
+    const exists = fs.existsSync(uploadDir);
+    const isDir = exists ? fs.statSync(uploadDir).isDirectory() : false;
+    
+    res.json({
+      uploadDir,
+      exists,
+      isDirectory: isDir,
+      currentDir: process.cwd(),
+      files: exists ? fs.readdirSync(uploadDir) : []
+    });
+  } catch (error) {
+    console.error('Test upload dir error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
