@@ -59,12 +59,12 @@ export default function AdminProducts() {
   const fetchProducts = async () => {
     try {
       const token = localStorage.getItem("adminToken");
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: "10",
-        ...(searchTerm && { search: searchTerm }),
-        ...(categoryFilter && { category: categoryFilter })
-      });
+             const params = new URLSearchParams({
+         page: currentPage.toString(),
+         limit: "10",
+         ...(searchTerm && { search: searchTerm }),
+         ...(categoryFilter && categoryFilter !== "all" && { category: categoryFilter })
+       });
 
       const response = await fetch(`/api/admin/products?${params}`, {
         headers: {
@@ -200,15 +200,15 @@ export default function AdminProducts() {
                 <SelectTrigger>
                   <SelectValue placeholder="Toutes les catégories" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Toutes les catégories</SelectItem>
-                  <SelectItem value="shop">Boutique</SelectItem>
-                  <SelectItem value="events">Événements</SelectItem>
-                  <SelectItem value="rent">Location</SelectItem>
-                  <SelectItem value="crea">Création</SelectItem>
-                  <SelectItem value="home">Maison</SelectItem>
-                  <SelectItem value="co">Co</SelectItem>
-                </SelectContent>
+                                 <SelectContent>
+                   <SelectItem value="all">Toutes les catégories</SelectItem>
+                   <SelectItem value="shop">Boutique</SelectItem>
+                   <SelectItem value="events">Événements</SelectItem>
+                   <SelectItem value="rent">Location</SelectItem>
+                   <SelectItem value="crea">Création</SelectItem>
+                   <SelectItem value="home">Maison</SelectItem>
+                   <SelectItem value="co">Co</SelectItem>
+                 </SelectContent>
               </Select>
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">
@@ -334,7 +334,7 @@ export default function AdminProducts() {
               Aucun produit trouvé
             </h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm || categoryFilter 
+              {searchTerm || (categoryFilter && categoryFilter !== "all")
                 ? "Aucun produit ne correspond à vos critères de recherche."
                 : "Vous n'avez pas encore de produits. Commencez par en ajouter un !"
               }

@@ -76,12 +76,12 @@ export default function AdminOrders() {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem("adminToken");
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: "10",
-        ...(searchTerm && { search: searchTerm }),
-        ...(statusFilter && { status: statusFilter })
-      });
+             const params = new URLSearchParams({
+         page: currentPage.toString(),
+         limit: "10",
+         ...(searchTerm && { search: searchTerm }),
+         ...(statusFilter && statusFilter !== "all" && { status: statusFilter })
+       });
 
       const response = await fetch(`/api/admin/orders?${params}`, {
         headers: {
@@ -227,15 +227,15 @@ export default function AdminOrders() {
                 <SelectTrigger>
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Tous les statuts</SelectItem>
-                  <SelectItem value="pending">En attente</SelectItem>
-                  <SelectItem value="confirmed">Confirmée</SelectItem>
-                  <SelectItem value="processing">En traitement</SelectItem>
-                  <SelectItem value="shipped">Expédiée</SelectItem>
-                  <SelectItem value="delivered">Livrée</SelectItem>
-                  <SelectItem value="cancelled">Annulée</SelectItem>
-                </SelectContent>
+                                 <SelectContent>
+                   <SelectItem value="all">Tous les statuts</SelectItem>
+                   <SelectItem value="pending">En attente</SelectItem>
+                   <SelectItem value="confirmed">Confirmée</SelectItem>
+                   <SelectItem value="processing">En traitement</SelectItem>
+                   <SelectItem value="shipped">Expédiée</SelectItem>
+                   <SelectItem value="delivered">Livrée</SelectItem>
+                   <SelectItem value="cancelled">Annulée</SelectItem>
+                 </SelectContent>
               </Select>
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">
@@ -394,10 +394,10 @@ export default function AdminOrders() {
               Aucune commande trouvée
             </h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm || statusFilter 
-                ? "Aucune commande ne correspond à vos critères de recherche."
-                : "Vous n'avez pas encore de commandes."
-              }
+                             {searchTerm || (statusFilter && statusFilter !== "all")
+                 ? "Aucune commande ne correspond à vos critères de recherche."
+                 : "Vous n'avez pas encore de commandes."
+               }
             </p>
           </div>
         )}

@@ -65,12 +65,12 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("adminToken");
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: "10",
-        ...(searchTerm && { search: searchTerm }),
-        ...(roleFilter && { role: roleFilter })
-      });
+             const params = new URLSearchParams({
+         page: currentPage.toString(),
+         limit: "10",
+         ...(searchTerm && { search: searchTerm }),
+         ...(roleFilter && roleFilter !== "all" && { role: roleFilter })
+       });
 
       const response = await fetch(`/api/admin/users?${params}`, {
         headers: {
@@ -186,11 +186,11 @@ export default function AdminUsers() {
                 <SelectTrigger>
                   <SelectValue placeholder="Tous les rôles" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Tous les rôles</SelectItem>
-                  <SelectItem value="user">Utilisateurs</SelectItem>
-                  <SelectItem value="admin">Administrateurs</SelectItem>
-                </SelectContent>
+                                 <SelectContent>
+                   <SelectItem value="all">Tous les rôles</SelectItem>
+                   <SelectItem value="user">Utilisateurs</SelectItem>
+                   <SelectItem value="admin">Administrateurs</SelectItem>
+                 </SelectContent>
               </Select>
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">
@@ -322,10 +322,10 @@ export default function AdminUsers() {
               Aucun utilisateur trouvé
             </h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm || roleFilter 
-                ? "Aucun utilisateur ne correspond à vos critères de recherche."
-                : "Vous n'avez pas encore d'utilisateurs."
-              }
+                             {searchTerm || (roleFilter && roleFilter !== "all")
+                 ? "Aucun utilisateur ne correspond à vos critères de recherche."
+                 : "Vous n'avez pas encore d'utilisateurs."
+               }
             </p>
           </div>
         )}
