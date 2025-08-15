@@ -305,12 +305,45 @@ router.get('/test-upload-dir', adminAuth, async (req: AdminRequest, res: Respons
     const exists = fs.existsSync(uploadDir);
     const isDir = exists ? fs.statSync(uploadDir).isDirectory() : false;
     
+    // Vérifier les permissions
+    let permissions = 'unknown';
+    if (exists) {
+      try {
+        fs.accessSync(uploadDir, fs.constants.R_OK | fs.constants.W_OK);
+        permissions = 'read-write';
+      } catch (err) {
+        permissions = 'no-access';
+      }
+    }
+    
+    // Lister les fichiers avec leurs tailles
+    let files = [];
+    if (exists && isDir) {
+      try {
+        const fileList = fs.readdirSync(uploadDir);
+        files = fileList.map(filename => {
+          const filePath = path.join(uploadDir, filename);
+          const stats = fs.statSync(filePath);
+          return {
+            name: filename,
+            size: stats.size,
+            created: stats.birthtime,
+            modified: stats.mtime
+          };
+        });
+      } catch (err) {
+        files = [{ error: err.message }];
+      }
+    }
+    
     res.json({
       uploadDir,
       exists,
       isDirectory: isDir,
+      permissions,
       currentDir: process.cwd(),
-      files: exists ? fs.readdirSync(uploadDir) : []
+      files,
+      absolutePath: path.resolve(uploadDir)
     });
   } catch (error) {
     console.error('Test upload dir error:', error);
@@ -364,6 +397,39 @@ router.post('/setup', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Erreur création admin:', error);
     res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// Test image access
+router.get('/test-image/:filename', adminAuth, async (req: AdminRequest, res: Response) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    
+    const filename = req.params.filename;
+    const imagePath = path.join('uploads/products', filename);
+    
+    if (!fs.existsSync(imagePath)) {
+      return res.status(404).json({ 
+        error: 'Image not found',
+        path: imagePath,
+        absolutePath: path.resolve(imagePath)
+      });
+    }
+    
+    const stats = fs.statSync(imagePath);
+    
+    res.json({
+      filename,
+      path: imagePath,
+      absolutePath: path.resolve(imagePath),
+      size: stats.size,
+      exists: true,
+      accessible: true
+    });
+  } catch (error) {
+    console.error('Test image access error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
