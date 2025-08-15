@@ -46,6 +46,24 @@ app.use((req, res, next) => {
     // Connect to MongoDB (non-blocking)
     connectDB().catch(console.error);
     
+    // Create missing images for all products (non-blocking)
+    if (process.env.NODE_ENV === 'development') {
+      setTimeout(async () => {
+        try {
+          console.log('🖼️  Checking for missing product images...');
+          const response = await fetch('http://localhost:5000/api/create-missing-images', {
+            method: 'POST'
+          });
+          if (response.ok) {
+            const result = await response.json();
+            console.log(`✅ Images check completed: ${result.totalCreated} created, ${result.totalExisting} existing`);
+          }
+        } catch (error) {
+          console.log('⚠️  Could not check for missing images (server not ready yet)');
+        }
+      }, 3000); // Wait 3 seconds for server to be ready
+    }
+    
     console.log("🛣️  Registering routes...");
     const server = await registerRoutes(app);
     console.log("✅ Routes registered successfully");

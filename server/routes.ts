@@ -156,6 +156,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create test images for all products - public endpoint
+  app.post('/api/create-test-images', async (req, res) => {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      const uploadDir = 'uploads/products/';
+      if (!fs.default.existsSync(uploadDir)) {
+        fs.default.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      // Créer une image de test simple (1x1 pixel PNG en base64)
+      const testImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+      const testImageBuffer = Buffer.from(testImageBase64, 'base64');
+
+      // Récupérer tous les produits de la base de données
+      const { Product } = await import('./models/Product');
+      const products = await Product.find({});
+      
+      const createdImages = [];
+      const existingImages = [];
+
+      for (const product of products) {
+        // Créer une image de test pour chaque produit
+        const testImageName = `product-${product._id}-test.jpg`;
+        const filePath = path.default.join(uploadDir, testImageName);
+        
+        if (!fs.default.existsSync(filePath)) {
+          fs.default.writeFileSync(filePath, testImageBuffer);
+          createdImages.push(testImageName);
+        } else {
+          existingImages.push(testImageName);
+        }
+
+        // Mettre à jour le produit avec l'image de test s'il n'en a pas
+        if (!product.mainImageUrl) {
+          product.mainImageUrl = `/uploads/products/${testImageName}`;
+          await product.save();
+          console.log(`✅ Updated product ${product.name} with test image`);
+        }
+      }
+
+      res.json({
+        message: 'Images de test créées avec succès',
+        createdImages,
+        existingImages,
+        totalCreated: createdImages.length,
+        totalExisting: existingImages.length,
+        totalProducts: products.length
+      });
+    } catch (error) {
+      console.error('Erreur lors de la création des images de test:', error);
+      res.status(500).json({
+        error: error.message,
+        stack: error.stack
+      });
+    }
+  });
+
   // Create missing product images - public endpoint
   app.post('/api/create-missing-images', async (req, res) => {
     try {
