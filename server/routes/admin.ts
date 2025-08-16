@@ -160,6 +160,19 @@ router.post('/products', adminAuth, upload.single('image'), async (req: AdminReq
       });
     }
 
+    // Parser customizationOptions si c'est une chaîne JSON
+    let parsedCustomizationOptions = {};
+    if (customizationOptions) {
+      try {
+        parsedCustomizationOptions = typeof customizationOptions === 'string' 
+          ? JSON.parse(customizationOptions) 
+          : customizationOptions;
+      } catch (parseError) {
+        console.warn('⚠️  Erreur parsing customizationOptions:', parseError);
+        parsedCustomizationOptions = {};
+      }
+    }
+
     const product = new Product({
       name: name.trim(),
       description: description.trim(),
@@ -172,7 +185,7 @@ router.post('/products', adminAuth, upload.single('image'), async (req: AdminReq
       isRentable: isRentable === 'true',
       stockQuantity: parseInt(stockQuantity) || 0,
       dailyRentalPrice: dailyRentalPrice ? parseFloat(dailyRentalPrice) : undefined,
-      customizationOptions: customizationOptions || {}
+      customizationOptions: parsedCustomizationOptions
     });
 
     await product.save();
