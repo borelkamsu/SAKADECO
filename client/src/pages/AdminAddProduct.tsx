@@ -134,6 +134,19 @@ export default function AdminAddProduct() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation côté client
+    const errors = [];
+    if (!formData.name?.trim()) errors.push('Le nom est requis');
+    if (!formData.description?.trim()) errors.push('La description est requise');
+    if (!formData.price || formData.price <= 0) errors.push('Le prix doit être supérieur à 0');
+    if (!formData.category?.trim()) errors.push('La catégorie est requise');
+    
+    if (errors.length > 0) {
+      alert('Erreurs de validation:\n' + errors.join('\n'));
+      return;
+    }
+    
     if (!mainImageUrl) {
       alert("Veuillez uploader au moins une image principale");
       return;

@@ -140,12 +140,25 @@ router.post('/products', adminAuth, upload.single('image'), async (req: AdminReq
       console.log('📸 Aucun fichier uploadé, utilisation de mainImageUrl fourni');
     }
 
+    // Validation des champs requis
+    if (!name || !description || !price || !category) {
+      return res.status(400).json({
+        message: 'Champs requis manquants',
+        errors: {
+          name: !name ? 'Le nom est requis' : undefined,
+          description: !description ? 'La description est requise' : undefined,
+          price: !price ? 'Le prix est requis' : undefined,
+          category: !category ? 'La catégorie est requise' : undefined
+        }
+      });
+    }
+
     const product = new Product({
-      name,
-      description,
+      name: name.trim(),
+      description: description.trim(),
       price: parseFloat(price),
-      category,
-      subcategory,
+      category: category.trim(),
+      subcategory: subcategory ? subcategory.trim() : undefined,
       mainImageUrl: finalMainImageUrl,
       additionalImages: additionalImages || [],
       isCustomizable: isCustomizable === 'true' || isCustomizable === true,
@@ -159,8 +172,17 @@ router.post('/products', adminAuth, upload.single('image'), async (req: AdminReq
     console.log('✅ Produit créé avec succès, image:', finalMainImageUrl);
     res.status(201).json(product);
   } catch (error) {
-    console.error('Error creating product:', error);
-    res.status(500).json({ message: 'Error creating product', error: error.message });
+    console.error('❌ Erreur création produit:', error);
+    console.error('❌ Stack trace:', error.stack);
+    console.error('❌ Variables d\'environnement:');
+    console.error('  - CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
+    console.error('  - CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY);
+    console.error('  - CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET ? 'Configurée' : 'Manquante');
+    res.status(500).json({ 
+      message: 'Erreur lors de la création du produit', 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
