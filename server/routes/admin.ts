@@ -12,7 +12,14 @@ const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME &&
                               process.env.CLOUDINARY_API_KEY && 
                               process.env.CLOUDINARY_API_SECRET &&
                               process.env.CLOUDINARY_CLOUD_NAME !== 'votre_cloud_name' &&
-                              process.env.CLOUDINARY_API_KEY !== 'votre_api_key';
+                              process.env.CLOUDINARY_API_KEY !== 'votre_api_key' &&
+                              process.env.CLOUDINARY_API_SECRET !== 'votre_api_secret_cloudinary';
+
+console.log('🔧 Configuration Cloudinary sur Render :');
+console.log('  - CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME || 'MANQUANTE');
+console.log('  - CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY || 'MANQUANTE');
+console.log('  - CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET ? 'CONFIGURÉE' : 'MANQUANTE');
+console.log('  - Configuration valide:', isCloudinaryConfigured ? '✅ OUI' : '❌ NON');
 
 if (isCloudinaryConfigured) {
   cloudinary.config({
