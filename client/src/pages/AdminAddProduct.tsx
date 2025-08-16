@@ -132,6 +132,8 @@ export default function AdminAddProduct() {
     }));
   };
 
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -147,7 +149,7 @@ export default function AdminAddProduct() {
       return;
     }
     
-    if (!mainImageUrl) {
+    if (uploadedFiles.length === 0) {
       alert("Veuillez uploader au moins une image principale");
       return;
     }
@@ -156,19 +158,39 @@ export default function AdminAddProduct() {
 
     try {
       const token = localStorage.getItem('adminToken');
+      
+      // Créer FormData pour envoyer les fichiers
+      const formDataToSend = new FormData();
+      
+      // Ajouter les données du formulaire
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('price', formData.price);
+      formDataToSend.append('category', formData.category);
+      formDataToSend.append('subcategory', formData.subcategory);
+      formDataToSend.append('isCustomizable', String(Object.keys(customizationOptions).length > 0 || formData.isCustomizable));
+      formDataToSend.append('isRentable', String(formData.isRentable));
+      formDataToSend.append('stockQuantity', formData.stockQuantity);
+      formDataToSend.append('dailyRentalPrice', formData.dailyRentalPrice);
+      formDataToSend.append('customizationOptions', JSON.stringify(transformCustomizationOptions()));
+      
+      // Ajouter les fichiers
+      if (uploadedFiles.length > 0) {
+        formDataToSend.append('image', uploadedFiles[0]); // Image principale
+      }
+      
+      // Ajouter les images supplémentaires
+      uploadedFiles.slice(1).forEach((file, index) => {
+        formDataToSend.append('additionalImages', file);
+      });
+
       const response = await fetch('/api/admin/products', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
+          // Ne pas définir Content-Type pour FormData
         },
-        body: JSON.stringify({
-          ...formData,
-          mainImageUrl,
-          additionalImages,
-          isCustomizable: Object.keys(customizationOptions).length > 0 || formData.isCustomizable,
-          customizationOptions: transformCustomizationOptions()
-        })
+        body: formDataToSend
       });
 
       // Debug log
@@ -176,7 +198,8 @@ export default function AdminAddProduct() {
         formDataIsCustomizable: formData.isCustomizable,
         hasCustomizationOptions: Object.keys(customizationOptions).length > 0,
         finalIsCustomizable: Object.keys(customizationOptions).length > 0 || formData.isCustomizable,
-        customizationOptions: transformCustomizationOptions()
+        customizationOptions: transformCustomizationOptions(),
+        uploadedFilesCount: uploadedFiles.length
       });
 
       if (!response.ok) {
@@ -301,6 +324,7 @@ export default function AdminAddProduct() {
             <CardContent>
               <ImageUpload
                 onImagesUploaded={handleImagesUploaded}
+                onFilesSelected={setUploadedFiles}
                 multiple={true}
                 maxImages={10}
               />

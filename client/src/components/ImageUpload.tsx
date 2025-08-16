@@ -5,6 +5,7 @@ import { X, Upload, Image as ImageIcon } from "lucide-react";
 
 interface ImageUploadProps {
   onImagesUploaded: (imageUrls: string[]) => void;
+  onFilesSelected?: (files: File[]) => void;
   multiple?: boolean;
   maxImages?: number;
   className?: string;
@@ -12,28 +13,37 @@ interface ImageUploadProps {
 
 export default function ImageUpload({ 
   onImagesUploaded, 
+  onFilesSelected,
   multiple = false, 
   maxImages = 10,
   className = "" 
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
+    // Stocker les fichiers sélectionnés
+    const fileArray = Array.from(files);
+    setSelectedFiles(fileArray);
+    
+    // Notifier le parent des fichiers sélectionnés
+    if (onFilesSelected) {
+      onFilesSelected(fileArray);
+    }
+
     setIsUploading(true);
 
     try {
       const formData = new FormData();
-      Array.from(files).forEach((file) => {
+      fileArray.forEach((file) => {
         formData.append('images', file);
       });
 
-
-      
       const response = await fetch('/api/upload-images', {
         method: 'POST',
         body: formData
@@ -57,8 +67,13 @@ export default function ImageUpload({
 
   const removeImage = (index: number) => {
     const newImages = uploadedImages.filter((_, i) => i !== index);
+    const newFiles = selectedFiles.filter((_, i) => i !== index);
     setUploadedImages(newImages);
+    setSelectedFiles(newFiles);
     onImagesUploaded(newImages);
+    if (onFilesSelected) {
+      onFilesSelected(newFiles);
+    }
   };
 
   const canUploadMore = multiple ? uploadedImages.length < maxImages : uploadedImages.length === 0;
