@@ -68,36 +68,37 @@ app.use((req, res, next) => {
     const server = await registerRoutes(app);
     console.log("✅ Routes registered successfully");
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    // Error handling middleware
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
 
-    console.error('Server error:', err);
-    res.status(status).json({ message });
-    // Don't throw the error to prevent server crash
-  });
-
-  // Setup static file serving for production (Render)
-  if (app.get("env") === "production") {
-    // Serve static files from the dist directory
-    app.use(express.static('dist'));
-    
-    // Serve uploaded files
-    app.use('/uploads', express.static('uploads'));
-    
-    // Serve index.html for all non-API routes (SPA routing)
-    app.get('*', (req, res) => {
-      if (!req.path.startsWith('/api')) {
-        res.sendFile('dist/index.html', { root: process.cwd() });
-      }
+      console.error('Server error:', err);
+      res.status(status).json({ message });
+      // Don't throw the error to prevent server crash
     });
-  } else {
-    // Development: serve uploaded files BEFORE vite setup
-    app.use('/uploads', express.static('uploads'));
-    
-    // Development: setup vite
-    await setupVite(app, server);
-  }
+
+    // Setup static file serving for production (Render)
+    if (app.get("env") === "production") {
+      // Serve static files from the dist directory
+      app.use(express.static('dist'));
+      
+      // Serve uploaded files
+      app.use('/uploads', express.static('uploads'));
+      
+      // Serve index.html for all non-API routes (SPA routing)
+      app.get('*', (req, res) => {
+        if (!req.path.startsWith('/api')) {
+          res.sendFile('dist/index.html', { root: process.cwd() });
+        }
+      });
+    } else {
+      // Development: serve uploaded files BEFORE vite setup
+      app.use('/uploads', express.static('uploads'));
+      
+      // Development: setup vite
+      await setupVite(app, server);
+    }
 
     // ALWAYS serve the app on the port specified in the environment variable PORT
     // Other ports are firewalled. Default to 5000 if not specified.

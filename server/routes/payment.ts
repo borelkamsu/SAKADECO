@@ -5,14 +5,37 @@ import { Product } from '../models/Product';
 
 const router = Router();
 
-// Initialiser Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-12-18.acacia'
-});
+// Vérifier si Stripe est configuré
+const isStripeConfigured = process.env.STRIPE_SECRET_KEY && 
+                          process.env.STRIPE_SECRET_KEY !== 'your_stripe_secret_key' &&
+                          process.env.STRIPE_SECRET_KEY.length > 0;
+
+// Initialiser Stripe seulement si configuré
+let stripe: Stripe | null = null;
+if (isStripeConfigured) {
+  try {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: '2024-12-18.acacia'
+    });
+    console.log('✅ Stripe initialisé avec succès');
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'initialisation de Stripe:', error);
+    stripe = null;
+  }
+} else {
+  console.log('⚠️  Stripe non configuré - les paiements ne fonctionneront pas');
+}
 
 // Créer une session de paiement Stripe
 router.post('/create-checkout-session', async (req: Request, res: Response) => {
   try {
+    // Vérifier si Stripe est configuré
+    if (!stripe) {
+      return res.status(503).json({ 
+        message: 'Service de paiement temporairement indisponible. Veuillez réessayer plus tard.' 
+      });
+    }
+
     const { items, shippingAddress, billingAddress, isRental } = req.body;
 
     if (!items || items.length === 0) {

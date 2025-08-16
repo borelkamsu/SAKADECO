@@ -40,12 +40,13 @@ cd SAKADECO
 npm install
 
 # Créer le fichier .env
-cp .env.example .env
+node create-env-example.cjs
 
 # Configurer les variables d'environnement
-DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/SDK
-SESSION_SECRET=votre_secret_tres_long
-NODE_ENV=development
+# Remplacez les valeurs dans le fichier .env avec vos vraies clés :
+# - DATABASE_URL (MongoDB Atlas)
+# - STRIPE_PUBLIC_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+# - CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
 
 # Lancer en développement
 npm run dev

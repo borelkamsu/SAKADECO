@@ -13,3 +13,7 @@ vite.config.ts.*
 # Uploaded files (keep the folder but ignore contents)
 uploads/*
 !uploads/.gitkeep
+
+# Environment setup files with sensitive data
+create-env.cjs
+test-cloudinary.cjs

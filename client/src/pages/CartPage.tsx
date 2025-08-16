@@ -8,7 +8,7 @@ import { Trash2, Plus, Minus, ShoppingCart, ArrowLeft } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { loadStripe } from '@stripe/stripe-js';
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY || 'pk_test_votre_cle_publique');
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || 'pk_test_51RwMYOR0o3iJkkS6m6QdutPepHoHevnGVfr771nNV25WXrE74hpb2vvPKpEiL7EHTQYtJ2rX71rbGxnXaLnheUjP00dz8vDKzm');
 
 interface CartItem {
   productId: string;
