@@ -6,6 +6,7 @@ import { db } from "./db";
 import { z } from "zod";
 import adminRoutes from "./routes/admin";
 import paymentRoutes from "./routes/payment";
+import invoiceRoutes from "./routes/invoice";
 
 // Validation schemas for MongoDB
 const insertProductSchema = z.object({
@@ -867,6 +868,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Payment routes
   app.use('/api/payment', paymentRoutes);
+  
+  // Invoice routes
+  app.use('/api/invoice', invoiceRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

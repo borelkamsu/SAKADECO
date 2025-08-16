@@ -30,6 +30,7 @@ import Orders from "@/pages/Orders";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import PaymentCancel from "@/pages/PaymentCancel";
 import CartPage from "@/pages/CartPage";
+import Invoice from "@/pages/Invoice";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -50,6 +51,7 @@ function Router() {
       <Route path="/contact" component={Contact} />
       <Route path="/about" component={About} />
       <Route path="/orders" component={Orders} />
+      <Route path="/invoice/:orderId" component={Invoice} />
       <Route path="/payment/success" component={PaymentSuccess} />
       <Route path="/payment/cancel" component={PaymentCancel} />
       <Route path="/themes" component={Themes} />

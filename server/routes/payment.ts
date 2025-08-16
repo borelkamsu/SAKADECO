@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import Stripe from 'stripe';
 import Order from '../models/Order';
+import emailService from '../services/emailService';
 import { Product } from '../models/Product';
 
 const router = Router();
@@ -176,6 +177,41 @@ router.post('/webhook', async (req: Request, res: Response) => {
           await order.save();
           
           console.log(`Commande ${order._id} marquée comme payée`);
+          
+          // Envoyer automatiquement la facture par email
+          try {
+            const invoiceData = {
+              orderNumber: order.orderNumber || order._id.toString(),
+              user: {
+                email: order.user?.email || 'client@example.com',
+                firstName: order.shippingAddress?.firstName,
+                lastName: order.shippingAddress?.lastName
+              },
+              items: order.items.map(item => ({
+                product: {
+                  name: item.product?.name || 'Produit',
+                  price: item.price
+                },
+                quantity: item.quantity,
+                price: item.price
+              })),
+              subtotal: order.subtotal,
+              tax: order.tax,
+              shipping: order.shipping,
+              total: order.total,
+              shippingAddress: order.shippingAddress,
+              billingAddress: order.billingAddress,
+              createdAt: order.createdAt.toISOString()
+            };
+            
+            // Envoyer l'email de confirmation et la facture
+            await emailService.sendOrderConfirmationEmail(invoiceData);
+            await emailService.sendInvoiceEmail(invoiceData);
+            
+            console.log(`✅ Facture envoyée automatiquement pour la commande ${order._id}`);
+          } catch (emailError) {
+            console.error('❌ Erreur envoi facture automatique:', emailError);
+          }
         }
         break;
 
