@@ -40,7 +40,20 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
         return res.status(400).json({ message: `Le produit ${product.name} n'est pas disponible à la location` });
       }
 
-      const rentalDays = Math.ceil((new Date(item.rentalEndDate).getTime() - new Date(item.rentalStartDate).getTime()) / (1000 * 60 * 60 * 24));
+      // Validation des dates
+      const startDate = new Date(item.rentalStartDate);
+      const endDate = new Date(item.rentalEndDate);
+      
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        return res.status(400).json({ message: 'Dates de location invalides' });
+      }
+      
+      if (endDate <= startDate) {
+        return res.status(400).json({ message: 'La date de fin doit être postérieure à la date de début' });
+      }
+
+      const timeDiff = endDate.getTime() - startDate.getTime();
+      const rentalDays = Math.max(1, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
       const itemTotal = (product.dailyRentalPrice || 0) * rentalDays * item.quantity;
       subtotal += itemTotal;
 
@@ -83,8 +96,8 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
         dailyPrice: item.dailyPrice,
         rentalStartDate: item.rentalStartDate,
         rentalEndDate: item.rentalEndDate,
-        rentalDays: Math.ceil((new Date(item.rentalEndDate).getTime() - new Date(item.rentalStartDate).getTime()) / (1000 * 60 * 60 * 24)),
-        totalPrice: (item.dailyPrice || 0) * Math.ceil((new Date(item.rentalEndDate).getTime() - new Date(item.rentalStartDate).getTime()) / (1000 * 60 * 60 * 24)) * item.quantity,
+        rentalDays: Math.max(1, Math.ceil((new Date(item.rentalEndDate).getTime() - new Date(item.rentalStartDate).getTime()) / (1000 * 60 * 60 * 24))),
+        totalPrice: (item.dailyPrice || 0) * Math.max(1, Math.ceil((new Date(item.rentalEndDate).getTime() - new Date(item.rentalStartDate).getTime()) / (1000 * 60 * 60 * 24))) * item.quantity,
         customizations: item.customizations || {},
         customMessage: item.customMessage || ''
       })),
@@ -102,7 +115,7 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
     console.error('Erreur création session location:', error);
     console.error('Stack trace:', error.stack);
     console.error('Données reçues:', {
-      itemsCount: items?.length
+      itemsCount: req.body.items?.length
     });
     res.status(500).json({ 
       message: 'Erreur lors de la création de la session de location',
