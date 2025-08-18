@@ -38,6 +38,7 @@ import RentalCart from "@/pages/RentalCart";
 import RentalSuccess from "@/pages/RentalSuccess";
 import RentalCancel from "@/pages/RentalCancel";
 import Realisations from "@/pages/Realisations";
+import ProductCustomizationDemo from "@/pages/ProductCustomizationDemo";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -62,6 +63,7 @@ function Router() {
       <Route path="/contact" component={Contact} />
       <Route path="/about" component={About} />
       <Route path="/realisations" component={Realisations} />
+      <Route path="/demo-customization" component={ProductCustomizationDemo} />
       <Route path="/orders" component={Orders} />
       <Route path="/invoice/:orderId" component={Invoice} />
       <Route path="/payment/success" component={PaymentSuccess} />

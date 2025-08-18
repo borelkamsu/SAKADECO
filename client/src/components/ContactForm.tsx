@@ -240,7 +240,7 @@ export default function ContactForm({ serviceType }: ContactFormProps) {
           <Button
             type="submit"
             disabled={!isFormValid() || createQuoteMutation.isPending}
-            className="w-full bg-gold text-white hover:bg-gold/90 py-3 text-lg"
+            className="w-full bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-500 hover:to-gold text-white py-3 text-lg font-semibold shadow-lg"
           >
             {createQuoteMutation.isPending ? "Envoi en cours..." : "Envoyer ma demande"}
           </Button>

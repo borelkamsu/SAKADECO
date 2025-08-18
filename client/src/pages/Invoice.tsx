@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'wouter';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import Layout from '../components/Layout';
 
 interface InvoiceItem {
   product: {
@@ -146,7 +147,8 @@ const Invoice: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <Layout>
+      <div className="min-h-screen bg-gray-50 py-8">
       {/* Header avec boutons d'action */}
       <div className="max-w-4xl mx-auto px-4 mb-8 print:hidden">
         <div className="bg-white rounded-lg shadow-sm p-6">
@@ -259,7 +261,27 @@ const Invoice: React.FC = () => {
                           />
                           <div>
                             <p className="font-medium text-gray-800">{item.product?.name || 'Produit supprimé'}</p>
-                                                          <p className="text-sm text-gray-600">Ref: {item.product?._id || 'N/A'}</p>
+                            <p className="text-sm text-gray-600">Ref: {item.product?._id || 'N/A'}</p>
+                            {/* Personnalisations */}
+                            {item.customizations && Object.keys(item.customizations).length > 0 && (
+                              <div className="mt-2">
+                                <p className="text-xs font-semibold text-gray-700">Personnalisations:</p>
+                                <ul className="text-xs text-gray-600">
+                                  {Object.entries(item.customizations).map(([key, value]) => (
+                                    <li key={key}>
+                                      <span className="font-medium">{key.replace(/_/g, ' ')}:</span> {value}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {/* Message personnalisé */}
+                            {item.customMessage && (
+                              <div className="mt-2">
+                                <p className="text-xs font-semibold text-gray-700">Message:</p>
+                                <p className="text-xs text-gray-600 italic">"{item.customMessage}"</p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -316,6 +338,7 @@ const Invoice: React.FC = () => {
         </div>
       </div>
     </div>
+    </Layout>
   );
 };
 

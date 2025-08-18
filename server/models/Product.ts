@@ -84,7 +84,7 @@ const ProductSchema = new Schema<IProduct>({
     of: {
       type: {
         type: String,
-        enum: ['dropdown', 'checkbox', 'text', 'textarea'],
+        enum: ['dropdown', 'checkbox', 'text', 'textarea', 'name_engraving', 'image_upload'],
         required: true
       },
       label: {
@@ -97,7 +97,22 @@ const ProductSchema = new Schema<IProduct>({
       },
       options: [String], // Pour les dropdowns et checkboxes
       placeholder: String, // Pour les champs texte
-      maxLength: Number
+      maxLength: Number,
+      engravingType: {
+        type: String,
+        enum: ['text', 'image', 'both'],
+        default: 'text'
+      },
+      engravingPosition: {
+        type: String,
+        enum: ['front', 'back', 'side', 'top', 'bottom'],
+        default: 'front'
+      },
+      engravingStyle: {
+        type: String,
+        enum: ['simple', 'elegant', 'bold', 'script', 'decorative'],
+        default: 'simple'
+      }
     },
     default: {}
   }

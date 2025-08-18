@@ -7,6 +7,7 @@ import { Trash2, Calendar, ShoppingCart } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ImageWithFallback from '../components/ImageWithFallback';
+import Layout from '../components/Layout';
 
 interface RentalItem {
   productId: string;
@@ -127,7 +128,8 @@ const RentalCart: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <Layout>
+      <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Panier de location</h1>
         <p className="text-gray-600">Gérez vos produits à louer</p>
@@ -288,6 +290,7 @@ const RentalCart: React.FC = () => {
         </div>
       </div>
     </div>
+    </Layout>
   );
 };
 

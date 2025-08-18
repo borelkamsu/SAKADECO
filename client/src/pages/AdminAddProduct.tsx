@@ -15,6 +15,10 @@ import ImageUpload from "@/components/ImageUpload";
 interface CustomizationOption {
   label: string;
   values: string[];
+  type?: 'dropdown' | 'checkbox' | 'text' | 'textarea' | 'name_engraving' | 'image_upload';
+  required?: boolean;
+  engravingPosition?: 'front' | 'back' | 'side' | 'top' | 'bottom';
+  engravingStyle?: 'simple' | 'elegant' | 'bold' | 'script' | 'decorative';
 }
 
 export default function AdminAddProduct() {
@@ -54,7 +58,28 @@ export default function AdminAddProduct() {
       ...prev,
       [optionKey]: {
         label: '',
-        values: ['', '', ''] // 3 valeurs par défaut
+        values: ['', '', ''], // 3 valeurs par défaut
+        type: 'dropdown'
+      }
+    }));
+    
+    // Automatically enable customization when adding options
+    if (!formData.isCustomizable) {
+      handleInputChange('isCustomizable', true);
+    }
+  };
+
+  const addEngravingOption = () => {
+    const optionKey = `engraving_${Date.now()}`;
+    setCustomizationOptions(prev => ({
+      ...prev,
+      [optionKey]: {
+        label: 'Nom à graver',
+        values: [],
+        type: 'name_engraving',
+        required: false,
+        engravingPosition: 'front',
+        engravingStyle: 'simple'
       }
     }));
     
@@ -73,11 +98,26 @@ export default function AdminAddProduct() {
         // Use the label as the key for better readability
         const optionKey = option.label.toLowerCase().replace(/\s+/g, '_');
         
-        // Filter out empty values
-        const validValues = option.values.filter(value => value.trim() !== '');
-        
-        if (validValues.length > 0) {
-          transformed[optionKey] = validValues;
+        if (option.type === 'name_engraving' || option.type === 'image_upload') {
+          // Options de gravure
+          transformed[optionKey] = {
+            type: option.type,
+            label: option.label,
+            required: option.required || false,
+            engravingPosition: option.engravingPosition || 'front',
+            engravingStyle: option.engravingStyle || 'simple'
+          };
+        } else {
+          // Options standard
+          const validValues = option.values.filter(value => value.trim() !== '');
+          if (validValues.length > 0) {
+            transformed[optionKey] = {
+              type: option.type || 'dropdown',
+              label: option.label,
+              required: false,
+              options: validValues
+            };
+          }
         }
       }
     });
@@ -406,22 +446,37 @@ export default function AdminAddProduct() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   Options de personnalisation
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addCustomizationOption}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Ajouter une option
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addCustomizationOption}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Option standard
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addEngravingOption()}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Gravure personnalisée
+                    </Button>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 {Object.entries(customizationOptions).map(([key, option]) => (
                   <div key={key} className="border rounded-lg p-4 space-y-4">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-medium">Option de personnalisation</h4>
+                      <h4 className="font-medium">
+                        {option.type === 'name_engraving' || option.type === 'image_upload' 
+                          ? 'Option de gravure personnalisée' 
+                          : 'Option de personnalisation'}
+                      </h4>
                       <Button
                         type="button"
                         variant="destructive"
@@ -432,54 +487,135 @@ export default function AdminAddProduct() {
                       </Button>
                     </div>
                     
-                    <div>
-                      <Label>Libellé de l'option</Label>
-                      <Input
-                        value={option.label}
-                        onChange={(e) => updateCustomizationOption(key, 'label', e.target.value)}
-                        placeholder="ex: Couleur, Taille, Thème, Style..."
-                        className="mb-4"
-                      />
-                    </div>
+                    {option.type === 'name_engraving' || option.type === 'image_upload' ? (
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Type de gravure</Label>
+                          <Select 
+                            value={option.type} 
+                            onValueChange={(value) => updateCustomizationOption(key, 'type', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="name_engraving">Gravure de texte/nom</SelectItem>
+                              <SelectItem value="image_upload">Gravure d'image</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <Label>Libellé de l'option</Label>
+                          <Input
+                            value={option.label}
+                            onChange={(e) => updateCustomizationOption(key, 'label', e.target.value)}
+                            placeholder="ex: Nom à graver, Logo à graver..."
+                            className="mb-4"
+                          />
+                        </div>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label>Valeurs disponibles</Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addOptionValue(key)}
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Ajouter une valeur
-                        </Button>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                        {option.values.map((value, index) => (
-                          <div key={index} className="flex items-center space-x-2">
-                            <Input
-                              value={value}
-                              onChange={(e) => updateOptionValue(key, index, e.target.value)}
-                              placeholder={`Valeur ${index + 1}`}
-                              className="flex-1"
-                            />
-                            {option.values.length > 1 && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeOptionValue(key, index)}
-                                className="h-auto p-1"
-                              >
-                                <X className="w-3 h-3" />
-                              </Button>
-                            )}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Position de la gravure</Label>
+                            <Select 
+                              value={option.engravingPosition || 'front'} 
+                              onValueChange={(value) => updateCustomizationOption(key, 'engravingPosition', value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="front">Avant</SelectItem>
+                                <SelectItem value="back">Arrière</SelectItem>
+                                <SelectItem value="side">Côté</SelectItem>
+                                <SelectItem value="top">Haut</SelectItem>
+                                <SelectItem value="bottom">Bas</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
-                        ))}
+                          
+                          <div>
+                            <Label>Style de gravure</Label>
+                            <Select 
+                              value={option.engravingStyle || 'simple'} 
+                              onValueChange={(value) => updateCustomizationOption(key, 'engravingStyle', value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="simple">Simple</SelectItem>
+                                <SelectItem value="elegant">Élégant</SelectItem>
+                                <SelectItem value="bold">Gras</SelectItem>
+                                <SelectItem value="script">Script</SelectItem>
+                                <SelectItem value="decorative">Décoratif</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`required-${key}`}
+                            checked={option.required || false}
+                            onCheckedChange={(checked) => updateCustomizationOption(key, 'required', checked)}
+                          />
+                          <Label htmlFor={`required-${key}`}>Option obligatoire</Label>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <>
+                        <div>
+                          <Label>Libellé de l'option</Label>
+                          <Input
+                            value={option.label}
+                            onChange={(e) => updateCustomizationOption(key, 'label', e.target.value)}
+                            placeholder="ex: Couleur, Taille, Thème, Style..."
+                            className="mb-4"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label>Valeurs disponibles</Label>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => addOptionValue(key)}
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              Ajouter une valeur
+                            </Button>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {option.values.map((value, index) => (
+                              <div key={index} className="flex items-center space-x-2">
+                                <Input
+                                  value={value}
+                                  onChange={(e) => updateOptionValue(key, index, e.target.value)}
+                                  placeholder={`Valeur ${index + 1}`}
+                                  className="flex-1"
+                                />
+                                {option.values.length > 1 && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeOptionValue(key, index)}
+                                    className="h-auto p-1"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </CardContent>

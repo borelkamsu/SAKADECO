@@ -11,7 +11,10 @@
     "db:push": "drizzle-kit push",
     "seed": "cross-env NODE_ENV=development tsx server/seedProducts.ts",
     "test-db": "cross-env NODE_ENV=development tsx server/test-db-connection.ts",
-    "create-admin": "node scripts/createAdmin.js"
+    "create-admin": "node scripts/createAdmin.js",
+    "create-sale-products": "node scripts/create-sale-products.js",
+    "create-rental-products": "node scripts/create-rental-products.js",
+    "create-all-products": "node scripts/create-all-test-products.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

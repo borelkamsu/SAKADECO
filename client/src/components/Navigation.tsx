@@ -88,8 +88,8 @@ export default function Navigation() {
               <Link href="/">
                 <div className="flex items-center space-x-2 lg:space-x-3 cursor-pointer group">
                   <Logo 
-                    width={100} 
-                    height={67} 
+                    width={80} 
+                    height={53} 
                     className="group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
