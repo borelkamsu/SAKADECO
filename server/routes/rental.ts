@@ -50,7 +50,7 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
           product_data: {
             name: `Location: ${product.name}`,
             description: `Location du ${new Date(item.rentalStartDate).toLocaleDateString('fr-FR')} au ${new Date(item.rentalEndDate).toLocaleDateString('fr-FR')} (${rentalDays} jours)`,
-            images: [product.mainImageUrl.startsWith('http') ? product.mainImageUrl : 'https://via.placeholder.com/300x200?text=Produit']
+            images: product.mainImageUrl && product.mainImageUrl.startsWith('http') ? [product.mainImageUrl] : []
           },
           unit_amount: Math.round((product.dailyRentalPrice || 0) * 100) // Stripe utilise les centimes
         },
@@ -87,14 +87,14 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
         rentalDays: Math.ceil((new Date(item.rentalEndDate).getTime() - new Date(item.rentalStartDate).getTime()) / (1000 * 60 * 60 * 24)),
         totalPrice: (item.dailyPrice || 0) * Math.ceil((new Date(item.rentalEndDate).getTime() - new Date(item.rentalStartDate).getTime()) / (1000 * 60 * 60 * 24)) * item.quantity,
         customizations: item.customizations || {},
-        customMessage: item.customMessage
+        customMessage: item.customMessage || ''
       })),
       subtotal,
       tax,
       deposit,
       total,
-      shippingAddress,
-      billingAddress,
+      shippingAddress: shippingAddress || {},
+      billingAddress: billingAddress || {},
       stripeSessionId: session.id
     });
 
@@ -103,7 +103,18 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
     res.json({ sessionId: session.id });
   } catch (error) {
     console.error('Erreur création session location:', error);
-    res.status(500).json({ message: 'Erreur lors de la création de la session de location' });
+    console.error('Stack trace:', error.stack);
+    console.error('Données reçues:', {
+      itemsCount: items?.length,
+      customerEmail,
+      hasShippingAddress: !!shippingAddress,
+      hasBillingAddress: !!billingAddress
+    });
+    res.status(500).json({ 
+      message: 'Erreur lors de la création de la session de location',
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 

@@ -33,8 +33,8 @@ const rentalItemSchema = new mongoose.Schema({
     required: true
   },
   customizations: {
-    type: Map,
-    of: String
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
   },
   customMessage: String
 });
