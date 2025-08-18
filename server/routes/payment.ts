@@ -204,9 +204,12 @@ router.post('/webhook', async (req: Request, res: Response) => {
               createdAt: order.createdAt.toISOString()
             };
             
-            // Envoyer l'email de confirmation et la facture
-            await emailService.sendOrderConfirmationEmail(invoiceData);
-            await emailService.sendInvoiceEmail(invoiceData);
+                         // Envoyer l'email de confirmation et la facture
+             await emailService.sendOrderConfirmationEmail(invoiceData);
+             await emailService.sendInvoiceEmail(invoiceData);
+             
+             // Envoyer notification à l'admin
+             await emailService.sendAdminNotificationEmail(invoiceData);
             
             console.log(`✅ Facture envoyée automatiquement pour la commande ${order._id}`);
           } catch (emailError) {

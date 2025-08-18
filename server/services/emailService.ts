@@ -311,6 +311,91 @@ class EmailService {
       return false;
     }
   }
+
+  async sendAdminNotificationEmail(invoice: InvoiceData): Promise<boolean> {
+    if (!this.transporter) {
+      console.warn('⚠️  Service email non configuré - notification admin non envoyée');
+      return false;
+    }
+
+    try {
+      const mailOptions = {
+        from: `"SakaDeco" <${process.env.EMAIL_USER}>`,
+        to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER, // L'admin reçoit la notification sur son email
+        subject: `🆕 Nouvelle commande reçue - ${invoice.orderNumber}`,
+        html: `
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Nouvelle commande</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { text-align: center; margin-bottom: 30px; }
+              .notification { color: #3b82f6; font-size: 24px; margin-bottom: 10px; }
+              .order-details { background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
+              .button { display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; 
+                        text-decoration: none; border-radius: 6px; margin: 20px 0; }
+              .items-list { margin: 10px 0; }
+              .item { padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <div class="notification">🆕</div>
+                <h1 style="color: #3b82f6;">Nouvelle commande reçue !</h1>
+              </div>
+              
+              <p>Bonjour Admin,</p>
+              
+              <p>Une nouvelle commande vient d'être effectuée sur SakaDeco.</p>
+              
+              <div class="order-details">
+                <h3>Détails de la commande</h3>
+                <p><strong>Numéro de commande:</strong> ${invoice.orderNumber}</p>
+                <p><strong>Date:</strong> ${format(new Date(invoice.createdAt), 'dd MMMM yyyy à HH:mm', { locale: fr })}</p>
+                <p><strong>Client:</strong> ${invoice.user.firstName || ''} ${invoice.user.lastName || ''} (${invoice.user.email})</p>
+                <p><strong>Total:</strong> ${invoice.total.toFixed(2)}€</p>
+                
+                <h4>Produits commandés:</h4>
+                <div class="items-list">
+                  ${invoice.items.map(item => `
+                    <div class="item">
+                      <strong>${item.product.name}</strong> - Quantité: ${item.quantity} - Prix: ${item.price.toFixed(2)}€
+                    </div>
+                  `).join('')}
+                </div>
+                
+                <h4>Adresse de livraison:</h4>
+                <p>${invoice.shippingAddress.firstName} ${invoice.shippingAddress.lastName}</p>
+                <p>${invoice.shippingAddress.address}</p>
+                <p>${invoice.shippingAddress.postalCode} ${invoice.shippingAddress.city}</p>
+                <p>${invoice.shippingAddress.country}</p>
+              </div>
+              
+              <p>Vous pouvez gérer cette commande en cliquant sur le bouton ci-dessous :</p>
+              
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}/admin/orders" 
+                 class="button">Gérer les commandes</a>
+              
+              <p>Cordialement,<br>Système SakaDeco</p>
+            </div>
+          </body>
+          </html>
+        `
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log('✅ Notification admin envoyée:', info.messageId);
+      return true;
+    } catch (error) {
+      console.error('❌ Erreur envoi notification admin:', error);
+      return false;
+    }
+  }
 }
 
 export default new EmailService();

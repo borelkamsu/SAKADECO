@@ -36,3 +36,5 @@ services:
         sync: false
       - key: FRONTEND_URL
         value: https://sakadeco-api.onrender.com
+      - key: ADMIN_EMAIL
+        value: lamawaffo11@gmail.com
