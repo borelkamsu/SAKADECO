@@ -94,30 +94,11 @@ const RentalCart: React.FC = () => {
       });
 
       if (response.ok) {
-        const { sessionId } = await response.json();
+        const { url } = await response.json();
         
         // Rediriger vers Stripe Checkout
-        const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
-        console.log('🔑 Clé Stripe publique:', stripePublicKey ? 'Configurée' : 'Manquante');
-        
-        if (!stripePublicKey) {
-          console.error('❌ Clé Stripe publique manquante');
-          alert('Configuration de paiement manquante. Veuillez contacter l\'administrateur.');
-          return;
-        }
-        
-        try {
-          const stripe = (window as any).Stripe(stripePublicKey);
-          const { error } = await stripe.redirectToCheckout({ sessionId });
-          
-          if (error) {
-            console.error('❌ Erreur Stripe:', error);
-            alert('Erreur lors du passage à la commande');
-          }
-        } catch (stripeError) {
-          console.error('❌ Erreur initialisation Stripe:', stripeError);
-          alert('Erreur lors de l\'initialisation du paiement');
-        }
+        console.log('Redirection vers Stripe:', url);
+        window.location.href = url;
       } else {
         const error = await response.json();
         alert(`Erreur: ${error.message}`);

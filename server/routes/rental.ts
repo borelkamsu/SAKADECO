@@ -97,7 +97,7 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
 
     await rental.save();
 
-    res.json({ sessionId: session.id });
+    res.json({ url: session.url });
   } catch (error) {
     console.error('Erreur création session location:', error);
     console.error('Stack trace:', error.stack);
