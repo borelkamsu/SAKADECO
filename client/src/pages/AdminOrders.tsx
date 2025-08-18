@@ -164,7 +164,7 @@ const AdminOrders: React.FC = () => {
       order.shippingAddress.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.shippingAddress.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.shippingAddress.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.items.some(item => item.product.name.toLowerCase().includes(searchTerm.toLowerCase()));
+              order.items.some(item => item.product?.name?.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     const matchesPaymentStatus = paymentStatusFilter === 'all' || order.paymentStatus === paymentStatusFilter;
@@ -348,7 +348,7 @@ const AdminOrders: React.FC = () => {
                           <div className="space-y-1">
                             {order.items.map((item, index) => (
                               <div key={index} className="text-sm text-gray-600">
-                                <p>{item.product.name} x{item.quantity}</p>
+                                <p>{item.product?.name || 'Produit supprimé'} x{item.quantity}</p>
                                 <p className="text-xs text-gray-500">
                                   {item.isRental ? 'Location' : 'Achat'} - {item.price.toFixed(2)}€
                                 </p>
@@ -470,14 +470,14 @@ const AdminOrders: React.FC = () => {
                       <div key={index} className="flex items-center space-x-4 p-3 border rounded-lg">
                         <img
                           src={item.product.mainImageUrl}
-                          alt={item.product.name}
+                          alt={item.product?.name || 'Produit supprimé'}
                           className="w-16 h-16 object-cover rounded-lg"
                           onError={(e) => {
                             e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0zMiAxNkMyMy4xNjM0IDE2IDE2IDIzLjE2MzQgMTYgMzJDMTYgNDAuODM2NiAyMy4xNjM0IDQ4IDMyIDQ4QzQwLjgzNjYgNDggNDggNDAuODM2NiA0OCAzMkM0OCAyMy4xNjM0IDQwLjgzNjYgMTYgMzIgMTZaIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0zMiAyMEMyNS4zNzI2IDIwIDIwIDI1LjM3MjYgMjAgMzJDMjAgMzguNjI3NCAyNS4zNzI2IDQ0IDMyIDQ0QzM4LjYyNzQgNDQgNDQgMzguNjI3NCA0NCAzMkM0NCAyNS4zNzI2IDM4LjYyNzQgMjAgMzIgMjBaIiBmaWxsPSIjRjNGNEY2Ii8+Cjwvc3ZnPgo=';
                           }}
                         />
                         <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{item.product.name}</h4>
+                          <h4 className="font-medium text-gray-900">{item.product?.name || 'Produit supprimé'}</h4>
                           <p className="text-sm text-gray-600">
                             Quantité: {item.quantity} | Prix: {item.price.toFixed(2)}€
                           </p>

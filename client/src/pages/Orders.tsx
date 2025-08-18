@@ -306,11 +306,11 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
               <div key={index} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
                 <img
                   src={item.product.mainImageUrl}
-                  alt={item.product.name}
+                                          alt={item.product?.name || 'Produit supprimé'}
                   className="w-12 h-12 object-cover rounded"
                 />
                 <div className="flex-1">
-                  <h4 className="font-medium">{item.product.name}</h4>
+                                          <h4 className="font-medium">{item.product?.name || 'Produit supprimé'}</h4>
                   <p className="text-sm text-gray-600">
                     Quantité: {item.quantity} × {item.price.toFixed(2)}€
                   </p>

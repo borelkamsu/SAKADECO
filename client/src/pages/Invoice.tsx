@@ -254,12 +254,12 @@ const Invoice: React.FC = () => {
                         <div className="flex items-center">
                           <img
                             src={item.product.mainImageUrl}
-                            alt={item.product.name}
+                            alt={item.product?.name || 'Produit supprimé'}
                             className="w-12 h-12 object-cover rounded-lg mr-4"
                           />
                           <div>
-                            <p className="font-medium text-gray-800">{item.product.name}</p>
-                            <p className="text-sm text-gray-600">Ref: {item.product._id}</p>
+                            <p className="font-medium text-gray-800">{item.product?.name || 'Produit supprimé'}</p>
+                                                          <p className="text-sm text-gray-600">Ref: {item.product?._id || 'N/A'}</p>
                           </div>
                         </div>
                       </td>
