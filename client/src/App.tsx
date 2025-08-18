@@ -46,10 +46,10 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/shop" component={Shop} />
       <Route path="/product/:id" component={ProductDetail} />
-      <Route path="/rental/:id" component={RentalDetail} />
       <Route path="/rental-cart" component={RentalCart} />
       <Route path="/rental/success" component={RentalSuccess} />
       <Route path="/rental/cancel" component={RentalCancel} />
+      <Route path="/rental/:id" component={RentalDetail} />
       <Route path="/cart" component={CartPage} />
       <Route path="/crea" component={Crea} />
       <Route path="/rent" component={Rent} />
