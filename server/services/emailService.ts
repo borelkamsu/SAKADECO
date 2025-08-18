@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import * as nodemailer from 'nodemailer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
