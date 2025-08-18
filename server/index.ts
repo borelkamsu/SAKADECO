@@ -4,6 +4,11 @@ import { setupVite, serveStatic, log } from "./vite";
 import { connectDB } from "./db";
 
 const app = express();
+
+// Middleware spécial pour capturer le body brut des webhooks Stripe
+app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
+
+// Middleware JSON pour toutes les autres routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
