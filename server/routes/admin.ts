@@ -149,15 +149,29 @@ router.post('/products', adminAuth, upload.single('image'), async (req: AdminReq
     }
 
     // Validation des champs requis
-    if (!name || !description || !price || !category) {
+    const errors: any = {};
+    if (!name) errors.name = 'Le nom est requis';
+    if (!description) errors.description = 'La description est requise';
+    if (!category) errors.category = 'La catégorie est requise';
+    
+    // Validation conditionnelle selon la destination
+    const isForSaleBool = isForSale === 'true' || isForSale === true;
+    const isForRentBool = isForRent === 'true' || isForRent === true;
+    
+    if (isForSaleBool && (!price || parseFloat(price) <= 0)) {
+      errors.price = 'Le prix de vente doit être supérieur à 0';
+    }
+    if (isForRentBool && (!dailyRentalPrice || parseFloat(dailyRentalPrice) <= 0)) {
+      errors.dailyRentalPrice = 'Le prix de location doit être supérieur à 0';
+    }
+    if (!isForSaleBool && !isForRentBool) {
+      errors.destination = 'Le produit doit être destiné à la vente OU à la location (ou les deux)';
+    }
+    
+    if (Object.keys(errors).length > 0) {
       return res.status(400).json({
         message: 'Champs requis manquants',
-        errors: {
-          name: !name ? 'Le nom est requis' : undefined,
-          description: !description ? 'La description est requise' : undefined,
-          price: !price ? 'Le prix est requis' : undefined,
-          category: !category ? 'La catégorie est requise' : undefined
-        }
+        errors
       });
     }
 
@@ -177,16 +191,16 @@ router.post('/products', adminAuth, upload.single('image'), async (req: AdminReq
     const product = new Product({
       name: name.trim(),
       description: description.trim(),
-      price: parseFloat(price),
+      price: isForSaleBool ? parseFloat(price) : 0, // Prix 0 si pas destiné à la vente
       category: category.trim(),
       subcategory: subcategory ? subcategory.trim() : undefined,
       mainImageUrl: finalMainImageUrl,
       additionalImages: additionalImages || [],
       isCustomizable: isCustomizable === 'true' || isCustomizable === true,
-      isForSale: isForSale === 'true' || isForSale === true,
-      isForRent: isForRent === 'true' || isForRent === true,
+      isForSale: isForSaleBool,
+      isForRent: isForRentBool,
       stockQuantity: parseInt(stockQuantity) || 0,
-      dailyRentalPrice: dailyRentalPrice ? parseFloat(dailyRentalPrice) : undefined,
+      dailyRentalPrice: isForRentBool ? parseFloat(dailyRentalPrice) : undefined,
       customizationOptions: parsedCustomizationOptions
     });
 
