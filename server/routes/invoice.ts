@@ -256,4 +256,72 @@ router.get('/:orderId', async (req: Request, res: Response) => {
   }
 });
 
+// Route de test pour les emails
+router.post('/test-email', async (req: Request, res: Response) => {
+  try {
+    console.log('🧪 Test d\'envoi d\'email...');
+    
+    const testInvoiceData = {
+      orderNumber: 'TEST-001',
+      user: {
+        email: process.env.EMAIL_USER || 'test@example.com',
+        firstName: 'Test',
+        lastName: 'Client'
+      },
+      items: [
+        {
+          product: {
+            name: 'Produit de test',
+            price: 50
+          },
+          quantity: 1,
+          price: 50
+        }
+      ],
+      subtotal: 50,
+      tax: 10,
+      shipping: 0,
+      total: 60,
+      shippingAddress: {
+        firstName: 'Test',
+        lastName: 'Client',
+        address: '123 Test Street',
+        city: 'Test City',
+        postalCode: '12345',
+        country: 'France'
+      },
+      billingAddress: {
+        firstName: 'Test',
+        lastName: 'Client',
+        address: '123 Test Street',
+        city: 'Test City',
+        postalCode: '12345',
+        country: 'France'
+      },
+      createdAt: new Date().toISOString()
+    };
+
+    const result = await emailService.sendOrderConfirmationEmail(testInvoiceData);
+    
+    res.json({ 
+      success: result, 
+      message: result ? 'Email de test envoyé avec succès' : 'Échec de l\'envoi de l\'email de test',
+      config: {
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS ? 'Configuré' : 'Manquant',
+        adminEmail: process.env.ADMIN_EMAIL
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erreur test email:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erreur lors du test d\'email',
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
+    });
+  }
+});
+
 export default router;

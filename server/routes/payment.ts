@@ -178,43 +178,53 @@ router.post('/webhook', async (req: Request, res: Response) => {
           
           console.log(`Commande ${order._id} marquée comme payée`);
           
-          // Envoyer automatiquement la facture par email
-          try {
-            const invoiceData = {
-              orderNumber: order.orderNumber || order._id.toString(),
-              user: {
-                email: order.user?.email || 'client@example.com',
-                firstName: order.shippingAddress?.firstName,
-                lastName: order.shippingAddress?.lastName
-              },
-              items: order.items.map(item => ({
-                product: {
-                  name: item.product?.name || 'Produit',
-                  price: item.price
-                },
-                quantity: item.quantity,
-                price: item.price
-              })),
-              subtotal: order.subtotal,
-              tax: order.tax,
-              shipping: order.shipping,
-              total: order.total,
-              shippingAddress: order.shippingAddress,
-              billingAddress: order.billingAddress,
-              createdAt: order.createdAt.toISOString()
-            };
-            
-                         // Envoyer l'email de confirmation et la facture
-             await emailService.sendOrderConfirmationEmail(invoiceData);
-             await emailService.sendInvoiceEmail(invoiceData);
+                     // Envoyer automatiquement la facture par email
+           try {
+             console.log('📧 Préparation des emails pour la commande:', order._id);
+             
+             const invoiceData = {
+               orderNumber: order.orderNumber || order._id.toString(),
+               user: {
+                 email: order.user?.email || 'client@example.com',
+                 firstName: order.shippingAddress?.firstName,
+                 lastName: order.shippingAddress?.lastName
+               },
+               items: order.items.map(item => ({
+                 product: {
+                   name: item.product?.name || 'Produit',
+                   price: item.price
+                 },
+                 quantity: item.quantity,
+                 price: item.price
+               })),
+               subtotal: order.subtotal,
+               tax: order.tax,
+               shipping: order.shipping,
+               total: order.total,
+               shippingAddress: order.shippingAddress,
+               billingAddress: order.billingAddress,
+               createdAt: order.createdAt.toISOString()
+             };
+             
+             console.log('📧 Email client:', invoiceData.user.email);
+             console.log('📧 Email admin:', process.env.ADMIN_EMAIL || process.env.EMAIL_USER);
+             
+             // Envoyer l'email de confirmation et la facture
+             const confirmationResult = await emailService.sendOrderConfirmationEmail(invoiceData);
+             const invoiceResult = await emailService.sendInvoiceEmail(invoiceData);
              
              // Envoyer notification à l'admin
-             await emailService.sendAdminNotificationEmail(invoiceData);
-            
-            console.log(`✅ Facture envoyée automatiquement pour la commande ${order._id}`);
-          } catch (emailError) {
-            console.error('❌ Erreur envoi facture automatique:', emailError);
-          }
+             const adminResult = await emailService.sendAdminNotificationEmail(invoiceData);
+             
+             console.log('📧 Résultats envoi emails:');
+             console.log('  - Confirmation client:', confirmationResult ? '✅' : '❌');
+             console.log('  - Facture client:', invoiceResult ? '✅' : '❌');
+             console.log('  - Notification admin:', adminResult ? '✅' : '❌');
+             
+             console.log(`✅ Facture envoyée automatiquement pour la commande ${order._id}`);
+           } catch (emailError) {
+             console.error('❌ Erreur envoi facture automatique:', emailError);
+           }
         }
         break;
 

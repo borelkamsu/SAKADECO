@@ -69,6 +69,12 @@ class EmailService {
       }
     };
 
+    console.log('📧 Configuration email:');
+    console.log('  - Host:', emailConfig.host);
+    console.log('  - Port:', emailConfig.port);
+    console.log('  - User:', emailConfig.auth.user);
+    console.log('  - Pass:', emailConfig.auth.pass ? 'Configuré' : 'Manquant');
+
     // Vérifier si les variables d'environnement sont configurées
     if (!emailConfig.auth.user || !emailConfig.auth.pass) {
       console.warn('⚠️  Configuration email manquante - les emails ne seront pas envoyés');
@@ -221,6 +227,8 @@ class EmailService {
     }
 
     try {
+      console.log('📧 Envoi email facture à:', invoice.user.email);
+      
       const mailOptions = {
         from: `"SakaDeco" <${process.env.EMAIL_USER}>`,
         to: invoice.user.email,
@@ -250,6 +258,8 @@ class EmailService {
     }
 
     try {
+      console.log('📧 Envoi email confirmation à:', invoice.user.email);
+      
       const mailOptions = {
         from: `"SakaDeco" <${process.env.EMAIL_USER}>`,
         to: invoice.user.email,
@@ -319,9 +329,12 @@ class EmailService {
     }
 
     try {
+      const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+      console.log('📧 Envoi notification admin à:', adminEmail);
+      
       const mailOptions = {
         from: `"SakaDeco" <${process.env.EMAIL_USER}>`,
-        to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER, // L'admin reçoit la notification sur son email
+        to: adminEmail, // L'admin reçoit la notification sur son email
         subject: `🆕 Nouvelle commande reçue - ${invoice.orderNumber}`,
         html: `
           <!DOCTYPE html>
