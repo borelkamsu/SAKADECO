@@ -101,7 +101,10 @@ router.get('/profile', adminAuth, async (req: AdminRequest, res: Response) => {
 });
 
 // Create product
-router.post('/products', adminAuth, upload.single('image'), async (req: AdminRequest, res: Response) => {
+router.post('/products', adminAuth, upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'additionalImages', maxCount: 10 }
+]), async (req: AdminRequest, res: Response) => {
   try {
     const {
       name,
@@ -120,29 +123,61 @@ router.post('/products', adminAuth, upload.single('image'), async (req: AdminReq
     } = req.body;
 
     let finalMainImageUrl = mainImageUrl;
+    let additionalImageUrls = [];
 
-    // Si un fichier a été uploadé, le traiter
-    if (req.file) {
-      console.log('📸 Fichier uploadé détecté:', req.file.originalname);
+    // Traiter les fichiers uploadés
+    if (req.files) {
+      console.log('📸 Fichiers uploadés détectés:', Object.keys(req.files));
       
-      if (isCloudinaryConfigured) {
-        try {
-          console.log('☁️  Upload vers Cloudinary...');
-          const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: 'sakadeco/products',
-            public_id: `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-          });
-          
-          finalMainImageUrl = result.secure_url;
-          console.log('✅ Image uploadée vers Cloudinary:', result.secure_url);
-        } catch (cloudinaryError) {
-          console.error('❌ Erreur upload Cloudinary:', cloudinaryError);
-          // Fallback vers l'URL locale
-          finalMainImageUrl = mainImageUrl || '/uploads/products/default-product.jpg';
+      // Traiter l'image principale
+      if (req.files.image && req.files.image[0]) {
+        const mainFile = req.files.image[0];
+        console.log('📸 Image principale:', mainFile.originalname);
+        
+        if (isCloudinaryConfigured) {
+          try {
+            console.log('☁️  Upload image principale vers Cloudinary...');
+            const result = await cloudinary.uploader.upload(mainFile.path, {
+              folder: 'sakadeco/products',
+              public_id: `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            });
+            
+            finalMainImageUrl = result.secure_url;
+            console.log('✅ Image principale uploadée vers Cloudinary:', result.secure_url);
+          } catch (cloudinaryError) {
+            console.error('❌ Erreur upload Cloudinary image principale:', cloudinaryError);
+            finalMainImageUrl = mainImageUrl || '/uploads/products/default-product.jpg';
+          }
+        } else {
+          console.log('⚠️  Cloudinary non configuré, utilisation de l\'image locale');
+          finalMainImageUrl = `/uploads/products/${mainFile.filename}`;
         }
-      } else {
-        console.log('⚠️  Cloudinary non configuré, utilisation de l\'image locale');
-        finalMainImageUrl = mainImageUrl || '/uploads/products/default-product.jpg';
+      }
+      
+      // Traiter les images supplémentaires
+      if (req.files.additionalImages) {
+        console.log('📸 Images supplémentaires:', req.files.additionalImages.length);
+        
+        for (const file of req.files.additionalImages) {
+          if (isCloudinaryConfigured) {
+            try {
+              console.log('☁️  Upload image supplémentaire vers Cloudinary...');
+              const result = await cloudinary.uploader.upload(file.path, {
+                folder: 'sakadeco/products',
+                public_id: `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+              });
+              
+              additionalImageUrls.push(result.secure_url);
+              console.log('✅ Image supplémentaire uploadée vers Cloudinary:', result.secure_url);
+            } catch (cloudinaryError) {
+              console.error('❌ Erreur upload Cloudinary image supplémentaire:', cloudinaryError);
+              additionalImageUrls.push(`/uploads/products/${file.filename}`);
+            }
+          } else {
+            console.log('⚠️  Cloudinary non configuré, utilisation de l\'image locale');
+            additionalImageUrls.push(`/uploads/products/${file.filename}`);
+          }
+        }
       }
     } else {
       console.log('📸 Aucun fichier uploadé, utilisation de mainImageUrl fourni');
@@ -195,7 +230,7 @@ router.post('/products', adminAuth, upload.single('image'), async (req: AdminReq
       category: category.trim(),
       subcategory: subcategory ? subcategory.trim() : undefined,
       mainImageUrl: finalMainImageUrl,
-      additionalImages: additionalImages || [],
+      additionalImages: additionalImageUrls.length > 0 ? additionalImageUrls : (additionalImages || []),
       isCustomizable: isCustomizable === 'true' || isCustomizable === true,
       isForSale: isForSaleBool,
       isForRent: isForRentBool,

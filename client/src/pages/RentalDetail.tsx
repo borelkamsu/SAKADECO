@@ -46,9 +46,12 @@ const RentalDetail: React.FC = () => {
   const productId = window.location.pathname.split('/rental/')[1];
 
   useEffect(() => {
-    if (productId) {
+    if (productId && productId !== '[object Object]') {
       fetchProduct();
       fetchBookedDates();
+    } else {
+      console.error('ID de produit invalide:', productId);
+      setLocation('/shop');
     }
   }, [productId]);
 
