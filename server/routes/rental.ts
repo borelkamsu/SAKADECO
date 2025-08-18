@@ -67,8 +67,8 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/rental/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/rental/cancel`,
+      success_url: `${req.headers.origin}/rental/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.origin}/rental/cancel`,
       metadata: {
         rentalStartDate: items[0].rentalStartDate,
         rentalEndDate: items[0].rentalEndDate
