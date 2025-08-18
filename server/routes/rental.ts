@@ -67,8 +67,8 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `https://sakadeco-api.onrender.com/rental/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `https://sakadeco-api.onrender.com/rental/cancel`,
+      success_url: `https://sakadeco-api.onrender.com/api/rental/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `https://sakadeco-api.onrender.com/api/rental/cancel`,
       metadata: {
         rentalStartDate: items[0].rentalStartDate,
         rentalEndDate: items[0].rentalEndDate
@@ -269,11 +269,27 @@ router.get('/product/:productId/booked-dates', async (req: Request, res: Respons
       });
     });
     
-    res.json({ dates: bookedDates });
-  } catch (error) {
-    console.error('Erreur récupération dates réservées:', error);
-    res.status(500).json({ message: 'Erreur lors de la récupération des dates réservées' });
+      res.json({ dates: bookedDates });
+} catch (error) {
+  console.error('Erreur récupération dates réservées:', error);
+  res.status(500).json({ message: 'Erreur lors de la récupération des dates réservées' });
+}
+});
+
+// Route de redirection pour le succès de location
+router.get('/success', async (req: Request, res: Response) => {
+  const sessionId = req.query.session_id as string;
+  if (sessionId) {
+    // Rediriger vers la page frontend avec le session_id
+    res.redirect(`/rental/success?session_id=${sessionId}`);
+  } else {
+    res.redirect('/rental/success');
   }
+});
+
+// Route de redirection pour l'annulation de location
+router.get('/cancel', async (req: Request, res: Response) => {
+  res.redirect('/rental/cancel');
 });
 
 export default router;
