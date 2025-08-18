@@ -1,4 +1,4 @@
-import * as nodemailer from 'nodemailer';
+import { createTransport } from 'nodemailer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -51,7 +51,7 @@ interface InvoiceData {
 }
 
 class EmailService {
-  private transporter: nodemailer.Transporter | null = null;
+  private transporter: any = null;
 
   constructor() {
     this.initializeTransporter();
@@ -82,7 +82,7 @@ class EmailService {
     }
 
     try {
-      this.transporter = nodemailer.createTransporter(emailConfig);
+      this.transporter = createTransport(emailConfig);
       console.log('✅ Service email initialisé');
     } catch (error) {
       console.error('❌ Erreur initialisation service email:', error);
