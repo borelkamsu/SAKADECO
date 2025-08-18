@@ -18,9 +18,9 @@ export default function Layout({ children }: LayoutProps) {
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid lg:grid-cols-4 gap-8">
             <div>
-              <div className="mb-4">
-                <Logo width={150} height={100} className="filter brightness-0 invert" />
-              </div>
+                        <div className="mb-4">
+            <Logo width={120} height={80} className="filter brightness-0 invert" />
+          </div>
               <p className="text-gray-300 mb-4">L'élégance au service de vos moments et de vos espaces</p>
               <div className="flex space-x-4">
                 <a href="#" className="text-gray-300 hover:text-gold transition-colors">

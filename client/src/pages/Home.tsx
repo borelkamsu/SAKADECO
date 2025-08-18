@@ -79,9 +79,9 @@ export default function HomePage() {
         <div className="relative z-10 text-center max-w-5xl mx-auto px-6">
           <div className="mb-8">
             <div className="flex justify-center mb-6">
-              <Logo width={300} height={200} className="drop-shadow-lg" />
+              <Logo width={250} height={167} className="drop-shadow-lg" />
             </div>
-            <Badge className="mb-4 px-4 py-2 bg-gradient-to-r from-gold to-yellow-500 text-white border-none text-sm font-semibold">
+            <Badge className="mb-4 px-4 py-2 bg-gradient-to-r from-gold to-yellow-500 text-white border-none text-sm font-semibold rounded-full">
               ✨ Personnalisation à l'infini ✨
             </Badge>
           </div>

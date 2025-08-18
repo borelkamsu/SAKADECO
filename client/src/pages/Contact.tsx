@@ -20,7 +20,7 @@ export default function Contact() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-16">
             <div className="flex justify-center mb-6">
-              <Logo width={200} height={133} className="drop-shadow-lg" />
+              <Logo width={180} height={120} className="drop-shadow-lg" />
             </div>
             <h1 className="text-4xl font-playfair font-bold text-gray-800 mb-4">Contactez-nous</h1>
             <p className="text-xl text-gray-600 mb-2">Prêts à donner vie à vos projets ?</p>

@@ -53,7 +53,7 @@ export default function About() {
       <section className="py-20 bg-gradient-to-br from-gold/10 to-white">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <div className="flex justify-center mb-6">
-            <Logo width={200} height={133} className="drop-shadow-lg" />
+            <Logo width={180} height={120} className="drop-shadow-lg" />
           </div>
           <h1 className="text-4xl md:text-6xl font-playfair font-bold text-gray-800 mb-4">
             À propos de <span className="metallic-gold">Pajusly</span>
