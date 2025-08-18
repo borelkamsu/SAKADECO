@@ -163,7 +163,7 @@ const PaymentSuccess: React.FC = () => {
           {/* Actions */}
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Button
-              onClick={() => setLocation('/orders')}
+              onClick={() => orderDetails ? setLocation(`/invoice/${orderDetails._id}`) : setLocation('/orders')}
               className="bg-green-600 hover:bg-green-700"
             >
               📄 Voir ma facture

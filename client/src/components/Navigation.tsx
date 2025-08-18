@@ -404,6 +404,18 @@ export default function Navigation() {
                       <div className="font-medium text-gray-900">Contact</div>
                     </Link>
 
+                    {/* Mobile Cart */}
+                    <Link 
+                      href="/cart" 
+                      className="block p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium text-gray-900">Panier</div>
+                        <CartIcon />
+                      </div>
+                    </Link>
+
                     {/* Mobile Auth */}
                     {isAuthenticated ? (
                       <div className="pt-4 border-t">
