@@ -32,6 +32,8 @@ const PaymentSuccess: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setOrderDetails(data);
+      } else {
+        console.error('Erreur lors de la récupération des détails de commande:', response.status);
       }
     } catch (error) {
       console.error('Erreur lors de la récupération des détails de commande:', error);
@@ -160,14 +162,12 @@ const PaymentSuccess: React.FC = () => {
 
           {/* Actions */}
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-            {orderDetails && (
-              <Button
-                onClick={() => setLocation(`/invoice/${orderDetails._id}`)}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                📄 Voir ma facture
-              </Button>
-            )}
+            <Button
+              onClick={() => setLocation('/orders')}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              📄 Voir ma facture
+            </Button>
             <Button
               onClick={() => setLocation('/orders')}
               className="bg-skd-shop hover:bg-skd-shop/90"

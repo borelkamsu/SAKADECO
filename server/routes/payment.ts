@@ -276,4 +276,23 @@ router.get('/orders/detail/:orderId', async (req: Request, res: Response) => {
   }
 });
 
+// Récupérer une commande par session Stripe
+router.get('/orders/session/:sessionId', async (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const order = await Order.findOne({ stripeSessionId: sessionId })
+      .populate('items.product')
+      .populate('user');
+
+    if (!order) {
+      return res.status(404).json({ message: 'Commande non trouvée' });
+    }
+
+    res.json(order);
+  } catch (error) {
+    console.error('Erreur récupération commande par session:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
 export default router;
