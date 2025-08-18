@@ -1,5 +1,6 @@
 import Layout from "@/components/Layout";
 import ContactForm from "@/components/ContactForm";
+import BeforeAfterGallery from "@/components/BeforeAfterGallery";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, PaintbrushVertical, Package, Users } from "lucide-react";
 
@@ -19,6 +20,54 @@ export default function SKDHome() {
       icon: Users,
       title: "Coaching à Domicile",
       description: "Accompagnement personnalisé pour transformer durablement vos habitudes"
+    }
+  ];
+
+  const beforeAfterImages = [
+    {
+      id: "1",
+      title: "Salon - Transformation complète",
+      category: "Relooking Intérieur",
+      before: {
+        url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        alt: "Salon avant transformation",
+        description: "Espace encombré avec mobilier disparate et manque d'harmonie"
+      },
+      after: {
+        url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        alt: "Salon après transformation",
+        description: "Espace harmonieux avec décoration cohérente et fonctionnelle"
+      }
+    },
+    {
+      id: "2",
+      title: "Chambre - Organisation optimisée",
+      category: "Home Organizing",
+      before: {
+        url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        alt: "Chambre avant organisation",
+        description: "Chambre encombrée avec vêtements et objets éparpillés"
+      },
+      after: {
+        url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        alt: "Chambre après organisation",
+        description: "Chambre organisée avec rangement fonctionnel et espace dégagé"
+      }
+    },
+    {
+      id: "3",
+      title: "Cuisine - Aménagement fonctionnel",
+      category: "Relooking Intérieur",
+      before: {
+        url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        alt: "Cuisine avant aménagement",
+        description: "Cuisine peu pratique avec espace de travail limité"
+      },
+      after: {
+        url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        alt: "Cuisine après aménagement",
+        description: "Cuisine fonctionnelle avec plan de travail optimisé et rangement intelligent"
+      }
     }
   ];
 
@@ -68,31 +117,23 @@ export default function SKDHome() {
                 alt="Intérieur moderne et organisé avec décoration élégante" 
                 className="rounded-xl shadow-lg w-full"
               />
-              
-              {/* Before/After Comparison */}
-              <Card className="shadow-lg">
-                <CardHeader>
-                  <CardTitle className="font-playfair text-gray-800 text-center">Avant/Après</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center">
-                      <div className="bg-gray-200 rounded-lg h-24 flex items-center justify-center mb-2">
-                        <span className="text-gray-500 text-sm">Avant</span>
-                      </div>
-                      <p className="text-sm text-gray-600">Espace encombré</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="bg-skd-home/20 rounded-lg h-24 flex items-center justify-center mb-2">
-                        <span className="text-skd-home text-sm font-medium">Après</span>
-                      </div>
-                      <p className="text-sm text-gray-600">Harmonie & sérénité</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Before/After Gallery */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-playfair font-semibold text-gray-800 mb-4">
+              Nos Réalisations
+            </h2>
+            <p className="text-lg text-gray-600">
+              Découvrez les transformations réalisées par notre équipe
+            </p>
+          </div>
+          <BeforeAfterGallery images={beforeAfterImages} />
         </div>
       </section>
 

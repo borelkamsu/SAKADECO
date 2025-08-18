@@ -9,6 +9,7 @@ import { Newsletter } from "@/components/Newsletter";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import { GalleryShowcase } from "@/components/GalleryShowcase";
 import { Features } from "@/components/Features";
+import Logo from "@/components/Logo";
 import type { Product } from "@shared/schema";
 
 export default function HomePage() {
@@ -77,6 +78,9 @@ export default function HomePage() {
         
         <div className="relative z-10 text-center max-w-5xl mx-auto px-6">
           <div className="mb-8">
+            <div className="flex justify-center mb-6">
+              <Logo width={300} height={200} className="drop-shadow-lg" />
+            </div>
             <Badge className="mb-4 px-4 py-2 bg-gradient-to-r from-gold to-yellow-500 text-white border-none text-sm font-semibold">
               ✨ Personnalisation à l'infini ✨
             </Badge>

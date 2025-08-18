@@ -21,6 +21,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import CartIcon from "./CartIcon";
 import RentalCartIcon from "./RentalCartIcon";
+import Logo from "./Logo";
 
 export default function Navigation() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -86,20 +87,11 @@ export default function Navigation() {
             >
               <Link href="/">
                 <div className="flex items-center space-x-2 lg:space-x-3 cursor-pointer group">
-                  <div className="relative">
-                    <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-gold to-yellow-500 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                      <span className="text-white font-bold text-sm lg:text-base">S</span>
-                    </div>
-                    <div className="absolute -top-1 -right-1 w-2 h-2 lg:w-3 lg:h-3 bg-red-500 rounded-full animate-pulse"></div>
-                  </div>
-                  <div>
-                    <h1 className="text-lg lg:text-xl font-playfair font-bold bg-gradient-to-r from-gold to-yellow-600 bg-clip-text text-transparent group-hover:from-yellow-600 group-hover:to-gold transition-all duration-300">
-                      SakaDeco Group
-                    </h1>
-                    <span className="text-xs text-gray-600 font-light hidden lg:block">
-                      L'élégance au service de vos moments
-                    </span>
-                  </div>
+                  <Logo 
+                    width={120} 
+                    height={80} 
+                    className="group-hover:scale-105 transition-transform duration-300"
+                  />
                 </div>
               </Link>
             </motion.div>

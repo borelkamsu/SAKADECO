@@ -2,6 +2,7 @@ import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, Phone, Heart, Target } from "lucide-react";
+import Logo from "@/components/Logo";
 
 export default function About() {
   const values = [
@@ -51,6 +52,9 @@ export default function About() {
       {/* Header */}
       <section className="py-20 bg-gradient-to-br from-gold/10 to-white">
         <div className="max-w-6xl mx-auto px-4 text-center">
+          <div className="flex justify-center mb-6">
+            <Logo width={200} height={133} className="drop-shadow-lg" />
+          </div>
           <h1 className="text-4xl md:text-6xl font-playfair font-bold text-gray-800 mb-4">
             À propos de <span className="metallic-gold">Pajusly</span>
           </h1>

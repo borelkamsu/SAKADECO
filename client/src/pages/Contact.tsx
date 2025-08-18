@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Phone, Mail, MapPin, Clock, Facebook, Instagram, MessageSquare } from "lucide-react";
+import Logo from "@/components/Logo";
 
 export default function Contact() {
   const handleSubmit = (e: React.FormEvent) => {
@@ -18,6 +19,9 @@ export default function Contact() {
       <section className="py-20 bg-gradient-to-br from-gold/10 to-white">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-16">
+            <div className="flex justify-center mb-6">
+              <Logo width={200} height={133} className="drop-shadow-lg" />
+            </div>
             <h1 className="text-4xl font-playfair font-bold text-gray-800 mb-4">Contactez-nous</h1>
             <p className="text-xl text-gray-600 mb-2">Prêts à donner vie à vos projets ?</p>
             <p className="text-lg font-playfair text-gold italic">« Transformons vos idées en réalité »</p>

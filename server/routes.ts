@@ -693,6 +693,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const quoteData = insertQuoteSchema.parse(req.body);
       const quote = await storage.createQuote(quoteData);
+      
+      // Envoyer les emails
+      try {
+        // Email de confirmation au client
+        await emailService.sendQuoteConfirmationEmail(quote);
+        
+        // Notification à l'admin
+        await emailService.sendQuoteAdminNotificationEmail(quote);
+        
+        console.log(`✅ Emails de devis envoyés pour ${quote._id}`);
+      } catch (emailError) {
+        console.error('❌ Erreur envoi emails devis:', emailError);
+      }
+      
       res.status(201).json(quote);
     } catch (error) {
       console.error("Error creating quote:", error);
@@ -715,6 +729,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching quotes:", error);
       res.status(500).json({ message: "Failed to fetch quotes" });
+    }
+  });
+
+  app.patch('/api/quotes/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { id } = req.params;
+      const updateData = req.body;
+      
+      const quote = await storage.updateQuoteStatus(id, updateData.status, updateData.estimatedPrice);
+      res.json(quote);
+    } catch (error) {
+      console.error("Error updating quote:", error);
+      res.status(500).json({ message: "Failed to update quote" });
     }
   });
 
@@ -875,6 +907,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Invoice routes
   app.use('/api/invoice', invoiceRoutes);
+
+  // Logo avatar route for email clients
+  app.get('/logo-avatar.png', (req, res) => {
+    // Rediriger vers le logo SVG ou servir une version PNG
+    res.redirect('/api/logo-avatar');
+  });
+
+  app.get('/api/logo-avatar', (req, res) => {
+    // Servir le logo SVG comme avatar
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache 24h
+    
+    const svgLogo = `<svg width="300" height="200" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background -->
+      <rect width="300" height="200" fill="#faf9f6"/>
+      
+      <!-- Balloons -->
+      <!-- Left balloon (pink) -->
+      <ellipse cx="60" cy="40" rx="15" ry="20" fill="#ffb6c1" stroke="#d4af37" stroke-width="1"/>
+      <line x1="60" y1="60" x2="60" y2="80" stroke="#d4af37" stroke-width="1"/>
+      
+      <!-- Right balloon (teal) -->
+      <ellipse cx="90" cy="40" rx="15" ry="20" fill="#98d8c8" stroke="#d4af37" stroke-width="1"/>
+      <line x1="90" y1="60" x2="90" y2="80" stroke="#d4af37" stroke-width="1"/>
+      
+      <!-- Floral branch -->
+      <g stroke="#d4af37" stroke-width="1" fill="none">
+        <!-- Main stem -->
+        <path d="M 120 80 Q 140 60 160 40"/>
+        
+        <!-- Flowers -->
+        <g fill="#ffb6c1">
+          <circle cx="150" cy="35" r="8"/>
+          <circle cx="165" cy="25" r="6"/>
+        </g>
+        
+        <!-- Leaves -->
+        <g fill="#98d8c8">
+          <ellipse cx="135" cy="50" rx="4" ry="8" transform="rotate(-30 135 50)"/>
+          <ellipse cx="145" cy="45" rx="3" ry="6" transform="rotate(20 145 45)"/>
+          <ellipse cx="155" cy="55" rx="4" ry="7" transform="rotate(-15 155 55)"/>
+        </g>
+      </g>
+      
+      <!-- SKD text -->
+      <text x="150" y="120" font-family="cursive, serif" font-size="48" font-weight="bold" text-anchor="middle" fill="#d4af37">SKD</text>
+      
+      <!-- GROUP text -->
+      <text x="150" y="145" font-family="Arial, sans-serif" font-size="16" font-weight="normal" text-anchor="middle" fill="#98d8c8">GROUP</text>
+    </svg>`;
+    
+    res.send(svgLogo);
+  });
 
   const httpServer = createServer(app);
   return httpServer;

@@ -25,6 +25,7 @@ import AdminProductDetail from "@/pages/AdminProductDetail";
 import AdminEditProduct from "@/pages/AdminEditProduct";
 import AdminOrders from "@/pages/AdminOrders";
 import AdminRentals from "@/pages/AdminRentals";
+import AdminQuotes from "@/pages/AdminQuotes";
 import AdminUsers from "@/pages/AdminUsers";
 import ProductDetail from "@/pages/ProductDetail";
 import Orders from "@/pages/Orders";
@@ -36,6 +37,7 @@ import RentalDetail from "@/pages/RentalDetail";
 import RentalCart from "@/pages/RentalCart";
 import RentalSuccess from "@/pages/RentalSuccess";
 import RentalCancel from "@/pages/RentalCancel";
+import Realisations from "@/pages/Realisations";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -59,6 +61,7 @@ function Router() {
       <Route path="/checkout" component={Checkout} />
       <Route path="/contact" component={Contact} />
       <Route path="/about" component={About} />
+      <Route path="/realisations" component={Realisations} />
       <Route path="/orders" component={Orders} />
       <Route path="/invoice/:orderId" component={Invoice} />
       <Route path="/payment/success" component={PaymentSuccess} />
@@ -72,6 +75,7 @@ function Router() {
              <Route path="/admin/products/:id/edit" component={AdminEditProduct} />
              <Route path="/admin/orders" component={AdminOrders} />
              <Route path="/admin/rentals" component={AdminRentals} />
+             <Route path="/admin/quotes" component={AdminQuotes} />
              <Route path="/admin/users" component={AdminUsers} />
       <Route component={NotFound} />
     </Switch>

@@ -13,7 +13,8 @@ import {
   ShoppingCart,
   Star,
   TrendingUp,
-  Home
+  Home,
+  FileText
 } from "lucide-react";
 
 interface AdminInfo {
@@ -244,6 +245,23 @@ export default function AdminDashboard() {
               </p>
               <Button variant="outline" className="w-full">
                 Voir les locations
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation("/admin/quotes")}>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <FileText className="h-5 w-5 text-purple-500" />
+                <span>Devis</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-4">
+                Gérez les demandes de devis de vos clients.
+              </p>
+              <Button variant="outline" className="w-full">
+                Voir les devis
               </Button>
             </CardContent>
           </Card>

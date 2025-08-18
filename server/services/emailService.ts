@@ -2,6 +2,46 @@ import { createTransport } from 'nodemailer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+// Logo SKD GROUP en base64 (SVG)
+const SKD_LOGO_BASE64 = `data:image/svg+xml;base64,${Buffer.from(`<svg width="300" height="200" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="300" height="200" fill="#faf9f6"/>
+  
+  <!-- Balloons -->
+  <!-- Left balloon (pink) -->
+  <ellipse cx="60" cy="40" rx="15" ry="20" fill="#ffb6c1" stroke="#d4af37" stroke-width="1"/>
+  <line x1="60" y1="60" x2="60" y2="80" stroke="#d4af37" stroke-width="1"/>
+  
+  <!-- Right balloon (teal) -->
+  <ellipse cx="90" cy="40" rx="15" ry="20" fill="#98d8c8" stroke="#d4af37" stroke-width="1"/>
+  <line x1="90" y1="60" x2="90" y2="80" stroke="#d4af37" stroke-width="1"/>
+  
+  <!-- Floral branch -->
+  <g stroke="#d4af37" stroke-width="1" fill="none">
+    <!-- Main stem -->
+    <path d="M 120 80 Q 140 60 160 40"/>
+    
+    <!-- Flowers -->
+    <g fill="#ffb6c1">
+      <circle cx="150" cy="35" r="8"/>
+      <circle cx="165" cy="25" r="6"/>
+    </g>
+    
+    <!-- Leaves -->
+    <g fill="#98d8c8">
+      <ellipse cx="135" cy="50" rx="4" ry="8" transform="rotate(-30 135 50)"/>
+      <ellipse cx="145" cy="45" rx="3" ry="6" transform="rotate(20 145 45)"/>
+      <ellipse cx="155" cy="55" rx="4" ry="7" transform="rotate(-15 155 55)"/>
+    </g>
+  </g>
+  
+  <!-- SKD text -->
+  <text x="150" y="120" font-family="cursive, serif" font-size="48" font-weight="bold" text-anchor="middle" fill="#d4af37">SKD</text>
+  
+  <!-- GROUP text -->
+  <text x="150" y="145" font-family="Arial, sans-serif" font-size="16" font-weight="normal" text-anchor="middle" fill="#98d8c8">GROUP</text>
+</svg>`).toString('base64')}`;
+
 interface EmailConfig {
   host: string;
   port: number;
@@ -83,9 +123,29 @@ class EmailService {
 
     try {
       this.transporter = createTransport(emailConfig);
+      
+      // Configuration de l'avatar de l'expéditeur
+      this.setupSenderAvatar();
+      
       console.log('✅ Service email initialisé');
     } catch (error) {
       console.error('❌ Erreur initialisation service email:', error);
+    }
+  }
+
+  private async setupSenderAvatar() {
+    try {
+      // Configuration de l'avatar pour Gmail
+      if (process.env.EMAIL_HOST === 'smtp.gmail.com') {
+        console.log('📧 Configuration avatar expéditeur pour Gmail...');
+        
+        // Note: L'avatar Gmail est généralement configuré via le profil Google
+        // Mais nous pouvons essayer de configurer via les en-têtes
+        console.log('💡 Pour un avatar personnalisé, configurez votre photo de profil Gmail');
+        console.log('💡 Ou utilisez un service comme Gravatar avec votre email');
+      }
+    } catch (error) {
+      console.error('❌ Erreur configuration avatar:', error);
     }
   }
 
@@ -230,7 +290,10 @@ class EmailService {
       console.log('📧 Envoi email facture à:', invoice.user.email);
       
       const mailOptions = {
-        from: `"SakaDeco" <${process.env.EMAIL_USER}>`,
+        from: {
+          name: "SakaDeco Group",
+          address: process.env.EMAIL_USER || ''
+        },
         to: invoice.user.email,
         subject: `Facture SakaDeco - Commande ${invoice.orderNumber}`,
         html: this.generateInvoiceHTML(invoice),
@@ -239,7 +302,10 @@ class EmailService {
             filename: `facture-${invoice.orderNumber}.html`,
             content: this.generateInvoiceHTML(invoice)
           }
-        ]
+        ],
+        headers: {
+          'X-Entity-Ref-ID': 'skd-group-logo'
+        }
       };
 
       const info = await this.transporter.sendMail(mailOptions);
@@ -261,7 +327,10 @@ class EmailService {
       console.log('📧 Envoi email confirmation à:', invoice.user.email);
       
       const mailOptions = {
-        from: `"SakaDeco" <${process.env.EMAIL_USER}>`,
+        from: {
+          name: "SakaDeco Group",
+          address: process.env.EMAIL_USER || ''
+        },
         to: invoice.user.email,
         subject: `Confirmation de commande - ${invoice.orderNumber}`,
         html: `
@@ -333,7 +402,10 @@ class EmailService {
       console.log('📧 Envoi notification admin à:', adminEmail);
       
       const mailOptions = {
-        from: `"SakaDeco" <${process.env.EMAIL_USER}>`,
+        from: {
+          name: "SakaDeco Group",
+          address: process.env.EMAIL_USER || ''
+        },
         to: adminEmail, // L'admin reçoit la notification sur son email
         subject: `🆕 Nouvelle commande reçue - ${invoice.orderNumber}`,
         html: `
@@ -420,7 +492,10 @@ class EmailService {
       console.log('📧 Envoi email confirmation location à:', rental.user.email);
       
       const mailOptions = {
-        from: `"SakaDeco" <${process.env.EMAIL_USER}>`,
+        from: {
+          name: "SakaDeco Group",
+          address: process.env.EMAIL_USER || ''
+        },
         to: rental.user.email,
         subject: `Confirmation de location - ${rental.orderNumber}`,
         html: `
@@ -488,7 +563,10 @@ class EmailService {
       console.log('📧 Envoi notification admin location à:', adminEmail);
       
       const mailOptions = {
-        from: `"SakaDeco" <${process.env.EMAIL_USER}>`,
+        from: {
+          name: "SakaDeco Group",
+          address: process.env.EMAIL_USER || ''
+        },
         to: adminEmail,
         subject: `🏠 Nouvelle location reçue - ${rental.orderNumber}`,
         html: `
@@ -564,6 +642,172 @@ class EmailService {
       return true;
     } catch (error) {
       console.error('❌ Erreur envoi notification admin location:', error);
+      return false;
+    }
+  }
+
+  async sendQuoteConfirmationEmail(quote: any): Promise<boolean> {
+    if (!this.transporter) {
+      console.warn('⚠️  Service email non configuré - confirmation devis non envoyée');
+      return false;
+    }
+
+    try {
+      console.log('📧 Envoi confirmation devis à:', quote.customerEmail);
+      
+      const mailOptions = {
+        from: {
+          name: "SakaDeco Group",
+          address: process.env.EMAIL_USER || ''
+        },
+        to: quote.customerEmail,
+        subject: `📋 Demande de devis reçue - ${quote.service}`,
+        html: `
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Demande de devis reçue</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { text-align: center; margin-bottom: 30px; }
+              .confirmation { color: #10b981; font-size: 24px; margin-bottom: 10px; }
+              .quote-details { background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
+              .service-badge { display: inline-block; background-color: #3b82f6; color: white; 
+                              padding: 4px 12px; border-radius: 20px; font-size: 14px; margin: 10px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <div class="confirmation">📋</div>
+                <h1 style="color: #10b981;">Demande de devis reçue !</h1>
+              </div>
+              
+              <p>Bonjour ${quote.customerName},</p>
+              
+              <p>Nous avons bien reçu votre demande de devis et nous vous en remercions.</p>
+              
+              <div class="quote-details">
+                <div class="service-badge">${quote.service}</div>
+                <h3>Récapitulatif de votre demande</h3>
+                <p><strong>Nom:</strong> ${quote.customerName}</p>
+                <p><strong>Email:</strong> ${quote.customerEmail}</p>
+                ${quote.customerPhone ? `<p><strong>Téléphone:</strong> ${quote.customerPhone}</p>` : ''}
+                ${quote.eventDate ? `<p><strong>Date d'événement:</strong> ${format(new Date(quote.eventDate), 'dd MMMM yyyy', { locale: fr })}</p>` : ''}
+                ${quote.budget ? `<p><strong>Budget:</strong> ${quote.budget}</p>` : ''}
+                <p><strong>Description:</strong></p>
+                <p style="background-color: white; padding: 15px; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                  ${quote.description}
+                </p>
+              </div>
+              
+              <p><strong>Prochaines étapes :</strong></p>
+              <ul>
+                <li>Notre équipe va analyser votre demande</li>
+                <li>Nous vous recontactons sous 24h ouvrées</li>
+                <li>Nous vous proposerons un devis personnalisé</li>
+              </ul>
+              
+              <p>En attendant, n'hésitez pas à nous contacter au <strong>06 88 00 39 28</strong> si vous avez des questions.</p>
+              
+              <p>Cordialement,<br>L'équipe SakaDeco</p>
+            </div>
+          </body>
+          </html>
+        `
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log('✅ Confirmation devis envoyée:', info.messageId);
+      return true;
+    } catch (error) {
+      console.error('❌ Erreur envoi confirmation devis:', error);
+      return false;
+    }
+  }
+
+  async sendQuoteAdminNotificationEmail(quote: any): Promise<boolean> {
+    if (!this.transporter) {
+      console.warn('⚠️  Service email non configuré - notification admin devis non envoyée');
+      return false;
+    }
+
+    try {
+      const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+      console.log('📧 Envoi notification admin devis à:', adminEmail);
+      
+      const mailOptions = {
+        from: {
+          name: "SakaDeco Group",
+          address: process.env.EMAIL_USER || ''
+        },
+        to: adminEmail,
+        subject: `📋 Nouvelle demande de devis - ${quote.service}`,
+        html: `
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Nouvelle demande de devis</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { text-align: center; margin-bottom: 30px; }
+              .notification { color: #3b82f6; font-size: 24px; margin-bottom: 10px; }
+              .quote-details { background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
+              .button { display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; 
+                        text-decoration: none; border-radius: 6px; margin: 20px 0; }
+              .service-badge { display: inline-block; background-color: #3b82f6; color: white; 
+                              padding: 4px 12px; border-radius: 20px; font-size: 14px; margin: 10px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <div class="notification">📋</div>
+                <h1 style="color: #3b82f6;">Nouvelle demande de devis !</h1>
+              </div>
+              
+              <p>Bonjour Admin,</p>
+              
+              <p>Une nouvelle demande de devis vient d'être reçue sur SakaDeco.</p>
+              
+              <div class="quote-details">
+                <div class="service-badge">${quote.service}</div>
+                <h3>Détails de la demande</h3>
+                <p><strong>Date:</strong> ${format(new Date(quote.createdAt), 'dd MMMM yyyy à HH:mm', { locale: fr })}</p>
+                <p><strong>Client:</strong> ${quote.customerName}</p>
+                <p><strong>Email:</strong> ${quote.customerEmail}</p>
+                ${quote.customerPhone ? `<p><strong>Téléphone:</strong> ${quote.customerPhone}</p>` : ''}
+                ${quote.eventDate ? `<p><strong>Date d'événement:</strong> ${format(new Date(quote.eventDate), 'dd MMMM yyyy', { locale: fr })}</p>` : ''}
+                ${quote.budget ? `<p><strong>Budget:</strong> ${quote.budget}</p>` : ''}
+                <p><strong>Description:</strong></p>
+                <p style="background-color: white; padding: 15px; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                  ${quote.description}
+                </p>
+              </div>
+              
+              <p>Vous pouvez gérer cette demande en cliquant sur le bouton ci-dessous :</p>
+              
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}/admin/quotes" 
+                 class="button">Gérer les devis</a>
+              
+              <p>Cordialement,<br>Système SakaDeco</p>
+            </div>
+          </body>
+          </html>
+        `
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log('✅ Notification admin devis envoyée:', info.messageId);
+      return true;
+    } catch (error) {
+      console.error('❌ Erreur envoi notification admin devis:', error);
       return false;
     }
   }
