@@ -20,7 +20,7 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
       return res.status(503).json({ message: 'Stripe non configuré' });
     }
 
-    const { items, customerEmail, shippingAddress, billingAddress } = req.body;
+    const { items } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ message: 'Aucun article dans la location' });
@@ -69,7 +69,6 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
       mode: 'payment',
       success_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/rental/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5000'}/rental/cancel`,
-      customer_email: customerEmail,
       metadata: {
         rentalStartDate: items[0].rentalStartDate,
         rentalEndDate: items[0].rentalEndDate
@@ -93,8 +92,6 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
       tax,
       deposit,
       total,
-      shippingAddress: shippingAddress || {},
-      billingAddress: billingAddress || {},
       stripeSessionId: session.id
     });
 
@@ -105,10 +102,7 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
     console.error('Erreur création session location:', error);
     console.error('Stack trace:', error.stack);
     console.error('Données reçues:', {
-      itemsCount: items?.length,
-      customerEmail,
-      hasShippingAddress: !!shippingAddress,
-      hasBillingAddress: !!billingAddress
+      itemsCount: items?.length
     });
     res.status(500).json({ 
       message: 'Erreur lors de la création de la session de location',
@@ -152,9 +146,9 @@ router.post('/webhook', async (req: Request, res: Response) => {
             const rentalData = {
               orderNumber: rental.orderNumber,
               user: {
-                email: session.customer_email || 'client@example.com',
-                firstName: rental.shippingAddress?.firstName,
-                lastName: rental.shippingAddress?.lastName
+                email: session.customer_email || session.customer_details?.email || 'client@example.com',
+                firstName: rental.shippingAddress?.firstName || session.customer_details?.name?.split(' ')[0],
+                lastName: rental.shippingAddress?.lastName || session.customer_details?.name?.split(' ').slice(1).join(' ')
               },
               items: rental.items.map(item => ({
                 product: {

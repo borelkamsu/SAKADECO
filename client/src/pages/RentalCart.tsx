@@ -89,10 +89,7 @@ const RentalCart: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          items: rentalItems,
-          customerEmail: '', // Sera rempli dans le formulaire Stripe
-          shippingAddress: {}, // Sera rempli dans le formulaire Stripe
-          billingAddress: {} // Sera rempli dans le formulaire Stripe
+          items: rentalItems
         }),
       });
 
