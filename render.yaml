@@ -26,3 +26,13 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_USER
+        value: lamawaffo11@gmail.com
+      - key: EMAIL_PASS
+        sync: false
+      - key: FRONTEND_URL
+        value: https://sakadeco-api.onrender.com
