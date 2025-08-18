@@ -150,18 +150,45 @@ class EmailService {
   }
 
   private generateInvoiceHTML(invoice: InvoiceData): string {
-    const itemsHTML = invoice.items.map(item => `
-      <tr style="border-bottom: 1px solid #e5e7eb;">
-        <td style="padding: 12px; text-align: left;">
-          <div style="font-weight: 500; color: #1f2937;">${item.product.name}</div>
-        </td>
-        <td style="padding: 12px; text-align: center; color: #6b7280;">${item.quantity}</td>
-        <td style="padding: 12px; text-align: right; color: #6b7280;">${item.price.toFixed(2)}€</td>
-        <td style="padding: 12px; text-align: right; font-weight: 500; color: #1f2937;">
-          ${(item.price * item.quantity).toFixed(2)}€
-        </td>
-      </tr>
-    `).join('');
+    const itemsHTML = invoice.items.map(item => {
+      let customizationHTML = '';
+      if (item.customizations && Object.keys(item.customizations).length > 0) {
+        customizationHTML = `
+          <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
+            <strong>Personnalisations:</strong>
+            <ul style="margin: 4px 0; padding-left: 16px;">
+              ${Object.entries(item.customizations).map(([key, value]) => `
+                <li><strong>${key.replace(/_/g, ' ')}:</strong> ${value}</li>
+              `).join('')}
+            </ul>
+          </div>
+        `;
+      }
+      
+      let messageHTML = '';
+      if (item.customMessage) {
+        messageHTML = `
+          <div style="margin-top: 4px; font-size: 12px; color: #6b7280;">
+            <strong>Message:</strong> ${item.customMessage}
+          </div>
+        `;
+      }
+
+      return `
+        <tr style="border-bottom: 1px solid #e5e7eb;">
+          <td style="padding: 12px; text-align: left;">
+            <div style="font-weight: 500; color: #1f2937;">${item.product.name}</div>
+            ${customizationHTML}
+            ${messageHTML}
+          </td>
+          <td style="padding: 12px; text-align: center; color: #6b7280;">${item.quantity}</td>
+          <td style="padding: 12px; text-align: right; color: #6b7280;">${item.price.toFixed(2)}€</td>
+          <td style="padding: 12px; text-align: right; font-weight: 500; color: #1f2937;">
+            ${(item.price * item.quantity).toFixed(2)}€
+          </td>
+        </tr>
+      `;
+    }).join('');
 
     return `
       <!DOCTYPE html>
@@ -450,6 +477,15 @@ class EmailService {
                   ${invoice.items.map(item => `
                     <div class="item">
                       <strong>${item.product.name}</strong> - Quantité: ${item.quantity} - Prix: ${item.price.toFixed(2)}€
+                      ${item.customizations && Object.keys(item.customizations).length > 0 ? `
+                        <br><strong>Personnalisations:</strong>
+                        <ul style="margin: 5px 0; padding-left: 20px;">
+                          ${Object.entries(item.customizations).map(([key, value]) => `
+                            <li><strong>${key.replace(/_/g, ' ')}:</strong> ${value}</li>
+                          `).join('')}
+                        </ul>
+                      ` : ''}
+                      ${item.customMessage ? `<br><strong>Message:</strong> ${item.customMessage}` : ''}
                     </div>
                   `).join('')}
                 </div>

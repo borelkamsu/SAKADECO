@@ -312,6 +312,12 @@ export default function Navigation() {
               )}
             </div>
 
+            {/* Mobile Cart Icons - Always Visible */}
+            <div className="xl:hidden flex items-center gap-2 mr-2">
+              <CartIcon />
+              <RentalCartIcon />
+            </div>
+
             {/* Mobile Menu Button */}
             <div className="xl:hidden">
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -328,7 +334,7 @@ export default function Navigation() {
                     </SheetDescription>
                   </SheetHeader>
                   
-                  <div className="mt-8 space-y-4">
+                  <div className="mt-8 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
                     {/* Mobile Navigation Items */}
                     <Link 
                       href="/" 
@@ -399,27 +405,26 @@ export default function Navigation() {
                       <div className="font-medium text-gray-900">Contact</div>
                     </Link>
 
-                    {/* Mobile Cart */}
+                    {/* Mobile Cart Links */}
                     <Link 
                       href="/cart" 
                       className="block p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <div className="flex items-center justify-between">
-                        <div className="font-medium text-gray-900">Panier</div>
-                        <CartIcon />
+                        <div className="font-medium text-gray-900">Mon Panier</div>
+                        <div className="text-sm text-gray-500">Voir mes achats</div>
                       </div>
                     </Link>
 
-                    {/* Mobile Rental Cart */}
                     <Link 
                       href="/rental-cart" 
                       className="block p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <div className="flex items-center justify-between">
-                        <div className="font-medium text-gray-900">Panier de location</div>
-                        <RentalCartIcon />
+                        <div className="font-medium text-gray-900">Mes Locations</div>
+                        <div className="text-sm text-gray-500">Voir mes locations</div>
                       </div>
                     </Link>
 

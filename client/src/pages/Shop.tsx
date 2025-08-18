@@ -7,6 +7,7 @@ import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Search, Filter, ShoppingCart } from 'lucide-react';
 import ImageWithFallback from '../components/ImageWithFallback';
+import Layout from '../components/Layout';
 
 interface Product {
   _id: string;
@@ -71,16 +72,19 @@ const Shop: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-lg">Chargement des produits...</div>
+      <Layout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="text-lg">Chargement des produits...</div>
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <Layout>
+      <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Boutique</h1>
         <p className="text-gray-600">Découvrez nos produits disponibles à la vente</p>
@@ -164,6 +168,7 @@ const Shop: React.FC = () => {
         </div>
       )}
     </div>
+    </Layout>
   );
 };
 
