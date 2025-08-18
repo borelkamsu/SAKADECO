@@ -169,7 +169,7 @@ const Shop: React.FC = () => {
                       {product.stockQuantity > 0 ? 'En stock' : 'Rupture'}
                     </Badge>
                   </div>
-                  <Link href={`/product/${product._id}`}>
+                  <Link href={`/product/${product._id.toString()}`}>
                     <Button className="w-full" disabled={product.stockQuantity === 0}>
                       Voir le produit
                     </Button>
@@ -238,7 +238,7 @@ const Shop: React.FC = () => {
                       Disponible
                     </Badge>
                   </div>
-                  <Link href={`/rental/${product._id}`}>
+                  <Link href={`/rental/${product._id.toString()}`}>
                     <Button className="w-full bg-orange-500 hover:bg-orange-600">
                       Louer ce produit
                     </Button>
