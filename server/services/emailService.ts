@@ -411,4 +411,163 @@ class EmailService {
   }
 }
 
+  async sendRentalConfirmationEmail(rental: any): Promise<boolean> {
+    if (!this.transporter) {
+      console.warn('⚠️  Service email non configuré - email location non envoyé');
+      return false;
+    }
+
+    try {
+      console.log('📧 Envoi email confirmation location à:', rental.user.email);
+      
+      const mailOptions = {
+        from: `"SakaDeco" <${process.env.EMAIL_USER}>`,
+        to: rental.user.email,
+        subject: `Confirmation de location - ${rental.orderNumber}`,
+        html: `
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Confirmation de location</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { text-align: center; margin-bottom: 30px; }
+              .success { color: #059669; font-size: 24px; margin-bottom: 10px; }
+              .rental-details { background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
+              .button { display: inline-block; background-color: #059669; color: white; padding: 12px 24px; 
+                        text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <div class="success">✅</div>
+                <h1 style="color: #059669;">Location confirmée !</h1>
+              </div>
+              
+              <p>Bonjour ${rental.user.firstName || 'Client'},</p>
+              
+              <p>Nous vous remercions pour votre location. Votre paiement a été traité avec succès.</p>
+              
+              <div class="rental-details">
+                <h3>Détails de la location</h3>
+                <p><strong>Numéro de location:</strong> ${rental.orderNumber}</p>
+                <p><strong>Date:</strong> ${format(new Date(rental.createdAt), 'dd MMMM yyyy', { locale: fr })}</p>
+                <p><strong>Total:</strong> ${rental.total.toFixed(2)}€</p>
+                <p><strong>Dépôt:</strong> ${rental.deposit.toFixed(2)}€</p>
+              </div>
+              
+              <p>Votre location sera préparée et livrée selon les dates convenues.</p>
+              
+              <p>Cordialement,<br>L'équipe SakaDeco</p>
+            </div>
+          </body>
+          </html>
+        `
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log('✅ Email de confirmation location envoyé:', info.messageId);
+      return true;
+    } catch (error) {
+      console.error('❌ Erreur envoi email confirmation location:', error);
+      return false;
+    }
+  }
+
+  async sendRentalAdminNotificationEmail(rental: any): Promise<boolean> {
+    if (!this.transporter) {
+      console.warn('⚠️  Service email non configuré - notification admin location non envoyée');
+      return false;
+    }
+
+    try {
+      const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+      console.log('📧 Envoi notification admin location à:', adminEmail);
+      
+      const mailOptions = {
+        from: `"SakaDeco" <${process.env.EMAIL_USER}>`,
+        to: adminEmail,
+        subject: `🏠 Nouvelle location reçue - ${rental.orderNumber}`,
+        html: `
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Nouvelle location</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { text-align: center; margin-bottom: 30px; }
+              .notification { color: #3b82f6; font-size: 24px; margin-bottom: 10px; }
+              .rental-details { background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
+              .button { display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; 
+                        text-decoration: none; border-radius: 6px; margin: 20px 0; }
+              .items-list { margin: 10px 0; }
+              .item { padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <div class="notification">🏠</div>
+                <h1 style="color: #3b82f6;">Nouvelle location reçue !</h1>
+              </div>
+              
+              <p>Bonjour Admin,</p>
+              
+              <p>Une nouvelle location vient d'être effectuée sur SakaDeco.</p>
+              
+              <div class="rental-details">
+                <h3>Détails de la location</h3>
+                <p><strong>Numéro de location:</strong> ${rental.orderNumber}</p>
+                <p><strong>Date:</strong> ${format(new Date(rental.createdAt), 'dd MMMM yyyy à HH:mm', { locale: fr })}</p>
+                <p><strong>Client:</strong> ${rental.user.firstName || ''} ${rental.user.lastName || ''} (${rental.user.email})</p>
+                <p><strong>Total:</strong> ${rental.total.toFixed(2)}€</p>
+                <p><strong>Dépôt:</strong> ${rental.deposit.toFixed(2)}€</p>
+                
+                <h4>Produits loués:</h4>
+                <div class="items-list">
+                  ${rental.items.map(item => `
+                    <div class="item">
+                      <strong>${item.product.name}</strong> - Quantité: ${item.quantity} - ${item.rentalDays} jours
+                      <br>Du ${format(new Date(item.rentalStartDate), 'dd/MM/yyyy', { locale: fr })} au ${format(new Date(item.rentalEndDate), 'dd/MM/yyyy', { locale: fr })}
+                      <br>Prix: ${item.totalPrice.toFixed(2)}€
+                    </div>
+                  `).join('')}
+                </div>
+                
+                <h4>Adresse de livraison:</h4>
+                <p>${rental.shippingAddress.firstName} ${rental.shippingAddress.lastName}</p>
+                <p>${rental.shippingAddress.address}</p>
+                <p>${rental.shippingAddress.postalCode} ${rental.shippingAddress.city}</p>
+                <p>${rental.shippingAddress.country}</p>
+              </div>
+              
+              <p>Vous pouvez gérer cette location en cliquant sur le bouton ci-dessous :</p>
+              
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}/admin/rentals" 
+                 class="button">Gérer les locations</a>
+              
+              <p>Cordialement,<br>Système SakaDeco</p>
+            </div>
+          </body>
+          </html>
+        `
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log('✅ Notification admin location envoyée:', info.messageId);
+      return true;
+    } catch (error) {
+      console.error('❌ Erreur envoi notification admin location:', error);
+      return false;
+    }
+  }
+}
+
 export default new EmailService();

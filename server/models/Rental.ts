@@ -1,20 +1,118 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose from 'mongoose';
 
-export interface IRental extends Document {
-  productId: string;
-  orderId: string;
-  startDate: Date;
-  endDate: Date;
-  status: string;
-  createdAt: Date;
-}
+const rentalItemSchema = new mongoose.Schema({
+  product: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product',
+    required: true
+  },
+  quantity: {
+    type: Number,
+    required: true,
+    min: 1
+  },
+  dailyPrice: {
+    type: Number,
+    required: true
+  },
+  rentalStartDate: {
+    type: Date,
+    required: true
+  },
+  rentalEndDate: {
+    type: Date,
+    required: true
+  },
+  rentalDays: {
+    type: Number,
+    required: true,
+    min: 1
+  },
+  totalPrice: {
+    type: Number,
+    required: true
+  },
+  customizations: {
+    type: Map,
+    of: String
+  },
+  customMessage: String
+});
 
-const RentalSchema = new Schema<IRental>({
-  productId: { type: String, required: true },
-  orderId: { type: String, required: true },
-  startDate: { type: Date, required: true },
-  endDate: { type: Date, required: true },
-  status: { type: String, default: 'active' },
-}, { timestamps: true });
+const rentalSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false
+  },
+  items: [rentalItemSchema],
+  status: {
+    type: String,
+    enum: ['pending', 'confirmed', 'active', 'completed', 'cancelled'],
+    default: 'pending'
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'paid', 'failed', 'refunded'],
+    default: 'pending'
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['stripe', 'paypal', 'cash'],
+    default: 'stripe'
+  },
+  stripePaymentIntentId: String,
+  stripeSessionId: String,
+  subtotal: {
+    type: Number,
+    required: true
+  },
+  tax: {
+    type: Number,
+    default: 0
+  },
+  deposit: {
+    type: Number,
+    default: 0
+  },
+  total: {
+    type: Number,
+    required: true
+  },
+  shippingAddress: {
+    firstName: String,
+    lastName: String,
+    address: String,
+    city: String,
+    postalCode: String,
+    country: String,
+    phone: String
+  },
+  billingAddress: {
+    firstName: String,
+    lastName: String,
+    address: String,
+    city: String,
+    postalCode: String,
+    country: String,
+    phone: String
+  },
+  notes: String,
+  orderNumber: {
+    type: String,
+    unique: true
+  }
+}, {
+  timestamps: true
+});
 
-export const Rental = mongoose.model<IRental>('Rental', RentalSchema);
+// Générer automatiquement le numéro de commande
+rentalSchema.pre('save', async function(next) {
+  if (!this.orderNumber) {
+    const count = await mongoose.model('Rental').countDocuments();
+    this.orderNumber = `RENT-${Date.now()}-${count + 1}`;
+  }
+  next();
+});
+
+export const Rental = mongoose.model('Rental', rentalSchema);

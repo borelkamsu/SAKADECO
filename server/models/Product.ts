@@ -9,7 +9,8 @@ export interface IProduct extends Document {
   mainImageUrl: string; // Image principale
   additionalImages: string[]; // Images supplémentaires pour la galerie
   isCustomizable: boolean;
-  isRentable: boolean;
+  isForSale: boolean; // Disponible à la vente
+  isForRent: boolean; // Disponible à la location
   stockQuantity: number;
   dailyRentalPrice?: number;
   customizationOptions: {
@@ -61,7 +62,11 @@ const ProductSchema = new Schema<IProduct>({
     type: Boolean,
     default: false
   },
-  isRentable: {
+  isForSale: {
+    type: Boolean,
+    default: true
+  },
+  isForRent: {
     type: Boolean,
     default: false
   },

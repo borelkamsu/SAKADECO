@@ -24,6 +24,7 @@ import AdminAddProduct from "@/pages/AdminAddProduct";
 import AdminProductDetail from "@/pages/AdminProductDetail";
 import AdminEditProduct from "@/pages/AdminEditProduct";
 import AdminOrders from "@/pages/AdminOrders";
+import AdminRentals from "@/pages/AdminRentals";
 import AdminUsers from "@/pages/AdminUsers";
 import ProductDetail from "@/pages/ProductDetail";
 import Orders from "@/pages/Orders";
@@ -62,6 +63,7 @@ function Router() {
              <Route path="/admin/products/:id" component={AdminProductDetail} />
              <Route path="/admin/products/:id/edit" component={AdminEditProduct} />
              <Route path="/admin/orders" component={AdminOrders} />
+             <Route path="/admin/rentals" component={AdminRentals} />
              <Route path="/admin/users" component={AdminUsers} />
       <Route component={NotFound} />
     </Switch>

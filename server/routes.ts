@@ -6,6 +6,7 @@ import { db } from "./db";
 import { z } from "zod";
 import adminRoutes from "./routes/admin";
 import paymentRoutes from "./routes/payment";
+import rentalRoutes from "./routes/rental";
 import invoiceRoutes from "./routes/invoice";
 
 // Validation schemas for MongoDB
@@ -868,6 +869,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Payment routes
   app.use('/api/payment', paymentRoutes);
+  
+  // Rental routes
+  app.use('/api/rental', rentalRoutes);
   
   // Invoice routes
   app.use('/api/invoice', invoiceRoutes);

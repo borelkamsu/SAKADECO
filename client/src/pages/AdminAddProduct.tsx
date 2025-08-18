@@ -31,7 +31,8 @@ export default function AdminAddProduct() {
     category: "",
     subcategory: "",
     isCustomizable: false,
-    isRentable: false,
+    isForSale: true,
+    isForRent: false,
     stockQuantity: "",
     dailyRentalPrice: ""
   });
@@ -169,7 +170,8 @@ export default function AdminAddProduct() {
       formDataToSend.append('category', formData.category);
       formDataToSend.append('subcategory', formData.subcategory);
       formDataToSend.append('isCustomizable', String(Object.keys(customizationOptions).length > 0 || formData.isCustomizable));
-      formDataToSend.append('isRentable', String(formData.isRentable));
+      formDataToSend.append('isForSale', String(formData.isForSale));
+      formDataToSend.append('isForRent', String(formData.isForRent));
       formDataToSend.append('stockQuantity', formData.stockQuantity);
       formDataToSend.append('dailyRentalPrice', formData.dailyRentalPrice);
       formDataToSend.append('customizationOptions', JSON.stringify(transformCustomizationOptions()));
@@ -345,13 +347,33 @@ export default function AdminAddProduct() {
                 />
                 <Label htmlFor="isCustomizable">Produit personnalisable</Label>
               </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="isRentable"
-                  checked={formData.isRentable}
-                  onCheckedChange={(checked) => handleInputChange('isRentable', checked)}
-                />
-                <Label htmlFor="isRentable">Produit disponible à la location</Label>
+              
+              <div className="space-y-4 border-t pt-4">
+                <h4 className="font-medium text-gray-900">Disponibilité du produit</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="isForSale"
+                      checked={formData.isForSale}
+                      onCheckedChange={(checked) => handleInputChange('isForSale', checked)}
+                    />
+                    <Label htmlFor="isForSale">Destiné à la vente</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="isForRent"
+                      checked={formData.isForRent}
+                      onCheckedChange={(checked) => handleInputChange('isForRent', checked)}
+                    />
+                    <Label htmlFor="isForRent">Destiné à la location</Label>
+                  </div>
+                </div>
+                
+                {!formData.isForSale && !formData.isForRent && (
+                  <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+                    ⚠️ Le produit doit être disponible à la vente OU à la location (ou les deux)
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

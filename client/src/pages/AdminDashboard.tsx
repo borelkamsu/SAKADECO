@@ -12,7 +12,8 @@ import {
   LogOut,
   ShoppingCart,
   Star,
-  TrendingUp
+  TrendingUp,
+  Home
 } from "lucide-react";
 
 interface AdminInfo {
@@ -226,6 +227,23 @@ export default function AdminDashboard() {
               </p>
               <Button variant="outline" className="w-full">
                 Voir les commandes
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation("/admin/rentals")}>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Home className="h-5 w-5 text-green-500" />
+                <span>Locations</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-4">
+                Suivez et gérez les locations de vos clients.
+              </p>
+              <Button variant="outline" className="w-full">
+                Voir les locations
               </Button>
             </CardContent>
           </Card>

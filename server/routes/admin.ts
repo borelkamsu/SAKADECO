@@ -112,7 +112,8 @@ router.post('/products', adminAuth, upload.single('image'), async (req: AdminReq
       mainImageUrl,
       additionalImages,
       isCustomizable,
-      isRentable,
+      isForSale,
+      isForRent,
       stockQuantity,
       dailyRentalPrice,
       customizationOptions
@@ -182,7 +183,8 @@ router.post('/products', adminAuth, upload.single('image'), async (req: AdminReq
       mainImageUrl: finalMainImageUrl,
       additionalImages: additionalImages || [],
       isCustomizable: isCustomizable === 'true' || isCustomizable === true,
-      isRentable: isRentable === 'true',
+      isForSale: isForSale === 'true' || isForSale === true,
+      isForRent: isForRent === 'true' || isForRent === true,
       stockQuantity: parseInt(stockQuantity) || 0,
       dailyRentalPrice: dailyRentalPrice ? parseFloat(dailyRentalPrice) : undefined,
       customizationOptions: parsedCustomizationOptions
@@ -634,6 +636,96 @@ router.get('/test-image/:filename', adminAuth, async (req: AdminRequest, res: Re
   } catch (error) {
     console.error('Test image access error:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all rentals (admin)
+router.get('/rentals', adminAuth, async (req: AdminRequest, res: Response) => {
+  try {
+    const { Rental } = await import('../models/Rental.js');
+    
+    const rentals = await Rental.find()
+      .populate('items.product')
+      .populate('user')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      rentals: rentals.map(rental => ({
+        _id: rental._id,
+        orderNumber: rental.orderNumber,
+        user: rental.user,
+        items: rental.items,
+        status: rental.status,
+        paymentStatus: rental.paymentStatus,
+        paymentMethod: rental.paymentMethod,
+        subtotal: rental.subtotal,
+        tax: rental.tax,
+        deposit: rental.deposit,
+        total: rental.total,
+        shippingAddress: rental.shippingAddress,
+        billingAddress: rental.billingAddress,
+        stripeSessionId: rental.stripeSessionId,
+        stripePaymentIntentId: rental.stripePaymentIntentId,
+        createdAt: rental.createdAt,
+        updatedAt: rental.updatedAt
+      }))
+    });
+  } catch (error) {
+    console.error('Erreur récupération locations admin:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// Get rental details (admin)
+router.get('/rentals/:rentalId', adminAuth, async (req: AdminRequest, res: Response) => {
+  try {
+    const { rentalId } = req.params;
+    const { Rental } = await import('../models/Rental.js');
+    
+    const rental = await Rental.findById(rentalId)
+      .populate('items.product')
+      .populate('user');
+
+    if (!rental) {
+      return res.status(404).json({ message: 'Location non trouvée' });
+    }
+
+    res.json({ rental });
+  } catch (error) {
+    console.error('Erreur récupération location admin:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// Update rental status (admin)
+router.put('/rentals/:rentalId/status', adminAuth, async (req: AdminRequest, res: Response) => {
+  try {
+    const { rentalId } = req.params;
+    const { status, paymentStatus } = req.body;
+    const { Rental } = await import('../models/Rental.js');
+
+    const rental = await Rental.findById(rentalId);
+    
+    if (!rental) {
+      return res.status(404).json({ message: 'Location non trouvée' });
+    }
+
+    if (status) rental.status = status;
+    if (paymentStatus) rental.paymentStatus = paymentStatus;
+
+    await rental.save();
+
+    res.json({ 
+      message: 'Statut de location mis à jour',
+      rental: {
+        _id: rental._id,
+        status: rental.status,
+        paymentStatus: rental.paymentStatus
+      }
+    });
+  } catch (error) {
+    console.error('Erreur mise à jour statut location:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
   }
 });
 
