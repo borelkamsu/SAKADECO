@@ -32,6 +32,8 @@ import PaymentSuccess from "@/pages/PaymentSuccess";
 import PaymentCancel from "@/pages/PaymentCancel";
 import CartPage from "@/pages/CartPage";
 import Invoice from "@/pages/Invoice";
+import RentalDetail from "@/pages/RentalDetail";
+import RentalCart from "@/pages/RentalCart";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -42,6 +44,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/shop" component={Shop} />
       <Route path="/shop/:id" component={ProductDetail} />
+      <Route path="/rental/:id" component={RentalDetail} />
+      <Route path="/rental-cart" component={RentalCart} />
       <Route path="/cart" component={CartPage} />
       <Route path="/crea" component={Crea} />
       <Route path="/rent" component={Rent} />

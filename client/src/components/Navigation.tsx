@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import CartIcon from "./CartIcon";
+import RentalCartIcon from "./RentalCartIcon";
 
 export default function Navigation() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -262,13 +263,15 @@ export default function Navigation() {
                 </Link>
               </motion.div>
 
-              {/* Cart Icon */}
+              {/* Cart Icons */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.45 }}
+                className="flex items-center gap-2"
               >
                 <CartIcon />
+                <RentalCartIcon />
               </motion.div>
 
               {/* User Menu */}
@@ -413,6 +416,18 @@ export default function Navigation() {
                       <div className="flex items-center justify-between">
                         <div className="font-medium text-gray-900">Panier</div>
                         <CartIcon />
+                      </div>
+                    </Link>
+
+                    {/* Mobile Rental Cart */}
+                    <Link 
+                      href="/rental-cart" 
+                      className="block p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium text-gray-900">Panier de location</div>
+                        <RentalCartIcon />
                       </div>
                     </Link>
 

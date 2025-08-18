@@ -240,4 +240,35 @@ router.get('/session/:sessionId', async (req: Request, res: Response) => {
   }
 });
 
+// Récupérer les dates réservées pour un produit
+router.get('/product/:productId/booked-dates', async (req: Request, res: Response) => {
+  try {
+    const { productId } = req.params;
+    
+    // Récupérer toutes les locations confirmées pour ce produit
+    const rentals = await Rental.find({
+      'items.product': productId,
+      status: 'confirmed'
+    }).select('items.rentalStartDate items.rentalEndDate');
+    
+    const bookedDates: Array<{ startDate: Date; endDate: Date }> = [];
+    
+    rentals.forEach(rental => {
+      rental.items.forEach(item => {
+        if (item.product.toString() === productId) {
+          bookedDates.push({
+            startDate: item.rentalStartDate,
+            endDate: item.rentalEndDate
+          });
+        }
+      });
+    });
+    
+    res.json({ dates: bookedDates });
+  } catch (error) {
+    console.error('Erreur récupération dates réservées:', error);
+    res.status(500).json({ message: 'Erreur lors de la récupération des dates réservées' });
+  }
+});
+
 export default router;

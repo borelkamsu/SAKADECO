@@ -1,217 +1,256 @@
-import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
-import Layout from "@/components/Layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ShoppingBag, Plus } from "lucide-react";
-import ImageWithFallback from "@/components/ImageWithFallback";
+import React, { useState, useEffect } from 'react';
+import { Link } from 'wouter';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
+import { Input } from '../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Search, Filter, ShoppingCart, Calendar } from 'lucide-react';
+import ImageWithFallback from '../components/ImageWithFallback';
 
-// Define Product type for frontend
 interface Product {
   _id: string;
   name: string;
-  description?: string;
+  description: string;
   price: number;
-  category: string;
-  subcategory?: string;
-  mainImageUrl: string;
-  additionalImages: string[];
-  isCustomizable: boolean;
-  isRentable: boolean;
-  stockQuantity: number;
   dailyRentalPrice?: number;
-  customizationOptions?: {
-    [key: string]: {
-      type: 'dropdown' | 'checkbox' | 'text' | 'textarea';
-      label: string;
-      required: boolean;
-      options?: string[];
-      placeholder?: string;
-      maxLength?: number;
-    };
-  };
-  createdAt: string;
-  updatedAt: string;
+  category: string;
+  mainImageUrl: string;
+  stockQuantity: number;
+  isForSale: boolean;
+  isForRent: boolean;
+  isCustomizable: boolean;
+  customizationOptions?: Map<string, string[]>;
 }
 
-export default function Shop() {
-  const [, setLocation] = useLocation();
-  const { data: allProducts, isLoading, error } = useQuery<Product[]>({
-    queryKey: ["products"],
-    queryFn: async () => {
+const Shop: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [activeTab, setActiveTab] = useState('sale');
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
       const response = await fetch('/api/products');
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
+      if (response.ok) {
+        const data = await response.json();
+        setProducts(data);
       }
-      return response.json();
-    },
-  });
+    } catch (error) {
+      console.error('Erreur lors du chargement des produits:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Filter products for shop category
-  const products = allProducts?.filter(product => product.category === "shop") || [];
+  // Filtrer les produits selon l'onglet actif
+  const getFilteredProducts = () => {
+    let filtered = products;
 
-  if (isLoading) {
+    // Filtrer par type (vente ou location)
+    if (activeTab === 'sale') {
+      filtered = filtered.filter(product => product.isForSale);
+    } else if (activeTab === 'rent') {
+      filtered = filtered.filter(product => product.isForRent);
+    }
+
+    // Filtrer par recherche
+    if (searchTerm) {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filtrer par catégorie
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(product => product.category === selectedCategory);
+    }
+
+    return filtered;
+  };
+
+  const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
+
+  if (loading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="animate-spin w-8 h-8 border-4 border-skd-shop border-t-transparent rounded-full" />
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">Chargement des produits...</div>
         </div>
-      </Layout>
-    );
-  }
-
-  if (error) {
-    return (
-      <Layout>
-        <div className="text-center py-12">
-          <p className="text-red-600">Erreur lors du chargement des produits</p>
-        </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      {/* Header */}
-      <section className="py-20 bg-gradient-to-br from-skd-shop/10 to-white">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-skd-shop rounded-full mb-6">
-              <ShoppingBag className="text-white text-2xl" />
-            </div>
-            <h1 className="text-4xl font-playfair font-bold text-gray-800 mb-4">SKD Shop</h1>
-            <p className="text-xl text-gray-600 mb-2">Vente de ballons, fleurs & accessoires</p>
-            <p className="text-lg font-playfair text-skd-shop italic font-semibold">« Offrez la touche qui fait sourire »</p>
-            <p className="text-base text-gray-600 mt-2">Des petits détails qui font de grands effets</p>
-          </div>
-        </div>
-      </section>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          {activeTab === 'sale' ? 'Boutique' : 'SDK Rend'}
+        </h1>
+        <p className="text-gray-600">
+          {activeTab === 'sale' 
+            ? 'Découvrez nos produits disponibles à la vente' 
+            : 'Louez nos produits pour vos événements'
+          }
+        </p>
+      </div>
 
-      {/* Products Grid */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-playfair font-semibold text-gray-800">Nos Produits</h2>
-            <div className="flex items-center space-x-4">
-              <Badge variant="outline" className="border-skd-shop text-skd-shop">
-                {products.length} produits disponibles
-              </Badge>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="sale" className="flex items-center gap-2">
+            <ShoppingCart className="w-4 h-4" />
+            Boutique
+          </TabsTrigger>
+          <TabsTrigger value="rent" className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            SDK Rend
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="sale" className="space-y-6">
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Rechercher un produit..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>
+                    {category === 'all' ? 'Toutes les catégories' : category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {products.length === 0 ? (
-            <div className="text-center py-16">
-              <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">Aucun produit disponible</h3>
-              <p className="text-gray-500">Nos produits arrivent bientôt !</p>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product: Product) => (
-                <Card 
-                  key={product._id} 
-                  className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-skd-shop/30 cursor-pointer"
-                  onClick={() => setLocation(`/shop/${product._id}`)}
-                >
-                  <CardHeader className="p-0">
-                    <div className="aspect-square overflow-hidden rounded-t-lg">
-                      <img 
-                        src={product.mainImageUrl}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          console.log('Image failed to load:', product.mainImageUrl);
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-4">
-                    <CardTitle className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
-                      {product.name}
-                    </CardTitle>
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                      {product.description}
-                    </p>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xl font-bold text-skd-shop">
-                        {product.price.toFixed(2)}€
-                      </span>
-                      <div className="flex space-x-1">
-                        {product.isCustomizable && (
-                          <Badge variant="secondary" className="text-xs">
-                            Personnalisable
-                          </Badge>
-                        )}
-                        {product.isRentable && (
-                          <Badge variant="outline" className="text-xs">
-                            Location
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">
-                        {product.stockQuantity > 0 
-                          ? `${product.stockQuantity} en stock` 
-                          : 'Rupture de stock'
-                        }
-                      </span>
-                      <Button 
-                        size="sm" 
-                        className="bg-skd-shop hover:bg-skd-shop/90 text-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setLocation(`/shop/${product._id}`);
-                        }}
-                      >
-                        <ShoppingBag className="w-4 h-4 mr-1" />
-                        Voir détails
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Product Categories */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4">
-          <h3 className="text-2xl font-playfair font-semibold text-gray-800 mb-8 text-center">Nos Catégories</h3>
-          <div className="grid md:grid-cols-3 gap-6">
-            <Card className="text-center p-6 border-2 border-skd-shop/20 hover:border-skd-shop/50 transition-colors">
-              <div className="w-16 h-16 bg-skd-shop/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🎈</span>
-              </div>
-              <h4 className="font-playfair font-semibold text-gray-800 mb-3">Ballons Personnalisés</h4>
-              <p className="text-gray-600 mb-4">Latex, mylar, bulles avec messages sur-mesure</p>
-              <p className="text-sm text-gray-500">À partir de 15€</p>
-            </Card>
-            
-            <Card className="text-center p-6 border-2 border-skd-shop/20 hover:border-skd-shop/50 transition-colors">
-              <div className="w-16 h-16 bg-skd-shop/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🌸</span>
-              </div>
-              <h4 className="font-playfair font-semibold text-gray-800 mb-3">Fleurs & Compositions</h4>
-              <p className="text-gray-600 mb-4">Artificielles & naturelles pour tous événements</p>
-              <p className="text-sm text-gray-500">À partir de 25€</p>
-            </Card>
-            
-            <Card className="text-center p-6 border-2 border-skd-shop/20 hover:border-skd-shop/50 transition-colors">
-              <div className="w-16 h-16 bg-skd-shop/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">✨</span>
-              </div>
-              <h4 className="font-playfair font-semibold text-gray-800 mb-3">Objets Déco</h4>
-              <p className="text-gray-600 mb-4">Vases, lanternes, guirlandes pour la maison</p>
-              <p className="text-sm text-gray-500">À partir de 10€</p>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {getFilteredProducts().map((product) => (
+              <Card key={product._id} className="hover:shadow-lg transition-shadow">
+                <CardHeader className="p-0">
+                  <div className="relative">
+                    <ImageWithFallback
+                      src={product.mainImageUrl}
+                      alt={product.name}
+                      className="w-full h-48 object-cover rounded-t-lg"
+                    />
+                    {product.isCustomizable && (
+                      <Badge className="absolute top-2 right-2 bg-blue-500">
+                        Personnalisable
+                      </Badge>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <CardTitle className="text-lg mb-2">{product.name}</CardTitle>
+                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                    {product.description}
+                  </p>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-xl font-bold text-green-600">
+                      {product.price.toFixed(2)}€
+                    </span>
+                    <Badge variant={product.stockQuantity > 0 ? "default" : "destructive"}>
+                      {product.stockQuantity > 0 ? 'En stock' : 'Rupture'}
+                    </Badge>
+                  </div>
+                  <Link href={`/product/${product._id}`}>
+                    <Button className="w-full" disabled={product.stockQuantity === 0}>
+                      Voir le produit
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </div>
-      </section>
-    </Layout>
+        </TabsContent>
+
+        <TabsContent value="rent" className="space-y-6">
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Rechercher un produit à louer..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>
+                    {category === 'all' ? 'Toutes les catégories' : category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {getFilteredProducts().map((product) => (
+              <Card key={product._id} className="hover:shadow-lg transition-shadow">
+                <CardHeader className="p-0">
+                  <div className="relative">
+                    <ImageWithFallback
+                      src={product.mainImageUrl}
+                      alt={product.name}
+                      className="w-full h-48 object-cover rounded-t-lg"
+                    />
+                    {product.isCustomizable && (
+                      <Badge className="absolute top-2 right-2 bg-blue-500">
+                        Personnalisable
+                      </Badge>
+                    )}
+                    <Badge className="absolute top-2 left-2 bg-orange-500">
+                      Location
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <CardTitle className="text-lg mb-2">{product.name}</CardTitle>
+                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                    {product.description}
+                  </p>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-xl font-bold text-orange-600">
+                      {product.dailyRentalPrice?.toFixed(2) || '0.00'}€/jour
+                    </span>
+                    <Badge variant="default" className="bg-orange-500">
+                      Disponible
+                    </Badge>
+                  </div>
+                  <Link href={`/rental/${product._id}`}>
+                    <Button className="w-full bg-orange-500 hover:bg-orange-600">
+                      Louer ce produit
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
-}
+};
+
+export default Shop;
