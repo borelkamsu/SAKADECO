@@ -34,6 +34,8 @@ import CartPage from "@/pages/CartPage";
 import Invoice from "@/pages/Invoice";
 import RentalDetail from "@/pages/RentalDetail";
 import RentalCart from "@/pages/RentalCart";
+import RentalSuccess from "@/pages/RentalSuccess";
+import RentalCancel from "@/pages/RentalCancel";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -46,6 +48,8 @@ function Router() {
       <Route path="/product/:id" component={ProductDetail} />
       <Route path="/rental/:id" component={RentalDetail} />
       <Route path="/rental-cart" component={RentalCart} />
+      <Route path="/rental/success" component={RentalSuccess} />
+      <Route path="/rental/cancel" component={RentalCancel} />
       <Route path="/cart" component={CartPage} />
       <Route path="/crea" component={Crea} />
       <Route path="/rent" component={Rent} />
