@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import Stripe from 'stripe';
 import { Rental } from '../models/Rental.js';
 import { Product } from '../models/Product.js';
-import { emailService } from '../services/emailService.js';
+import emailService from '../services/emailService.js';
 
 const router = express.Router();
 

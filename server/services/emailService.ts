@@ -409,7 +409,6 @@ class EmailService {
       return false;
     }
   }
-}
 
   async sendRentalConfirmationEmail(rental: any): Promise<boolean> {
     if (!this.transporter) {
