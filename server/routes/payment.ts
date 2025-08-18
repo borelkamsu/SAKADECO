@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import express from 'express';
 import Stripe from 'stripe';
 import Order from '../models/Order';
+import { Rental } from '../models/Rental.js';
 import emailService from '../services/emailService';
 import { Product } from '../models/Product';
 
@@ -169,9 +170,12 @@ router.post('/webhook', async (req: Request, res: Response) => {
       case 'checkout.session.completed':
         const session = event.data.object as Stripe.Checkout.Session;
         
-        // Mettre à jour la commande
+        // Vérifier si c'est une commande (achat) ou une location
         const order = await Order.findOne({ stripeSessionId: session.id });
+        const rental = await Rental.findOne({ stripeSessionId: session.id });
+        
         if (order) {
+          // Traitement d'un achat
           order.status = 'paid';
           order.paymentStatus = 'paid';
           order.stripePaymentIntentId = session.payment_intent as string;
@@ -179,55 +183,105 @@ router.post('/webhook', async (req: Request, res: Response) => {
           
           console.log(`Commande ${order._id} marquée comme payée`);
           
-                     // Envoyer automatiquement la facture par email
-           try {
-             console.log('📧 Préparation des emails pour la commande:', order._id);
-             
-                           const invoiceData = {
-                orderNumber: order.orderNumber || order._id.toString(),
-                user: {
-                  email: session.customer_email || order.user?.email || 'client@example.com',
-                  firstName: order.shippingAddress?.firstName,
-                  lastName: order.shippingAddress?.lastName
+          // Envoyer automatiquement la facture par email
+          try {
+            console.log('📧 Préparation des emails pour la commande:', order._id);
+            
+            const invoiceData = {
+              orderNumber: order.orderNumber || order._id.toString(),
+              user: {
+                email: session.customer_email || order.user?.email || 'client@example.com',
+                firstName: order.shippingAddress?.firstName,
+                lastName: order.shippingAddress?.lastName
+              },
+              items: order.items.map(item => ({
+                product: {
+                  name: item.product?.name || 'Produit',
+                  price: item.price
                 },
-               items: order.items.map(item => ({
-                 product: {
-                   name: item.product?.name || 'Produit',
-                   price: item.price
-                 },
-                 quantity: item.quantity,
-                 price: item.price
-               })),
-               subtotal: order.subtotal,
-               tax: order.tax,
-               shipping: order.shipping,
-               total: order.total,
-               shippingAddress: order.shippingAddress,
-               billingAddress: order.billingAddress,
-               createdAt: order.createdAt.toISOString()
-             };
-             
-                           console.log('📧 Email client:', invoiceData.user.email);
-              console.log('📧 Email admin:', process.env.ADMIN_EMAIL || process.env.EMAIL_USER);
-              console.log('📧 Session customer_email:', session.customer_email);
-              console.log('📧 Order user email:', order.user?.email);
-             
-             // Envoyer l'email de confirmation et la facture
-             const confirmationResult = await emailService.sendOrderConfirmationEmail(invoiceData);
-             const invoiceResult = await emailService.sendInvoiceEmail(invoiceData);
-             
-             // Envoyer notification à l'admin
-             const adminResult = await emailService.sendAdminNotificationEmail(invoiceData);
-             
-             console.log('📧 Résultats envoi emails:');
-             console.log('  - Confirmation client:', confirmationResult ? '✅' : '❌');
-             console.log('  - Facture client:', invoiceResult ? '✅' : '❌');
-             console.log('  - Notification admin:', adminResult ? '✅' : '❌');
-             
-             console.log(`✅ Facture envoyée automatiquement pour la commande ${order._id}`);
-           } catch (emailError) {
-             console.error('❌ Erreur envoi facture automatique:', emailError);
-           }
+                quantity: item.quantity,
+                price: item.price
+              })),
+              subtotal: order.subtotal,
+              tax: order.tax,
+              shipping: order.shipping,
+              total: order.total,
+              shippingAddress: order.shippingAddress,
+              billingAddress: order.billingAddress,
+              createdAt: order.createdAt.toISOString()
+            };
+            
+            console.log('📧 Email client:', invoiceData.user.email);
+            console.log('📧 Email admin:', process.env.ADMIN_EMAIL || process.env.EMAIL_USER);
+            console.log('📧 Session customer_email:', session.customer_email);
+            console.log('📧 Order user email:', order.user?.email);
+            
+            // Envoyer l'email de confirmation et la facture
+            const confirmationResult = await emailService.sendOrderConfirmationEmail(invoiceData);
+            const invoiceResult = await emailService.sendInvoiceEmail(invoiceData);
+            
+            // Envoyer notification à l'admin
+            const adminResult = await emailService.sendAdminNotificationEmail(invoiceData);
+            
+            console.log('📧 Résultats envoi emails:');
+            console.log('  - Confirmation client:', confirmationResult ? '✅' : '❌');
+            console.log('  - Facture client:', invoiceResult ? '✅' : '❌');
+            console.log('  - Notification admin:', adminResult ? '✅' : '❌');
+            
+            console.log(`✅ Facture envoyée automatiquement pour la commande ${order._id}`);
+          } catch (emailError) {
+            console.error('❌ Erreur envoi facture automatique:', emailError);
+          }
+        } else if (rental) {
+          // Traitement d'une location
+          rental.status = 'confirmed';
+          rental.paymentStatus = 'paid';
+          rental.stripePaymentIntentId = session.payment_intent as string;
+          await rental.save();
+          
+          console.log(`Location ${rental._id} confirmée`);
+          
+          // Envoyer les emails de location
+          try {
+            const rentalData = {
+              orderNumber: rental.orderNumber,
+              user: {
+                email: session.customer_email || session.customer_details?.email || 'client@example.com',
+                firstName: rental.shippingAddress?.firstName || session.customer_details?.name?.split(' ')[0],
+                lastName: rental.shippingAddress?.lastName || session.customer_details?.name?.split(' ').slice(1).join(' ')
+              },
+              items: rental.items.map(item => ({
+                product: {
+                  name: item.product?.name || 'Produit',
+                  price: item.dailyPrice
+                },
+                quantity: item.quantity,
+                rentalDays: item.rentalDays,
+                rentalStartDate: item.rentalStartDate,
+                rentalEndDate: item.rentalEndDate,
+                totalPrice: item.totalPrice
+              })),
+              subtotal: rental.subtotal,
+              tax: rental.tax,
+              deposit: rental.deposit,
+              total: rental.total,
+              shippingAddress: rental.shippingAddress,
+              billingAddress: rental.billingAddress,
+              createdAt: rental.createdAt.toISOString()
+            };
+            
+            // Envoyer email de confirmation au client
+            await emailService.sendRentalConfirmationEmail(rentalData);
+            
+            // Envoyer notification à l'admin
+            await emailService.sendRentalAdminNotificationEmail(rentalData);
+            
+            console.log(`✅ Emails de location envoyés pour ${rental._id}`);
+          } catch (emailError) {
+            console.error('❌ Erreur envoi emails location:', emailError);
+          }
+        } else {
+          console.log(`⚠️ Session ${session.id} non trouvée dans les commandes ni les locations`);
         }
         break;
 
