@@ -3,9 +3,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Eye, Upload, X, Type, Image as ImageIcon } from 'lucide-react';
+import { Eye, Type, Image as ImageIcon, Plus } from 'lucide-react';
 import Product3DPreview from './Product3DPreview';
-import ImageUpload from './ImageUpload';
 
 interface CustomizationZone {
   id: string;
@@ -33,7 +32,7 @@ export default function ProductWithCustomization({ product }: ProductWithCustomi
   const [customizations, setCustomizations] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState(false);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
-  const imageRef = useRef<HTMLDivElement>(null);
+  const [showCustomizationPanel, setShowCustomizationPanel] = useState(false);
 
   // Zones de personnalisation par défaut si non définies
   const customizationZones = product.customizationZones || [
@@ -77,94 +76,32 @@ export default function ProductWithCustomization({ product }: ProductWithCustomi
   };
 
   const renderCustomizationZone = (zone: CustomizationZone) => {
-    const isSelected = selectedZone === zone.id;
     const hasValue = customizations[zone.id];
 
     return (
       <div
         key={zone.id}
-        className={`${getZonePosition(zone.position)} ${
-          isSelected ? 'ring-2 ring-blue-500' : 'ring-1 ring-gray-300'
-        } bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-2 min-w-[120px] max-w-[200px] transition-all duration-200 hover:ring-2 hover:ring-blue-400 cursor-pointer`}
-        onClick={() => setSelectedZone(zone.id)}
+        className={`${getZonePosition(zone.position)} bg-blue-500 bg-opacity-20 border-2 border-blue-400 rounded-lg p-2 min-w-[100px] max-w-[150px] transition-all duration-200 hover:bg-opacity-30 cursor-pointer`}
+        onClick={() => {
+          setSelectedZone(zone.id);
+          setShowCustomizationPanel(true);
+        }}
       >
-        {zone.type === 'text' ? (
-          <div className="space-y-1">
-            <Label className="text-xs font-medium text-gray-700">
-              {zone.label}
-              {zone.required && <span className="text-red-500 ml-1">*</span>}
-            </Label>
-            {isSelected ? (
-              <Input
-                value={customizations[zone.id] || ''}
-                onChange={(e) => handleCustomizationChange(zone.id, e.target.value)}
-                placeholder="Entrez votre texte..."
-                maxLength={zone.maxLength}
-                className="text-xs h-8"
-                autoFocus
-              />
+        <div className="text-center">
+          {zone.type === 'text' ? (
+            <Type className="w-4 h-4 mx-auto mb-1 text-blue-600" />
+          ) : (
+            <ImageIcon className="w-4 h-4 mx-auto mb-1 text-blue-600" />
+          )}
+          <div className="text-xs font-medium text-blue-800">
+            {hasValue ? (
+              <span className="truncate block">{customizations[zone.id]}</span>
             ) : (
-              <div className="text-xs text-gray-500 min-h-[32px] flex items-center">
-                {hasValue ? (
-                  <span className="truncate">{customizations[zone.id]}</span>
-                ) : (
-                  <span className="flex items-center">
-                    <Type className="w-3 h-3 mr-1" />
-                    Cliquez pour écrire
-                  </span>
-                )}
-              </div>
+              <span>{zone.label}</span>
             )}
           </div>
-        ) : (
-          <div className="space-y-1">
-            <Label className="text-xs font-medium text-gray-700">
-              {zone.label}
-              {zone.required && <span className="text-red-500 ml-1">*</span>}
-            </Label>
-            {isSelected ? (
-              <div className="space-y-2">
-                <ImageUpload
-                  onImagesUploaded={(urls) => {
-                    if (urls.length > 0) {
-                      handleCustomizationChange(zone.id, urls[0]);
-                      setSelectedZone(null);
-                    }
-                  }}
-                  onFilesSelected={() => {}}
-                  multiple={false}
-                  maxImages={1}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedZone(null)}
-                  className="w-full text-xs"
-                >
-                  Annuler
-                </Button>
-              </div>
-            ) : (
-              <div className="text-xs text-gray-500 min-h-[32px] flex items-center">
-                {hasValue ? (
-                  <div className="flex items-center space-x-2">
-                    <img
-                      src={customizations[zone.id]}
-                      alt="Image personnalisée"
-                      className="w-6 h-6 object-cover rounded"
-                    />
-                    <span className="truncate">Image ajoutée</span>
-                  </div>
-                ) : (
-                  <span className="flex items-center">
-                    <ImageIcon className="w-3 h-3 mr-1" />
-                    Cliquez pour uploader
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+          {zone.required && <span className="text-red-500 text-xs">*</span>}
+        </div>
       </div>
     );
   };
@@ -189,10 +126,7 @@ export default function ProductWithCustomization({ product }: ProductWithCustomi
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Image du produit avec zones de personnalisation */}
             <div className="relative">
-              <div
-                ref={imageRef}
-                className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200"
-              >
+              <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200">
                 <img
                   src={product.mainImageUrl}
                   alt={product.name}
@@ -203,10 +137,10 @@ export default function ProductWithCustomization({ product }: ProductWithCustomi
                 {product.isCustomizable && customizationZones.map(renderCustomizationZone)}
                 
                 {/* Overlay pour indiquer les zones cliquables */}
-                {!selectedZone && product.isCustomizable && (
+                {product.isCustomizable && (
                   <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center">
                     <div className="text-white text-center opacity-0 hover:opacity-100 transition-opacity duration-200">
-                      <p className="text-sm font-medium">Cliquez sur les zones pour personnaliser</p>
+                      <p className="text-sm font-medium">Cliquez sur les zones bleues pour personnaliser</p>
                     </div>
                   </div>
                 )}
@@ -216,7 +150,7 @@ export default function ProductWithCustomization({ product }: ProductWithCustomi
               {product.isCustomizable && (
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    💡 <strong>Comment personnaliser :</strong> Cliquez sur les zones colorées pour ajouter votre texte ou image personnalisée.
+                    💡 <strong>Comment personnaliser :</strong> Cliquez sur les zones bleues pour ajouter votre texte ou image personnalisée.
                   </p>
                 </div>
               )}
@@ -279,6 +213,106 @@ export default function ProductWithCustomization({ product }: ProductWithCustomi
           </div>
         </CardContent>
       </Card>
+
+      {/* Panel de personnalisation */}
+      {showCustomizationPanel && selectedZone && (
+        <Card className="fixed inset-4 z-50 max-w-md mx-auto top-1/2 transform -translate-y-1/2">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              Personnaliser
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowCustomizationPanel(false);
+                  setSelectedZone(null);
+                }}
+              >
+                ✕
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(() => {
+              const zone = customizationZones.find(z => z.id === selectedZone);
+              if (!zone) return null;
+
+              return (
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium">
+                      {zone.label}
+                      {zone.required && <span className="text-red-500 ml-1">*</span>}
+                    </Label>
+                    
+                    {zone.type === 'text' ? (
+                      <Input
+                        value={customizations[zone.id] || ''}
+                        onChange={(e) => handleCustomizationChange(zone.id, e.target.value)}
+                        placeholder="Entrez votre texte..."
+                        maxLength={zone.maxLength}
+                        className="mt-2"
+                        autoFocus
+                      />
+                    ) : (
+                      <div className="mt-2 space-y-2">
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                          <ImageIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                          <p className="text-sm text-gray-600">Cliquez pour sélectionner une image</p>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                  handleCustomizationChange(zone.id, e.target?.result as string);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            className="hidden"
+                            id="image-upload"
+                          />
+                          <label htmlFor="image-upload" className="cursor-pointer">
+                            <Button variant="outline" size="sm" className="mt-2">
+                              <Plus className="w-4 h-4 mr-1" />
+                              Choisir une image
+                            </Button>
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <Button
+                      onClick={() => {
+                        setShowCustomizationPanel(false);
+                        setSelectedZone(null);
+                      }}
+                      className="flex-1"
+                    >
+                      Valider
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowCustomizationPanel(false);
+                        setSelectedZone(null);
+                      }}
+                      className="flex-1"
+                    >
+                      Annuler
+                    </Button>
+                  </div>
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Modal de prévisualisation 3D */}
       {showPreview && (
