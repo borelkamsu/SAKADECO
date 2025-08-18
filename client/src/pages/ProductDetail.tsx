@@ -36,19 +36,11 @@ interface Product {
   mainImageUrl: string;
   additionalImages: string[];
   isCustomizable: boolean;
-  isRentable: boolean;
+  isForSale: boolean;
+  isForRent: boolean;
   stockQuantity: number;
   dailyRentalPrice?: number;
-  customizationOptions?: {
-    [key: string]: {
-      type: 'dropdown' | 'checkbox' | 'text' | 'textarea';
-      label: string;
-      required: boolean;
-      options?: string[];
-      placeholder?: string;
-      maxLength?: number;
-    };
-  };
+  customizationOptions?: Record<string, string[]>;
   createdAt: string;
   updatedAt: string;
 }
@@ -67,7 +59,7 @@ export default function ProductDetail() {
 
 
   // Extract product ID from URL
-  const productId = location.split('/')[2]; // /shop/{id}
+  const productId = location.split('/')[2]; // /product/{id}
 
   const { data: product, isLoading, error } = useQuery<Product>({
     queryKey: ["product", productId],
