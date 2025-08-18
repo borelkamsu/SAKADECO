@@ -22,7 +22,7 @@ interface Product {
   mainImageUrl: string;
   isForRent: boolean;
   isCustomizable: boolean;
-  customizationOptions?: Map<string, string[]>;
+  customizationOptions?: Record<string, string[]>;
 }
 
 interface RentalDate {
@@ -325,7 +325,7 @@ const RentalDetail: React.FC = () => {
                 <CardTitle>Options de personnalisation</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {Array.from(product.customizationOptions.entries()).map(([key, values]) => (
+                {Object.entries(product.customizationOptions || {}).map(([key, values]) => (
                   <div key={key}>
                     <Label>{key}</Label>
                     <Select

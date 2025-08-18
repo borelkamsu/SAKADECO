@@ -210,6 +210,11 @@ router.post('/products', adminAuth, upload.single('image'), async (req: AdminReq
   } catch (error) {
     console.error('❌ Erreur création produit:', error);
     console.error('❌ Stack trace:', error.stack);
+    console.error('❌ Données reçues:', {
+      name, description, price, category, subcategory,
+      isForSale, isForRent, dailyRentalPrice, stockQuantity,
+      isCustomizable, customizationOptions: typeof customizationOptions
+    });
     console.error('❌ Variables d\'environnement:');
     console.error('  - CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
     console.error('  - CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY);
