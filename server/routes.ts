@@ -22,7 +22,17 @@ const __dirname = dirname(__filename);
 const upload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, 'uploads/temp/');
+      // Utiliser le répertoire temporaire du système
+      const tempDir = process.env.TEMP || process.env.TMP || '/tmp';
+      const uploadDir = path.join(tempDir, 'sakadeco-uploads');
+      
+      // Créer le dossier s'il n'existe pas
+      const fs = require('fs');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
       const timestamp = Date.now();
@@ -926,13 +936,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Upload route for customization images
   app.post('/api/upload/image', upload.single('image'), async (req: any, res) => {
     try {
+      console.log('📸 Upload image request received');
+      console.log('📸 File:', req.file);
+      
       if (!req.file) {
+        console.log('❌ No file provided');
         return res.status(400).json({ message: 'Aucune image fournie' });
       }
 
       // Vérifier le type de fichier
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(req.file.mimetype)) {
+        console.log('❌ Invalid file type:', req.file.mimetype);
         return res.status(400).json({ 
           message: 'Type de fichier non autorisé. Types acceptés: JPEG, PNG, GIF' 
         });
@@ -941,6 +956,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Vérifier la taille (5MB max)
       const maxSize = 5 * 1024 * 1024; // 5MB
       if (req.file.size > maxSize) {
+        console.log('❌ File too large:', req.file.size);
         return res.status(400).json({ 
           message: 'Fichier trop volumineux. Taille maximale: 5MB' 
         });
@@ -952,21 +968,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fileExtension = req.file.originalname.split('.').pop();
       const fileName = `customization-${timestamp}-${randomString}.${fileExtension}`;
 
-      // Déplacer le fichier vers le dossier uploads
-      const uploadPath = `uploads/customizations/${fileName}`;
-      const fs = await import('fs');
+      console.log('📸 Generated filename:', fileName);
+
+      // Importer fs de manière synchrone
+      const fs = require('fs');
 
       // Créer le dossier s'il n'existe pas
-      const uploadDir = path.join(__dirname, '..', 'uploads', 'customizations');
+      const uploadDir = path.join(process.cwd(), 'uploads', 'customizations');
+      console.log('📸 Upload directory:', uploadDir);
+      
       if (!fs.existsSync(uploadDir)) {
+        console.log('📸 Creating upload directory');
         fs.mkdirSync(uploadDir, { recursive: true });
       }
 
+      // Vérifier que le fichier temporaire existe
+      if (!fs.existsSync(req.file.path)) {
+        console.log('❌ Temp file does not exist:', req.file.path);
+        return res.status(500).json({ message: 'Fichier temporaire introuvable' });
+      }
+
       // Déplacer le fichier
-      fs.renameSync(req.file.path, path.join(uploadDir, fileName));
+      const finalPath = path.join(uploadDir, fileName);
+      console.log('📸 Moving file from', req.file.path, 'to', finalPath);
+      
+      try {
+        fs.copyFileSync(req.file.path, finalPath);
+        // Supprimer le fichier temporaire
+        fs.unlinkSync(req.file.path);
+      } catch (moveError) {
+        console.error('❌ Error moving file:', moveError);
+        return res.status(500).json({ message: 'Erreur lors du déplacement du fichier' });
+      }
 
       // Retourner l'URL de l'image
       const imageUrl = `/uploads/customizations/${fileName}`;
+      console.log('✅ Image uploaded successfully:', imageUrl);
 
       res.json({ 
         message: 'Image uploadée avec succès',
@@ -975,8 +1012,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
     } catch (error) {
-      console.error('Erreur upload image:', error);
-      res.status(500).json({ message: 'Erreur lors de l\'upload de l\'image' });
+      console.error('❌ Erreur upload image:', error);
+      console.error('❌ Stack trace:', error.stack);
+      res.status(500).json({ 
+        message: 'Erreur lors de l\'upload de l\'image',
+        error: error.message 
+      });
     }
   });
 
@@ -1054,7 +1095,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Serve uploaded files
-  app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+  // Test route pour vérifier l'upload
+  app.get('/api/upload/test', (req, res) => {
+    res.json({
+      message: 'Upload endpoint is working',
+      tempDir: process.env.TEMP || process.env.TMP || '/tmp',
+      uploadDir: path.join(process.env.TEMP || process.env.TMP || '/tmp', 'sakadeco-uploads'),
+      cwd: process.cwd()
+    });
+  });
 
   const httpServer = createServer(app);
   return httpServer;
