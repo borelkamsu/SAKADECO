@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Save, ArrowLeft, X } from "lucide-react";
 import ImageUpload from "@/components/ImageUpload";
+import ProductImageUpload from "@/components/ProductImageUpload";
 
 interface CustomizationOption {
   label: string;
@@ -449,7 +450,7 @@ export default function AdminAddProduct() {
               <CardTitle>Images du produit</CardTitle>
             </CardHeader>
             <CardContent>
-              <ImageUpload
+              <ProductImageUpload
                 onImagesUploaded={handleImagesUploaded}
                 onFilesSelected={setUploadedFiles}
                 multiple={true}

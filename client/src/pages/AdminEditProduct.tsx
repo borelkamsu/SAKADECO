@@ -15,6 +15,7 @@ import {
   X
 } from "lucide-react";
 import ImageUpload from "@/components/ImageUpload";
+import ProductImageUpload from "@/components/ProductImageUpload";
 import {
   Select,
   SelectContent,
@@ -341,9 +342,8 @@ export default function AdminEditProduct() {
 
               <div>
                 <Label>Image du produit *</Label>
-                <ImageUpload
-                  onImageUpload={(imageUrl) => handleInputChange("imageUrl", imageUrl)}
-                  currentImageUrl={formData.imageUrl}
+                <ProductImageUpload
+                  onImagesUploaded={(imageUrls) => handleInputChange("imageUrl", imageUrls[0])}
                 />
               </div>
             </CardContent>
