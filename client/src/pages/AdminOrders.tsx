@@ -30,6 +30,15 @@ interface OrderItem {
   price: number;
   isRental: boolean;
   customizations?: any;
+  customText?: string;
+  customImage?: string;
+  customImageFile?: {
+    originalName: string;
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+  };
+  customizationPrice?: number;
 }
 
 interface Order {
@@ -185,6 +194,119 @@ const AdminOrders: React.FC = () => {
       </Layout>
     );
   }
+
+  const renderOrderDetails = (order: Order) => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h4 className="font-medium text-gray-900 mb-2">Informations client</h4>
+          <div className="text-sm text-gray-600 space-y-1">
+            <p><strong>Nom:</strong> {order.user?.name || 'Client non connecté'}</p>
+            <p><strong>Email:</strong> {order.user?.email || 'N/A'}</p>
+            <p><strong>Téléphone:</strong> {order.shippingAddress?.phone || 'N/A'}</p>
+          </div>
+        </div>
+        <div>
+          <h4 className="font-medium text-gray-900 mb-2">Adresse de livraison</h4>
+          <div className="text-sm text-gray-600 space-y-1">
+            <p>{order.shippingAddress?.firstName} {order.shippingAddress?.lastName}</p>
+            <p>{order.shippingAddress?.address}</p>
+            <p>{order.shippingAddress?.postalCode} {order.shippingAddress?.city}</p>
+            <p>{order.shippingAddress?.country}</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h4 className="font-medium text-gray-900 mb-2">Produits commandés</h4>
+        <div className="space-y-3">
+          {order.items.map((item, index) => (
+            <div key={index} className="border rounded-lg p-4 bg-gray-50">
+              <div className="flex items-start space-x-4">
+                <img
+                  src={item.product.mainImageUrl}
+                  alt={item.product.name}
+                  className="w-16 h-16 object-cover rounded"
+                />
+                <div className="flex-1">
+                  <h5 className="font-medium text-gray-900">{item.product.name}</h5>
+                  <p className="text-sm text-gray-600">
+                    Quantité: {item.quantity} | Prix: {item.price.toFixed(2)}€
+                  </p>
+                  
+                  {/* Affichage des personnalisations */}
+                  {item.customizations && Object.keys(item.customizations).length > 0 && (
+                    <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                      <h6 className="font-medium text-blue-900 mb-2">Personnalisations:</h6>
+                      <div className="space-y-2">
+                        {Object.entries(item.customizations).map(([key, value]) => {
+                          if (typeof value === 'object' && value.type === 'text' && value.value) {
+                            return (
+                              <div key={key} className="text-sm">
+                                <strong>{key.replace(/_/g, ' ')} (texte):</strong> {value.value}
+                              </div>
+                            );
+                          } else if (typeof value === 'object' && value.type === 'image' && value.value) {
+                            return (
+                              <div key={key} className="text-sm">
+                                <strong>{key.replace(/_/g, ' ')} (image):</strong>
+                                <div className="mt-2">
+                                  <img
+                                    src={value.value}
+                                    alt="Image personnalisée"
+                                    className="w-32 h-32 object-cover rounded border"
+                                  />
+                                  <a
+                                    href={value.value}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block text-blue-600 hover:text-blue-800 text-xs mt-1"
+                                  >
+                                    Voir l'image en grand
+                                  </a>
+                                </div>
+                              </div>
+                            );
+                          } else if (typeof value === 'string') {
+                            return (
+                              <div key={key} className="text-sm">
+                                <strong>{key.replace(/_/g, ' ')}:</strong> {value}
+                              </div>
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                      {item.customizationPrice && item.customizationPrice > 0 && (
+                        <div className="mt-2 text-sm text-blue-700">
+                          <strong>Prix de personnalisation:</strong> +{item.customizationPrice.toFixed(2)}€
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="text-center p-4 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-600">Sous-total</p>
+          <p className="text-lg font-semibold">{order.subtotal.toFixed(2)}€</p>
+        </div>
+        <div className="text-center p-4 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-600">Livraison</p>
+          <p className="text-lg font-semibold">{order.shipping.toFixed(2)}€</p>
+        </div>
+        <div className="text-center p-4 bg-green-50 rounded-lg">
+          <p className="text-sm text-gray-600">Total</p>
+          <p className="text-lg font-semibold text-green-700">{order.total.toFixed(2)}€</p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <Layout>
@@ -431,98 +553,8 @@ const AdminOrders: React.FC = () => {
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-4">Informations client</h3>
-                    <div className="space-y-2 text-sm">
-                      <p><strong>Nom:</strong> {selectedOrder.shippingAddress.firstName} {selectedOrder.shippingAddress.lastName}</p>
-                      <p><strong>Adresse:</strong> {selectedOrder.shippingAddress.address}</p>
-                      <p><strong>Ville:</strong> {selectedOrder.shippingAddress.postalCode} {selectedOrder.shippingAddress.city}</p>
-                      <p><strong>Pays:</strong> {selectedOrder.shippingAddress.country}</p>
-                      <p><strong>Téléphone:</strong> {selectedOrder.shippingAddress.phone}</p>
-                    </div>
-                  </div>
+                {renderOrderDetails(selectedOrder)}
 
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-4">Informations commande</h3>
-                    <div className="space-y-2 text-sm">
-                      <p><strong>Statut:</strong> 
-                        <Badge className={`ml-2 ${getStatusColor(selectedOrder.status)}`}>
-                          {selectedOrder.status}
-                        </Badge>
-                      </p>
-                      <p><strong>Paiement:</strong> 
-                        <Badge className={`ml-2 ${getPaymentStatusColor(selectedOrder.paymentStatus)}`}>
-                          {selectedOrder.paymentStatus}
-                        </Badge>
-                      </p>
-                      <p><strong>Méthode:</strong> {selectedOrder.paymentMethod}</p>
-                      <p><strong>Type:</strong> {selectedOrder.isRental ? 'Location' : 'Achat'}</p>
-                      <p><strong>Date:</strong> {new Date(selectedOrder.createdAt).toLocaleString('fr-FR')}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <h3 className="font-semibold text-gray-900 mb-4">Articles</h3>
-                  <div className="space-y-3">
-                    {selectedOrder.items.map((item, index) => (
-                      <div key={index} className="flex items-center space-x-4 p-3 border rounded-lg">
-                        <img
-                          src={item.product.mainImageUrl}
-                          alt={item.product?.name || 'Produit supprimé'}
-                          className="w-16 h-16 object-cover rounded-lg"
-                          onError={(e) => {
-                            e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0zMiAxNkMyMy4xNjM0IDE2IDE2IDIzLjE2MzQgMTYgMzJDMTYgNDAuODM2NiAyMy4xNjM0IDQ4IDMyIDQ4QzQwLjgzNjYgNDggNDggNDAuODM2NiA0OCAzMkM0OCAyMy4xNjM0IDQwLjgzNjYgMTYgMzIgMTZaIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0zMiAyMEMyNS4zNzI2IDIwIDIwIDI1LjM3MjYgMjAgMzJDMjAgMzguNjI3NCAyNS4zNzI2IDQ0IDMyIDQ0QzM4LjYyNzQgNDQgNDQgMzguNjI3NCA0NCAzMkM0NCAyNS4zNzI2IDM4LjYyNzQgMjAgMzIgMjBaIiBmaWxsPSIjRjNGNEY2Ii8+Cjwvc3ZnPgo=';
-                          }}
-                        />
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{item.product?.name || 'Produit supprimé'}</h4>
-                          <p className="text-sm text-gray-600">
-                            Quantité: {item.quantity} | Prix: {item.price.toFixed(2)}€
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {item.isRental ? 'Location' : 'Achat'}
-                          </p>
-                          {item.customizations && Object.keys(item.customizations).length > 0 && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              {Object.entries(item.customizations).map(([key, value]) => (
-                                <span key={key} className="mr-2">{key}: {value as string}</span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-gray-900">
-                            {(item.price * item.quantity).toFixed(2)}€
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="font-semibold text-gray-900 mb-4">Récapitulatif</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Sous-total:</span>
-                      <span>{selectedOrder.subtotal.toFixed(2)}€</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>TVA:</span>
-                      <span>{selectedOrder.tax.toFixed(2)}€</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Livraison:</span>
-                      <span>{selectedOrder.shipping.toFixed(2)}€</span>
-                    </div>
-                    <div className="flex justify-between font-semibold text-lg border-t pt-2">
-                      <span>Total:</span>
-                      <span>{selectedOrder.total.toFixed(2)}€</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

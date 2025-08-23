@@ -5,20 +5,20 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Textarea } from './ui/textarea';
-import { Eye, Upload, X } from 'lucide-react';
-import Product3DPreview from './Product3DPreview';
+import { Eye, Upload, X, Type, Image as ImageIcon } from 'lucide-react';
 import ImageUpload from './ImageUpload';
 
 interface CustomizationOption {
-  type: 'dropdown' | 'checkbox' | 'text' | 'textarea' | 'name_engraving' | 'image_upload';
+  type: 'dropdown' | 'checkbox' | 'text' | 'textarea' | 'text_image_upload';
   label: string;
   required: boolean;
   options?: string[];
   placeholder?: string;
   maxLength?: number;
-  engravingType?: 'text' | 'image' | 'both';
-  engravingPosition?: 'front' | 'back' | 'side' | 'top' | 'bottom';
-  engravingStyle?: 'simple' | 'elegant' | 'bold' | 'script' | 'decorative';
+  maxFileSize?: number;
+  allowedFileTypes?: string[];
+  pricePerCharacter?: number;
+  basePrice?: number;
 }
 
 interface ProductCustomizationProps {
@@ -37,11 +37,10 @@ export default function ProductCustomization({
   initialCustomizations = {}
 }: ProductCustomizationProps) {
   const [customizations, setCustomizations] = useState<Record<string, any>>(initialCustomizations);
-  const [showPreview, setShowPreview] = useState(false);
-  const [engravingText, setEngravingText] = useState('');
-  const [engravingImage, setEngravingImage] = useState<string>('');
-  const [engravingPosition, setEngravingPosition] = useState<'front' | 'back' | 'side' | 'top' | 'bottom'>('front');
-  const [engravingStyle, setEngravingStyle] = useState<'simple' | 'elegant' | 'bold' | 'script' | 'decorative'>('simple');
+  const [customText, setCustomText] = useState('');
+  const [customImage, setCustomImage] = useState<string>('');
+  const [customizationType, setCustomizationType] = useState<'text' | 'image'>('text');
+  const [customizationPrice, setCustomizationPrice] = useState(0);
 
   const handleCustomizationChange = (key: string, value: any) => {
     const newCustomizations = { ...customizations, [key]: value };
@@ -49,14 +48,30 @@ export default function ProductCustomization({
     onCustomizationChange(newCustomizations);
   };
 
-  const handleEngravingTextChange = (text: string) => {
-    setEngravingText(text);
-    handleCustomizationChange('engravingText', text);
-  };
+  const handleTextImageUploadChange = (key: string, type: 'text' | 'image', value: string) => {
+    const option = customizationOptions[key];
+    let price = option.basePrice || 0;
 
-  const handleEngravingImageChange = (imageUrl: string) => {
-    setEngravingImage(imageUrl);
-    handleCustomizationChange('engravingImage', imageUrl);
+    if (type === 'text' && value.length > 0) {
+      // Calculer le prix basé sur le nombre de caractères
+      const extraChars = Math.max(0, value.length - (option.maxLength || 0));
+      price += extraChars * (option.pricePerCharacter || 0.1);
+    } else if (type === 'image' && value) {
+      price = option.basePrice || 5; // Prix de base pour l'image
+    }
+
+    setCustomizationPrice(price);
+
+    const newCustomizations = {
+      ...customizations,
+      [key]: {
+        type,
+        value,
+        price
+      }
+    };
+    setCustomizations(newCustomizations);
+    onCustomizationChange(newCustomizations);
   };
 
   const renderCustomizationField = (key: string, option: CustomizationOption) => {
@@ -125,109 +140,93 @@ export default function ProductCustomization({
           />
         );
 
-      case 'name_engraving':
+      case 'text_image_upload':
         return (
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="engravingText">Texte à graver</Label>
-              <Input
-                id="engravingText"
-                value={engravingText}
-                onChange={(e) => handleEngravingTextChange(e.target.value)}
-                placeholder="Entrez le nom ou texte à graver..."
-                maxLength={50}
-              />
+            {/* Sélection du type de personnalisation */}
+            <div className="flex space-x-4">
+              <Button
+                type="button"
+                variant={customizationType === 'text' ? 'default' : 'outline'}
+                onClick={() => setCustomizationType('text')}
+                className="flex items-center space-x-2"
+              >
+                <Type className="w-4 h-4" />
+                <span>Texte</span>
+              </Button>
+              <Button
+                type="button"
+                variant={customizationType === 'image' ? 'default' : 'outline'}
+                onClick={() => setCustomizationType('image')}
+                className="flex items-center space-x-2"
+              >
+                <ImageIcon className="w-4 h-4" />
+                <span>Image</span>
+              </Button>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="engravingPosition">Position de la gravure</Label>
-                <Select value={engravingPosition} onValueChange={(value: any) => setEngravingPosition(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="front">Avant</SelectItem>
-                    <SelectItem value="back">Arrière</SelectItem>
-                    <SelectItem value="side">Côté</SelectItem>
-                    <SelectItem value="top">Haut</SelectItem>
-                    <SelectItem value="bottom">Bas</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="engravingStyle">Style de gravure</Label>
-                <Select value={engravingStyle} onValueChange={(value: any) => setEngravingStyle(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="simple">Simple</SelectItem>
-                    <SelectItem value="elegant">Élégant</SelectItem>
-                    <SelectItem value="bold">Gras</SelectItem>
-                    <SelectItem value="script">Script</SelectItem>
-                    <SelectItem value="decorative">Décoratif</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-        );
 
-      case 'image_upload':
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Image à graver</Label>
-              <ImageUpload
-                onImagesUploaded={(urls) => {
-                  if (urls.length > 0) {
-                    handleEngravingImageChange(urls[0]);
-                  }
-                }}
-                onFilesSelected={() => {}}
-                multiple={false}
-                maxImages={1}
-              />
-            </div>
-            
-            {engravingImage && (
-              <div className="relative inline-block">
-                <img
-                  src={engravingImage}
-                  alt="Image à graver"
-                  className="w-20 h-20 object-cover rounded-lg border"
+            {/* Interface pour le texte */}
+            {customizationType === 'text' && (
+              <div className="space-y-2">
+                <Textarea
+                  value={customText}
+                  onChange={(e) => {
+                    setCustomText(e.target.value);
+                    handleTextImageUploadChange(key, 'text', e.target.value);
+                  }}
+                  placeholder={option.placeholder}
+                  maxLength={option.maxLength}
+                  rows={3}
                 />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  className="absolute -top-2 -right-2 w-6 h-6 p-0"
-                  onClick={() => handleEngravingImageChange('')}
-                >
-                  <X className="w-3 h-3" />
-                </Button>
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>{customText.length}/{option.maxLength || 50} caractères</span>
+                  {customizationPrice > 0 && (
+                    <span className="text-blue-600 font-medium">
+                      +{customizationPrice.toFixed(2)}€
+                    </span>
+                  )}
+                </div>
+                {option.maxLength && customText.length > option.maxLength && (
+                  <p className="text-sm text-red-600">
+                    Limite de caractères dépassée. Prix supplémentaire appliqué.
+                  </p>
+                )}
               </div>
             )}
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="engravingPosition">Position de la gravure</Label>
-                <Select value={engravingPosition} onValueChange={(value: any) => setEngravingPosition(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="front">Avant</SelectItem>
-                    <SelectItem value="back">Arrière</SelectItem>
-                    <SelectItem value="side">Côté</SelectItem>
-                    <SelectItem value="top">Haut</SelectItem>
-                    <SelectItem value="bottom">Bas</SelectItem>
-                  </SelectContent>
-                </Select>
+
+            {/* Interface pour l'image */}
+            {customizationType === 'image' && (
+              <div className="space-y-2">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                  <ImageUpload
+                    onImageUpload={(imageUrl) => {
+                      setCustomImage(imageUrl);
+                      handleTextImageUploadChange(key, 'image', imageUrl);
+                    }}
+                    maxFileSize={option.maxFileSize || 5}
+                    allowedFileTypes={option.allowedFileTypes || ['image/jpeg', 'image/png']}
+                    placeholder="Glissez-déposez votre image ou cliquez pour sélectionner"
+                  />
+                </div>
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>Taille max: {option.maxFileSize || 5}MB</span>
+                  {customizationPrice > 0 && (
+                    <span className="text-blue-600 font-medium">
+                      +{customizationPrice.toFixed(2)}€
+                    </span>
+                  )}
+                </div>
+                {customImage && (
+                  <div className="mt-2">
+                    <img
+                      src={customImage}
+                      alt="Image personnalisée"
+                      className="w-20 h-20 object-cover rounded border"
+                    />
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
         );
 
@@ -236,77 +235,45 @@ export default function ProductCustomization({
     }
   };
 
-  const hasEngravingOptions = Object.values(customizationOptions).some(
-    option => option.type === 'name_engraving' || option.type === 'image_upload'
-  );
-
   return (
     <div className="space-y-6">
-      {/* Options de personnalisation standard */}
-      {Object.entries(customizationOptions)
-        .filter(([_, option]) => option.type !== 'name_engraving' && option.type !== 'image_upload')
-        .map(([key, option]) => (
-          <div key={key} className="space-y-2">
-            <Label htmlFor={key}>
-              {option.label}
-              {option.required && <span className="text-red-500 ml-1">*</span>}
-            </Label>
-            {renderCustomizationField(key, option)}
-          </div>
-        ))}
-
-      {/* Options de gravure */}
-      {hasEngravingOptions && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Upload className="w-5 h-5 mr-2" />
-              Options de gravure
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {Object.entries(customizationOptions)
-              .filter(([_, option]) => option.type === 'name_engraving' || option.type === 'image_upload')
-              .map(([key, option]) => (
-                <div key={key} className="space-y-2">
-                  <Label htmlFor={key}>
-                    {option.label}
-                    {option.required && <span className="text-red-500 ml-1">*</span>}
-                  </Label>
-                  {renderCustomizationField(key, option)}
-                </div>
-              ))}
-
-            {/* Bouton de prévisualisation */}
-            {(engravingText || engravingImage) && (
-              <div className="pt-4 border-t">
-                <Button
-                  type="button"
-                  onClick={() => setShowPreview(true)}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  Prévisualiser en 3D
-                </Button>
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <span>Options de Personnalisation</span>
+            {Object.values(customizations).some(val => val && (typeof val === 'string' ? val.length > 0 : true)) && (
+              <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                ✨ Personnalisé
+              </span>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {Object.entries(customizationOptions).map(([key, option]) => (
+            <div key={key} className="space-y-2">
+              <Label htmlFor={key} className="text-sm font-medium">
+                {option.label}
+                {option.required && <span className="text-red-500 ml-1">*</span>}
+              </Label>
+              {renderCustomizationField(key, option)}
+              {option.placeholder && (
+                <p className="text-xs text-gray-500">{option.placeholder}</p>
+              )}
+            </div>
+          ))}
 
-      {/* Modal de prévisualisation 3D */}
-      {showPreview && (
-        <Product3DPreview
-          productImage={productImage}
-          productName={productName}
-          engravingText={engravingText}
-          engravingImage={engravingImage}
-          engravingPosition={engravingPosition}
-          engravingStyle={engravingStyle}
-          onClose={() => setShowPreview(false)}
-        />
-      )}
+          {/* Résumé des prix de personnalisation */}
+          {customizationPrice > 0 && (
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Prix de personnalisation:</strong> +{customizationPrice.toFixed(2)}€
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
+
 

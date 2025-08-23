@@ -8,6 +8,35 @@ import adminRoutes from "./routes/admin";
 import paymentRoutes from "./routes/payment";
 import rentalRoutes from "./routes/rental";
 import invoiceRoutes from "./routes/invoice";
+import multer from "multer";
+import path from "path";
+import express from "express";
+
+// Configuration multer pour l'upload d'images
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, 'uploads/temp/');
+    },
+    filename: (req, file, cb) => {
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const extension = path.extname(file.originalname);
+      cb(null, `temp-${timestamp}-${randomString}${extension}`);
+    }
+  }),
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Type de fichier non autorisé'));
+    }
+  }
+});
 
 // Validation schemas for MongoDB
 const insertProductSchema = z.object({
@@ -888,6 +917,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload route for customization images
+  app.post('/api/upload/image', upload.single('image'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'Aucune image fournie' });
+      }
+
+      // Vérifier le type de fichier
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(req.file.mimetype)) {
+        return res.status(400).json({ 
+          message: 'Type de fichier non autorisé. Types acceptés: JPEG, PNG, GIF' 
+        });
+      }
+
+      // Vérifier la taille (5MB max)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (req.file.size > maxSize) {
+        return res.status(400).json({ 
+          message: 'Fichier trop volumineux. Taille maximale: 5MB' 
+        });
+      }
+
+      // Générer un nom de fichier unique
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const fileExtension = req.file.originalname.split('.').pop();
+      const fileName = `customization-${timestamp}-${randomString}.${fileExtension}`;
+
+      // Déplacer le fichier vers le dossier uploads
+      const uploadPath = `uploads/customizations/${fileName}`;
+      const fs = require('fs');
+      const path = require('path');
+
+      // Créer le dossier s'il n'existe pas
+      const uploadDir = path.join(__dirname, '..', 'uploads', 'customizations');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      // Déplacer le fichier
+      fs.renameSync(req.file.path, path.join(uploadDir, fileName));
+
+      // Retourner l'URL de l'image
+      const imageUrl = `/uploads/customizations/${fileName}`;
+
+      res.json({ 
+        message: 'Image uploadée avec succès',
+        imageUrl: imageUrl,
+        fileName: fileName
+      });
+
+    } catch (error) {
+      console.error('Erreur upload image:', error);
+      res.status(500).json({ message: 'Erreur lors de l\'upload de l\'image' });
+    }
+  });
+
   // Webhook placeholder for future payment integration
   app.post('/api/payment-webhook', async (req, res) => {
     res.status(501).json({ 
@@ -960,6 +1047,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     res.send(svgLogo);
   });
+
+  // Serve uploaded files
+  app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
   const httpServer = createServer(app);
   return httpServer;

@@ -15,12 +15,16 @@ export interface IProduct extends Document {
   dailyRentalPrice?: number;
   customizationOptions: {
     [key: string]: {
-      type: 'dropdown' | 'checkbox' | 'text' | 'textarea';
+      type: 'dropdown' | 'checkbox' | 'text' | 'textarea' | 'text_image_upload';
       label: string;
       required: boolean;
       options?: string[]; // Pour les dropdowns et checkboxes
       placeholder?: string; // Pour les champs texte
       maxLength?: number;
+      maxFileSize?: number; // Taille maximale du fichier en MB
+      allowedFileTypes?: string[]; // Types de fichiers autorisés
+      pricePerCharacter?: number; // Prix par caractère supplémentaire
+      basePrice?: number; // Prix de base pour cette option
     };
   };
   createdAt: Date;
@@ -84,7 +88,7 @@ const ProductSchema = new Schema<IProduct>({
     of: {
       type: {
         type: String,
-        enum: ['dropdown', 'checkbox', 'text', 'textarea', 'name_engraving', 'image_upload'],
+        enum: ['dropdown', 'checkbox', 'text', 'textarea', 'text_image_upload'],
         required: true
       },
       label: {
@@ -98,20 +102,18 @@ const ProductSchema = new Schema<IProduct>({
       options: [String], // Pour les dropdowns et checkboxes
       placeholder: String, // Pour les champs texte
       maxLength: Number,
-      engravingType: {
-        type: String,
-        enum: ['text', 'image', 'both'],
-        default: 'text'
+      maxFileSize: {
+        type: Number,
+        default: 5 // 5MB par défaut
       },
-      engravingPosition: {
-        type: String,
-        enum: ['front', 'back', 'side', 'top', 'bottom'],
-        default: 'front'
+      allowedFileTypes: [String], // ['image/jpeg', 'image/png', 'image/gif']
+      pricePerCharacter: {
+        type: Number,
+        default: 0.1 // 0.10€ par caractère supplémentaire
       },
-      engravingStyle: {
-        type: String,
-        enum: ['simple', 'elegant', 'bold', 'script', 'decorative'],
-        default: 'simple'
+      basePrice: {
+        type: Number,
+        default: 0
       }
     },
     default: {}

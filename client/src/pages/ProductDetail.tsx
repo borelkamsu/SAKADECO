@@ -5,26 +5,19 @@ import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   ArrowLeft, 
   ShoppingCart, 
-  Star, 
   Package, 
   Palette,
-  MessageSquare,
   Plus,
   Minus,
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
 import ImageWithFallback from "@/components/ImageWithFallback";
-
+import ProductCustomization from "@/components/ProductCustomization";
 
 interface Product {
   _id: string;
@@ -40,23 +33,21 @@ interface Product {
   isForRent: boolean;
   stockQuantity: number;
   dailyRentalPrice?: number;
-  customizationOptions?: Record<string, string[]>;
+  customizationOptions?: Record<string, any>;
   createdAt: string;
   updatedAt: string;
 }
 
 interface CustomizationSelection {
-  [key: string]: string[] | string | boolean;
+  [key: string]: any;
 }
 
 export default function ProductDetail() {
   const [location, setLocation] = useLocation();
   const [quantity, setQuantity] = useState(1);
   const [customizations, setCustomizations] = useState<CustomizationSelection>({});
-  const [customMessage, setCustomMessage] = useState("");
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-
 
   // Extract product ID from URL
   const productId = location.split('/')[2]; // /product/{id}
@@ -73,18 +64,8 @@ export default function ProductDetail() {
     enabled: !!productId,
   });
 
-  const handleCustomizationChange = (optionType: string, value: string | boolean, isMultiple = false) => {
-    setCustomizations(prev => {
-      if (isMultiple) {
-        const currentValues = (prev[optionType] as string[]) || [];
-        const newValues = currentValues.includes(value as string)
-          ? currentValues.filter(v => v !== value)
-          : [...currentValues, value as string];
-        return { ...prev, [optionType]: newValues };
-      } else {
-        return { ...prev, [optionType]: value };
-      }
-    });
+  const handleCustomizationChange = (newCustomizations: CustomizationSelection) => {
+    setCustomizations(newCustomizations);
   };
 
   const handleAddToCart = async () => {
@@ -93,6 +74,19 @@ export default function ProductDetail() {
     setIsAddingToCart(true);
     
     try {
+      // Calculer le prix total avec personnalisations
+      let totalPrice = product.price;
+      let customizationPrice = 0;
+
+      // Calculer le prix des personnalisations
+      Object.values(customizations).forEach((customization: any) => {
+        if (customization && typeof customization === 'object' && customization.price) {
+          customizationPrice += customization.price;
+        }
+      });
+
+      totalPrice += customizationPrice;
+
       // Préparer l'article pour le panier
       const cartItem = {
         productId: product._id,
@@ -102,7 +96,8 @@ export default function ProductDetail() {
         image: product.mainImageUrl,
         isRental: false,
         customizations: customizations,
-        customMessage: customMessage
+        customizationPrice: customizationPrice,
+        totalPrice: totalPrice
       };
 
       // Récupérer le panier existant
@@ -117,6 +112,9 @@ export default function ProductDetail() {
       if (existingItemIndex >= 0) {
         // Mettre à jour la quantité
         cartItems[existingItemIndex].quantity += quantity;
+        cartItems[existingItemIndex].customizations = customizations;
+        cartItems[existingItemIndex].customizationPrice = customizationPrice;
+        cartItems[existingItemIndex].totalPrice = totalPrice;
       } else {
         // Ajouter le nouvel article
         cartItems.push(cartItem);
@@ -136,152 +134,6 @@ export default function ProductDetail() {
     }
   };
 
-  const renderCustomizationOption = (optionKey: string, option: any) => {
-    const currentValue = customizations[optionKey];
-
-    // Handle new format (simple array of values)
-    if (Array.isArray(option)) {
-      return (
-        <div key={optionKey} className="space-y-2">
-          <Label className="text-sm font-medium capitalize">
-            {optionKey.replace(/_/g, ' ')}
-          </Label>
-          <Select
-            value={currentValue as string || ""}
-            onValueChange={(value) => handleCustomizationChange(optionKey, value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={`Choisir ${optionKey.replace(/_/g, ' ')}`} />
-            </SelectTrigger>
-            <SelectContent>
-              {option.map((value: string) => (
-                <SelectItem key={value} value={value}>
-                  {value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      );
-    }
-
-    // Handle old format (object with type, label, etc.)
-    if (option && typeof option === 'object' && 'type' in option) {
-      const { type, label, required, options, placeholder, maxLength } = option;
-
-      switch (type) {
-        case 'checkbox':
-          return (
-            <div key={optionKey} className="flex items-center space-x-2">
-              <Checkbox
-                id={optionKey}
-                checked={currentValue as boolean || false}
-                onCheckedChange={(checked) => handleCustomizationChange(optionKey, checked)}
-              />
-              <Label htmlFor={optionKey} className="text-sm font-medium">
-                {label}
-              </Label>
-              {required && <span className="text-red-500">*</span>}
-            </div>
-          );
-
-        case 'dropdown':
-          return (
-            <div key={optionKey} className="space-y-2">
-              <Label className="text-sm font-medium">
-                {label}
-                {required && <span className="text-red-500">*</span>}
-              </Label>
-              <Select
-                value={currentValue as string || ""}
-                onValueChange={(value) => handleCustomizationChange(optionKey, value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={`Choisir ${label.toLowerCase()}`} />
-                </SelectTrigger>
-                <SelectContent>
-                  {options?.map((value: string) => (
-                    <SelectItem key={value} value={value}>
-                      {value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          );
-
-        case 'text':
-          return (
-            <div key={optionKey} className="space-y-2">
-              <Label className="text-sm font-medium">
-                {label}
-                {required && <span className="text-red-500">*</span>}
-              </Label>
-              <Input
-                placeholder={placeholder}
-                maxLength={maxLength}
-                value={currentValue as string || ""}
-                onChange={(e) => handleCustomizationChange(optionKey, e.target.value)}
-              />
-            </div>
-          );
-
-        case 'textarea':
-          return (
-            <div key={optionKey} className="space-y-2">
-              <Label className="text-sm font-medium">
-                {label}
-                {required && <span className="text-red-500">*</span>}
-              </Label>
-              <Textarea
-                placeholder={placeholder}
-                maxLength={maxLength}
-                value={currentValue as string || ""}
-                onChange={(e) => handleCustomizationChange(optionKey, e.target.value)}
-                rows={3}
-              />
-            </div>
-          );
-
-        default:
-          return null;
-      }
-    }
-
-    // Handle other formats for backward compatibility
-    if (typeof option === 'boolean') {
-      return (
-        <div key={optionKey} className="flex items-center space-x-2">
-          <Checkbox
-            id={optionKey}
-            checked={currentValue as boolean || false}
-            onCheckedChange={(checked) => handleCustomizationChange(optionKey, checked)}
-          />
-          <Label htmlFor={optionKey} className="text-sm font-medium capitalize">
-            {optionKey.replace(/_/g, ' ')}
-          </Label>
-        </div>
-      );
-    }
-
-    if (typeof option === 'string') {
-      return (
-        <div key={optionKey} className="space-y-2">
-          <Label className="text-sm font-medium capitalize">
-            {optionKey.replace(/_/g, ' ')}
-          </Label>
-          <Input
-            placeholder={option}
-            value={currentValue as string || ""}
-            onChange={(e) => handleCustomizationChange(optionKey, e.target.value)}
-          />
-        </div>
-      );
-    }
-
-    return null;
-  };
-
   const allImages = product ? [product.mainImageUrl, ...product.additionalImages] : [];
   const currentImage = allImages[selectedImageIndex];
 
@@ -292,6 +144,16 @@ export default function ProductDetail() {
   const prevImage = () => {
     setSelectedImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
   };
+
+  // Calculer le prix total avec personnalisations
+  const customizationPrice = Object.values(customizations).reduce((total: number, customization: any) => {
+    if (customization && typeof customization === 'object' && customization.price) {
+      return total + customization.price;
+    }
+    return total;
+  }, 0);
+
+  const totalPrice = (product?.price || 0) + customizationPrice;
 
   if (isLoading) {
     return (
@@ -421,11 +283,11 @@ export default function ProductDetail() {
                 <div className="flex items-center space-x-4">
                   <div>
                     <span className="text-3xl font-bold text-skd-shop">
-                      {(product.price * quantity).toFixed(2)}€
+                      {totalPrice.toFixed(2)}€
                     </span>
                     {quantity > 1 && (
                       <span className="text-sm text-gray-500 ml-2">
-                        ({product.price.toFixed(2)}€ l'unité)
+                        ({(totalPrice / quantity).toFixed(2)}€ l'unité)
                       </span>
                     )}
                   </div>
@@ -435,6 +297,11 @@ export default function ProductDetail() {
                     </span>
                   )}
                 </div>
+                {customizationPrice > 0 && (
+                  <p className="text-sm text-blue-600 mt-2">
+                    +{customizationPrice.toFixed(2)}€ de personnalisation
+                  </p>
+                )}
               </div>
 
               {/* Stock Info */}
@@ -448,31 +315,15 @@ export default function ProductDetail() {
                 </span>
               </div>
 
-
-
               {/* Customization Options */}
-              {(() => {
-                console.log('🔍 Debug - Product customization check:', {
-                  isCustomizable: product.isCustomizable,
-                  customizationOptions: product.customizationOptions,
-                  hasOptions: !!product.customizationOptions,
-                  optionsKeys: product.customizationOptions ? Object.keys(product.customizationOptions) : []
-                });
-                return product.isCustomizable && product.customizationOptions;
-              })() && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Palette className="w-5 h-5" />
-                      <span>Options de Personnalisation</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {Object.entries(product.customizationOptions).map(([optionKey, option]) => 
-                      renderCustomizationOption(optionKey, option)
-                    )}
-                  </CardContent>
-                </Card>
+              {product.isCustomizable && product.customizationOptions && (
+                <ProductCustomization
+                  productName={product.name}
+                  productImage={product.mainImageUrl}
+                  customizationOptions={product.customizationOptions}
+                  onCustomizationChange={handleCustomizationChange}
+                  initialCustomizations={customizations}
+                />
               )}
 
               {/* Quantity and Add to Cart */}
@@ -481,7 +332,7 @@ export default function ProductDetail() {
                   <div className="space-y-4">
                     {/* Quantity Selector */}
                     <div className="flex items-center space-x-4">
-                      <Label className="text-sm font-medium">Quantité:</Label>
+                      <span className="text-sm font-medium">Quantité:</span>
                       <div className="flex items-center space-x-2">
                         <Button
                           variant="outline"
@@ -506,11 +357,11 @@ export default function ProductDetail() {
                     {/* Price Display */}
                     <div className="text-center mb-4">
                       <span className="text-2xl font-bold text-gray-900">
-                        {(product.price * quantity).toFixed(2)}€
+                        {(totalPrice * quantity).toFixed(2)}€
                       </span>
                       {quantity > 1 && (
                         <span className="text-sm text-gray-500 ml-2">
-                          ({product.price.toFixed(2)}€ l'unité)
+                          ({totalPrice.toFixed(2)}€ l'unité)
                         </span>
                       )}
                     </div>
@@ -547,8 +398,6 @@ export default function ProductDetail() {
           </div>
         </div>
       </section>
-      
-
     </Layout>
   );
 }

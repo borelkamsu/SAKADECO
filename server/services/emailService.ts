@@ -372,9 +372,6 @@ class EmailService {
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
               .header { text-align: center; margin-bottom: 30px; }
               .success { color: #059669; font-size: 24px; margin-bottom: 10px; }
-              .order-details { background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
-              .button { display: inline-block; background-color: #059669; color: white; padding: 12px 24px; 
-                        text-decoration: none; border-radius: 6px; margin: 20px 0; }
             </style>
           </head>
           <body>
@@ -452,6 +449,8 @@ class EmailService {
                         text-decoration: none; border-radius: 6px; margin: 20px 0; }
               .items-list { margin: 10px 0; }
               .item { padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+              .customization { background-color: #e0f2fe; padding: 10px; border-radius: 6px; margin: 8px 0; }
+              .custom-image { max-width: 200px; max-height: 200px; border-radius: 8px; margin: 10px 0; }
             </style>
           </head>
           <body>
@@ -474,20 +473,40 @@ class EmailService {
                 
                 <h4>Produits commandés:</h4>
                 <div class="items-list">
-                  ${invoice.items.map(item => `
-                    <div class="item">
-                      <strong>${item.product.name}</strong> - Quantité: ${item.quantity} - Prix: ${item.price.toFixed(2)}€
-                      ${item.customizations && Object.keys(item.customizations).length > 0 ? `
-                        <br><strong>Personnalisations:</strong>
-                        <ul style="margin: 5px 0; padding-left: 20px;">
-                          ${Object.entries(item.customizations).map(([key, value]) => `
-                            <li><strong>${key.replace(/_/g, ' ')}:</strong> ${value}</li>
-                          `).join('')}
-                        </ul>
-                      ` : ''}
-                      ${item.customMessage ? `<br><strong>Message:</strong> ${item.customMessage}` : ''}
-                    </div>
-                  `).join('')}
+                  ${invoice.items.map(item => {
+                    let customizationHTML = '';
+                    let customImageHTML = '';
+                    
+                    if (item.customizations && Object.keys(item.customizations).length > 0) {
+                      customizationHTML = `
+                        <div class="customization">
+                          <strong>Personnalisations:</strong>
+                          <ul style="margin: 5px 0; padding-left: 20px;">
+                            ${Object.entries(item.customizations).map(([key, value]) => {
+                              if (typeof value === 'object' && value.type === 'text' && value.value) {
+                                return `<li><strong>${key.replace(/_/g, ' ')} (texte):</strong> ${value.value}</li>`;
+                              } else if (typeof value === 'object' && value.type === 'image' && value.value) {
+                                customImageHTML = `<img src="${value.value}" alt="Image personnalisée" class="custom-image" />`;
+                                return `<li><strong>${key.replace(/_/g, ' ')} (image):</strong> Image téléchargée</li>`;
+                              } else if (typeof value === 'string') {
+                                return `<li><strong>${key.replace(/_/g, ' ')}:</strong> ${value}</li>`;
+                              }
+                              return '';
+                            }).join('')}
+                          </ul>
+                          ${customImageHTML}
+                        </div>
+                      `;
+                    }
+                    
+                    return `
+                      <div class="item">
+                        <strong>${item.product.name}</strong> - Quantité: ${item.quantity} - Prix: ${item.price.toFixed(2)}€
+                        ${customizationHTML}
+                        ${item.customMessage ? `<br><strong>Message:</strong> ${item.customMessage}` : ''}
+                      </div>
+                    `;
+                  }).join('')}
                 </div>
                 
                 <h4>Adresse de livraison:</h4>

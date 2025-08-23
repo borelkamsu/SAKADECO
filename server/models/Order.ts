@@ -31,9 +31,22 @@ const orderItemSchema = new mongoose.Schema({
   },
   customizations: {
     type: Map,
-    of: String
+    of: mongoose.Schema.Types.Mixed // Permet de stocker des objets complexes
   },
-  customMessage: String
+  customMessage: String,
+  // Nouvelles propriétés pour les personnalisations
+  customText: String,
+  customImage: String, // URL de l'image téléchargée
+  customImageFile: {
+    originalName: String,
+    fileName: String,
+    fileSize: Number,
+    mimeType: String
+  },
+  customizationPrice: {
+    type: Number,
+    default: 0
+  }
 });
 
 const orderSchema = new mongoose.Schema({

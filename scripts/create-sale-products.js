@@ -1,12 +1,18 @@
 import mongoose from 'mongoose';
 import { Product } from '../server/models/Product.js';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// Obtenir le chemin du fichier actuel
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Charger les variables d'environnement
-dotenv.config();
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 // Configuration de la base de données
-const DATABASE_URL = process.env.DATABASE_URL || 'mongodb://localhost:27017/sakadeco';
+const DATABASE_URL = 'mongodb://localhost:27017/sakadeco';
 
 // Images de test (URLs d'images gratuites)
 const TEST_IMAGES = {
@@ -65,12 +71,16 @@ const saleProducts = [
         required: true,
         options: ['1', '5', '10', '15', '20', '25', '30']
       },
-      message: {
-        type: 'textarea',
-        label: 'Message personnalisé (optionnel)',
+      personnalisation: {
+        type: 'text_image_upload',
+        label: 'Personnalisation (texte ou image)',
         required: false,
-        placeholder: 'Votre message personnalisé...',
-        maxLength: 100
+        placeholder: 'Entrez votre texte personnalisé ou téléchargez une image',
+        maxLength: 50,
+        maxFileSize: 5,
+        allowedFileTypes: ['image/jpeg', 'image/png', 'image/gif'],
+        pricePerCharacter: 0.1,
+        basePrice: 5
       }
     }
   },
@@ -110,6 +120,17 @@ const saleProducts = [
         label: 'Inclure un vase assorti',
         required: false,
         options: ['Oui, inclure un vase (+15€)']
+      },
+      personnalisation: {
+        type: 'text_image_upload',
+        label: 'Message ou logo personnalisé',
+        required: false,
+        placeholder: 'Ajoutez un message spécial ou votre logo',
+        maxLength: 30,
+        maxFileSize: 3,
+        allowedFileTypes: ['image/jpeg', 'image/png'],
+        pricePerCharacter: 0.15,
+        basePrice: 8
       }
     }
   },
@@ -149,6 +170,17 @@ const saleProducts = [
         label: 'Nombre de bougies',
         required: true,
         options: ['1', '2', '3', '4', '6', '8', '12']
+      },
+      personnalisation: {
+        type: 'text_image_upload',
+        label: 'Gravure personnalisée',
+        required: false,
+        placeholder: 'Texte ou image à graver sur la bougie',
+        maxLength: 20,
+        maxFileSize: 2,
+        allowedFileTypes: ['image/jpeg', 'image/png'],
+        pricePerCharacter: 0.2,
+        basePrice: 10
       }
     }
   },
@@ -188,6 +220,17 @@ const saleProducts = [
         label: 'Type de service',
         required: true,
         options: ['Assiettes plates uniquement', 'Service complet (assiettes + couverts)', 'Service premium (assiettes + couverts + verres)']
+      },
+      personnalisation: {
+        type: 'text_image_upload',
+        label: 'Personnalisation du service',
+        required: false,
+        placeholder: 'Ajoutez votre nom ou logo sur les assiettes',
+        maxLength: 25,
+        maxFileSize: 4,
+        allowedFileTypes: ['image/jpeg', 'image/png', 'image/gif'],
+        pricePerCharacter: 0.25,
+        basePrice: 15
       }
     }
   }
