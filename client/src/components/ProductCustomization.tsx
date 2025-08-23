@@ -76,6 +76,7 @@ export default function ProductCustomization({
   };
 
   const handleImageUpload = (key: string, imageUrl: string) => {
+    console.log('handleImageUpload called with:', { key, imageUrl });
     setCustomImage(imageUrl);
     handleTextImageUploadChange(key, 'image', imageUrl);
   };
@@ -187,7 +188,13 @@ export default function ProductCustomization({
             <div className="space-y-2">
               <Label>Image à graver</Label>
               <ImageUpload
-                onImageUpload={(imageUrl) => handleImageUpload(key, imageUrl)}
+                onImageUpload={(imageUrl) => {
+                  if (typeof handleImageUpload === 'function') {
+                    handleImageUpload(key, imageUrl);
+                  } else {
+                    console.error('handleImageUpload is not a function:', handleImageUpload);
+                  }
+                }}
                 maxFileSize={option.maxFileSize}
                 allowedFileTypes={option.allowedFileTypes}
                 placeholder="Téléchargez l'image à graver sur le produit"
@@ -225,7 +232,13 @@ export default function ProductCustomization({
               <div>
                 <Label>Image à graver (optionnel)</Label>
                 <ImageUpload
-                  onImageUpload={(imageUrl) => handleImageUpload(key, imageUrl)}
+                  onImageUpload={(imageUrl) => {
+                    if (typeof handleImageUpload === 'function') {
+                      handleImageUpload(key, imageUrl);
+                    } else {
+                      console.error('handleImageUpload is not a function:', handleImageUpload);
+                    }
+                  }}
                   maxFileSize={option.maxFileSize}
                   allowedFileTypes={option.allowedFileTypes}
                   placeholder="Téléchargez l'image à graver (optionnel)"
@@ -299,7 +312,13 @@ export default function ProductCustomization({
             {customizationType === 'image' && (
               <div className="space-y-2">
                 <ImageUpload
-                  onImageUpload={(imageUrl) => handleImageUpload(key, imageUrl)}
+                  onImageUpload={(imageUrl) => {
+                    if (typeof handleImageUpload === 'function') {
+                      handleImageUpload(key, imageUrl);
+                    } else {
+                      console.error('handleImageUpload is not a function:', handleImageUpload);
+                    }
+                  }}
                   maxFileSize={option.maxFileSize || 5}
                   allowedFileTypes={option.allowedFileTypes || ['image/jpeg', 'image/png']}
                   placeholder="Glissez-déposez votre image ou cliquez pour sélectionner"
