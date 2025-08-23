@@ -20,27 +20,7 @@ const __dirname = dirname(__filename);
 
 // Configuration multer pour l'upload d'images
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      // Utiliser le répertoire temporaire du système
-      const tempDir = process.env.TEMP || process.env.TMP || '/tmp';
-      const uploadDir = path.join(tempDir, 'sakadeco-uploads');
-      
-      // Créer le dossier s'il n'existe pas
-      const fs = require('fs');
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-      
-      cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-      const timestamp = Date.now();
-      const randomString = Math.random().toString(36).substring(2, 15);
-      const extension = path.extname(file.originalname);
-      cb(null, `temp-${timestamp}-${randomString}${extension}`);
-    }
-  }),
+  storage: multer.memoryStorage(), // Utiliser le stockage en mémoire
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB
   },
@@ -970,8 +950,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('📸 Generated filename:', fileName);
 
-      // Importer fs de manière synchrone
-      const fs = require('fs');
+      // Importer fs de manière asynchrone
+      const fs = await import('fs');
 
       // Créer le dossier s'il n'existe pas
       const uploadDir = path.join(process.cwd(), 'uploads', 'customizations');
@@ -982,23 +962,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
 
-      // Vérifier que le fichier temporaire existe
-      if (!fs.existsSync(req.file.path)) {
-        console.log('❌ Temp file does not exist:', req.file.path);
-        return res.status(500).json({ message: 'Fichier temporaire introuvable' });
-      }
-
-      // Déplacer le fichier
+      // Écrire le fichier depuis la mémoire
       const finalPath = path.join(uploadDir, fileName);
-      console.log('📸 Moving file from', req.file.path, 'to', finalPath);
+      console.log('📸 Writing file to:', finalPath);
       
       try {
-        fs.copyFileSync(req.file.path, finalPath);
-        // Supprimer le fichier temporaire
-        fs.unlinkSync(req.file.path);
-      } catch (moveError) {
-        console.error('❌ Error moving file:', moveError);
-        return res.status(500).json({ message: 'Erreur lors du déplacement du fichier' });
+        fs.writeFileSync(finalPath, req.file.buffer);
+      } catch (writeError) {
+        console.error('❌ Error writing file:', writeError);
+        return res.status(500).json({ message: 'Erreur lors de l\'écriture du fichier' });
       }
 
       // Retourner l'URL de l'image
