@@ -204,6 +204,15 @@ export default function ProductCustomization({
                   Prix de gravure : +{customizationPrice.toFixed(2)}€
                 </div>
               )}
+              {customImage && (
+                <div className="mt-2">
+                  <img
+                    src={customImage}
+                    alt="Image à graver"
+                    className="w-20 h-20 object-cover rounded border"
+                  />
+                </div>
+              )}
             </div>
           );
         }
@@ -243,6 +252,15 @@ export default function ProductCustomization({
                   allowedFileTypes={option.allowedFileTypes}
                   placeholder="Téléchargez l'image à graver (optionnel)"
                 />
+                {customImage && (
+                  <div className="mt-2">
+                    <img
+                      src={customImage}
+                      alt="Image à graver"
+                      className="w-20 h-20 object-cover rounded border"
+                    />
+                  </div>
+                )}
               </div>
 
               {(customText || customImage) && (
