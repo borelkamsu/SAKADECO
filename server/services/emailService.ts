@@ -67,6 +67,8 @@ interface InvoiceData {
     };
     quantity: number;
     price: number;
+    customizations?: any;
+    customMessage?: string;
   }>;
   subtotal: number;
   tax: number;
@@ -316,10 +318,12 @@ class EmailService {
 
     try {
       console.log('📧 Envoi email facture à:', invoice.user.email);
+      console.log('📧 Données de facture:', JSON.stringify(invoice, null, 2));
       
       // Générer le PDF de la facture
       console.log('📄 Génération du PDF de la facture...');
       const pdfBuffer = await pdfService.generateInvoicePDF(invoice);
+      console.log('📄 PDF généré, taille:', pdfBuffer.length, 'bytes');
       
       const mailOptions = {
         from: {

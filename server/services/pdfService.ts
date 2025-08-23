@@ -47,35 +47,51 @@ class PDFService {
 
   private async getBrowser(): Promise<puppeteer.Browser> {
     if (!this.browser) {
-      this.browser = await puppeteer.launch({
-        headless: 'new',
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
+      try {
+        console.log('📄 Lancement du navigateur Puppeteer...');
+        this.browser = await puppeteer.launch({
+          headless: 'new',
+          args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+        });
+        console.log('📄 Navigateur Puppeteer lancé avec succès');
+      } catch (error) {
+        console.error('❌ Erreur lancement navigateur Puppeteer:', error);
+        throw error;
+      }
     }
     return this.browser;
   }
 
   async generateInvoicePDF(invoice: InvoiceData): Promise<Buffer> {
-    const browser = await this.getBrowser();
-    const page = await browser.newPage();
-    
-    const html = this.generateInvoiceHTML(invoice);
-    
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    
-    const pdf = await page.pdf({
-      format: 'A4',
-      margin: {
-        top: '20mm',
-        right: '20mm',
-        bottom: '20mm',
-        left: '20mm'
-      },
-      printBackground: true
-    });
-    
-    await page.close();
-    return pdf;
+    try {
+      console.log('📄 Début génération PDF pour facture:', invoice.orderNumber);
+      const browser = await this.getBrowser();
+      const page = await browser.newPage();
+      
+      const html = this.generateInvoiceHTML(invoice);
+      console.log('📄 HTML généré, longueur:', html.length);
+      
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+      console.log('📄 Contenu HTML défini sur la page');
+      
+      const pdf = await page.pdf({
+        format: 'A4',
+        margin: {
+          top: '20mm',
+          right: '20mm',
+          bottom: '20mm',
+          left: '20mm'
+        },
+        printBackground: true
+      });
+      
+      console.log('📄 PDF généré avec succès, taille:', pdf.length, 'bytes');
+      await page.close();
+      return pdf;
+    } catch (error) {
+      console.error('❌ Erreur génération PDF:', error);
+      throw error;
+    }
   }
 
   private generateInvoiceHTML(invoice: InvoiceData): string {
