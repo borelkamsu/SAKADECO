@@ -51,28 +51,62 @@ export default function ProductCustomization({
 
   const handleTextImageUploadChange = (key: string, type: 'text' | 'image', value: string) => {
     const option = customizationOptions[key];
-    let price = option.basePrice || 0;
-
-    if (type === 'text' && value.length > 0) {
-      // Calculer le prix basé sur le nombre de caractères
-      const extraChars = Math.max(0, value.length - (option.maxLength || 0));
-      price += extraChars * (option.pricePerCharacter || 0.1);
-    } else if (type === 'image' && value) {
-      price = option.basePrice || 5; // Prix de base pour l'image
-    }
-
-    setCustomizationPrice(price);
-
-    const newCustomizations = {
-      ...customizations,
-      [key]: {
-        type,
-        value,
-        price
+    const currentCustomization = customizations[key] || {};
+    
+    // Pour les gravures "both", accumuler texte et image
+    if (option.engravingType === 'both') {
+      const newCustomization = {
+        ...currentCustomization,
+        type: 'both',
+        [type === 'text' ? 'textValue' : 'imageValue']: value,
+        price: 0
+      };
+      
+      // Calculer le prix total
+      let totalPrice = option.basePrice || 0;
+      
+      if (newCustomization.textValue && newCustomization.textValue.length > 0) {
+        const extraChars = Math.max(0, newCustomization.textValue.length - (option.maxLength || 0));
+        totalPrice += extraChars * (option.pricePerCharacter || 0.1);
       }
-    };
-    setCustomizations(newCustomizations);
-    onCustomizationChange(newCustomizations);
+      
+      if (newCustomization.imageValue) {
+        totalPrice += option.basePrice || 5; // Prix de base pour l'image
+      }
+      
+      newCustomization.price = totalPrice;
+      setCustomizationPrice(totalPrice);
+      
+      const newCustomizations = {
+        ...customizations,
+        [key]: newCustomization
+      };
+      setCustomizations(newCustomizations);
+      onCustomizationChange(newCustomizations);
+    } else {
+      // Pour les autres types, comportement normal
+      let price = option.basePrice || 0;
+
+      if (type === 'text' && value.length > 0) {
+        const extraChars = Math.max(0, value.length - (option.maxLength || 0));
+        price += extraChars * (option.pricePerCharacter || 0.1);
+      } else if (type === 'image' && value) {
+        price = option.basePrice || 5;
+      }
+
+      setCustomizationPrice(price);
+
+      const newCustomizations = {
+        ...customizations,
+        [key]: {
+          type,
+          value,
+          price
+        }
+      };
+      setCustomizations(newCustomizations);
+      onCustomizationChange(newCustomizations);
+    }
   };
 
   const handleImageUpload = (key: string, imageUrl: string) => {

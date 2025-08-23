@@ -240,7 +240,47 @@ const AdminOrders: React.FC = () => {
                       <h6 className="font-medium text-blue-900 mb-2">Personnalisations:</h6>
                       <div className="space-y-2">
                         {Object.entries(item.customizations).map(([key, value]) => {
-                          if (typeof value === 'object' && value.type === 'text' && value.value) {
+                          if (typeof value === 'object' && value.type === 'both') {
+                            return (
+                              <div key={key} className="text-sm space-y-2">
+                                <strong>{key.replace(/_/g, ' ')} (gravure texte + image):</strong>
+                                {value.textValue && (
+                                  <div className="ml-4">
+                                    <strong>Texte:</strong> {value.textValue}
+                                  </div>
+                                )}
+                                {value.imageValue && (
+                                  <div className="ml-4">
+                                    <strong>Image:</strong>
+                                    <div className="mt-2">
+                                      <img
+                                        src={value.imageValue}
+                                        alt="Image personnalisée"
+                                        className="w-32 h-32 object-cover rounded border"
+                                      />
+                                      <div className="flex space-x-2 mt-1">
+                                        <a
+                                          href={value.imageValue}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:text-blue-800 text-xs"
+                                        >
+                                          Voir en grand
+                                        </a>
+                                        <a
+                                          href={value.imageValue}
+                                          download
+                                          className="text-green-600 hover:text-green-800 text-xs"
+                                        >
+                                          Télécharger
+                                        </a>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          } else if (typeof value === 'object' && value.type === 'text' && value.value) {
                             return (
                               <div key={key} className="text-sm">
                                 <strong>{key.replace(/_/g, ' ')} (texte):</strong> {value.value}
@@ -256,14 +296,23 @@ const AdminOrders: React.FC = () => {
                                     alt="Image personnalisée"
                                     className="w-32 h-32 object-cover rounded border"
                                   />
-                                  <a
-                                    href={value.value}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="block text-blue-600 hover:text-blue-800 text-xs mt-1"
-                                  >
-                                    Voir l'image en grand
-                                  </a>
+                                  <div className="flex space-x-2 mt-1">
+                                    <a
+                                      href={value.value}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-800 text-xs"
+                                    >
+                                      Voir en grand
+                                    </a>
+                                    <a
+                                      href={value.value}
+                                      download
+                                      className="text-green-600 hover:text-green-800 text-xs"
+                                    >
+                                      Télécharger
+                                    </a>
+                                  </div>
                                 </div>
                               </div>
                             );

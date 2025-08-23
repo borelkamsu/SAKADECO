@@ -230,18 +230,41 @@ const CartPage: React.FC = () => {
                               if (typeof value === 'string') {
                                 return <div key={key}>{key}: {value}</div>;
                               } else if (typeof value === 'object' && value !== null) {
-                                // Pour les objets de personnalisation {type, value, price}
-                                const customization = value as { type: string; value: string; price: number };
-                                return (
-                                  <div key={key} className="flex justify-between items-center">
-                                    <span>{key}: {customization.value}</span>
-                                    {customization.price > 0 && (
-                                      <span className="text-blue-600 font-medium">
-                                        +{customization.price.toFixed(2)}€
-                                      </span>
-                                    )}
-                                  </div>
-                                );
+                                // Pour les objets de personnalisation {type, value, price} ou {type: 'both', textValue, imageValue, price}
+                                const customization = value as any;
+                                
+                                if (customization.type === 'both') {
+                                  return (
+                                    <div key={key} className="space-y-1">
+                                      {customization.textValue && (
+                                        <div className="flex justify-between items-center">
+                                          <span>{key} (texte): {customization.textValue}</span>
+                                        </div>
+                                      )}
+                                      {customization.imageValue && (
+                                        <div className="flex justify-between items-center">
+                                          <span>{key} (image): ✓ Image fournie</span>
+                                        </div>
+                                      )}
+                                      {customization.price > 0 && (
+                                        <div className="text-blue-600 font-medium text-right">
+                                          +{customization.price.toFixed(2)}€
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                } else {
+                                  return (
+                                    <div key={key} className="flex justify-between items-center">
+                                      <span>{key}: {customization.value}</span>
+                                      {customization.price > 0 && (
+                                        <span className="text-blue-600 font-medium">
+                                          +{customization.price.toFixed(2)}€
+                                        </span>
+                                      )}
+                                    </div>
+                                  );
+                                }
                               } else if (Array.isArray(value)) {
                                 return <div key={key}>{key}: {value.join(', ')}</div>;
                               }
