@@ -65,8 +65,12 @@ export default function ProductCustomization({
       // Calculer le prix total
       let totalPrice = 0;
       
-      // Prix pour le texte (seulement si du texte est saisi)
+      // Prix pour le texte (prix de base + caractères supplémentaires)
       if (newCustomization.textValue && newCustomization.textValue.length > 0) {
+        // Prix de base pour le texte
+        totalPrice += option.basePrice || 3;
+        
+        // Prix pour les caractères supplémentaires au-delà de la limite
         const extraChars = Math.max(0, newCustomization.textValue.length - (option.maxLength || 0));
         totalPrice += extraChars * (option.pricePerCharacter || 0.1);
       }
@@ -90,6 +94,10 @@ export default function ProductCustomization({
       let price = 0;
 
       if (type === 'text' && value.length > 0) {
+        // Prix de base pour le texte
+        price += option.basePrice || 3;
+        
+        // Prix pour les caractères supplémentaires au-delà de la limite
         const extraChars = Math.max(0, value.length - (option.maxLength || 0));
         price += extraChars * (option.pricePerCharacter || 0.1);
       } else if (type === 'image' && value) {
@@ -124,8 +132,12 @@ export default function ProductCustomization({
       
       // Recalculer le prix sans l'image
       if (newCustomization.textValue && newCustomization.textValue.length > 0) {
+        // Prix de base pour le texte
+        newCustomization.price = option.basePrice || 3;
+        
+        // Prix pour les caractères supplémentaires au-delà de la limite
         const extraChars = Math.max(0, newCustomization.textValue.length - (option.maxLength || 0));
-        newCustomization.price = extraChars * (option.pricePerCharacter || 0.1);
+        newCustomization.price += extraChars * (option.pricePerCharacter || 0.1);
       }
       
       setCustomizationPrice(newCustomization.price);
@@ -321,12 +333,12 @@ export default function ProductCustomization({
                    maxLength={option.maxLength}
                    rows={2}
                  />
-                 <div className="flex justify-between text-sm text-gray-500 mt-1">
-                   <span>{customText.length}/{option.maxLength || 50} caractères</span>
-                   <span className="text-blue-600 font-medium">
-                     {customText.length > 0 ? `+${(Math.max(0, customText.length - (option.maxLength || 0)) * (option.pricePerCharacter || 0.1)).toFixed(2)}€` : '0.00€'}
-                   </span>
-                 </div>
+                                   <div className="flex justify-between text-sm text-gray-500 mt-1">
+                    <span>{customText.length}/{option.maxLength || 50} caractères</span>
+                    <span className="text-blue-600 font-medium">
+                      {customText.length > 0 ? `+${((option.basePrice || 3) + (Math.max(0, customText.length - (option.maxLength || 0)) * (option.pricePerCharacter || 0.1))).toFixed(2)}€` : '0.00€'}
+                    </span>
+                  </div>
                </div>
 
                <div>
