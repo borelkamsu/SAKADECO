@@ -18,6 +18,17 @@ export default function ImageUpload({
   placeholder = "Glissez-déposez votre image ou cliquez pour sélectionner",
   className = ""
 }: ImageUploadProps) {
+  // Vérification de sécurité
+  if (typeof onImageUpload !== 'function') {
+    console.error('ImageUpload: onImageUpload must be a function, received:', onImageUpload);
+    return (
+      <div className={`w-full ${className}`}>
+        <div className="border-2 border-dashed border-red-300 rounded-lg p-6 text-center">
+          <p className="text-red-600">Erreur de configuration du composant</p>
+        </div>
+      </div>
+    );
+  }
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +76,12 @@ export default function ImageUpload({
       }
 
       const data = await response.json();
-      onImageUpload(data.imageUrl);
+      if (typeof onImageUpload === 'function') {
+        onImageUpload(data.imageUrl);
+      } else {
+        console.error('onImageUpload is not a function:', onImageUpload);
+        setError('Erreur de configuration du composant');
+      }
     } catch (error) {
       console.error('Erreur upload:', error);
       setError('Erreur lors du téléchargement de l\'image');

@@ -134,6 +134,7 @@ export default function AdminAddProduct() {
           engravingType: option.type, // 'text', 'image', or 'both'
           maxLength: option.maxLength || 50,
           maxFileSize: option.maxFileSize || 5,
+          allowedFileTypes: ['image/jpeg', 'image/png', 'image/gif'],
           pricePerCharacter: option.pricePerCharacter || 0.1,
           basePrice: option.basePrice || 0
         };
