@@ -442,57 +442,223 @@ export default function AdminAddProduct() {
             </CardContent>
           </Card>
 
-          {/* Options de personnalisation simplifiées */}
+          {/* Options de personnalisation complètes */}
           {formData.isCustomizable && (
             <Card>
               <CardHeader>
-                <CardTitle>Configuration de la personnalisation</CardTitle>
+                <CardTitle>Options de personnalisation</CardTitle>
+                <p className="text-sm text-gray-600">
+                  Configurez les options que le client pourra choisir pour personnaliser ce produit
+                </p>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label>Type de personnalisation</Label>
-                    <Select 
-                      value={customizationType} 
-                      onValueChange={setCustomizationType}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choisir le type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="text">Texte uniquement</SelectItem>
-                        <SelectItem value="image">Image uniquement</SelectItem>
-                        <SelectItem value="both">Texte et image</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <Label>Position de la personnalisation</Label>
-                    <Select 
-                      value={customizationPosition} 
-                      onValueChange={setCustomizationPosition}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choisir la position" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="center">Centre</SelectItem>
-                        <SelectItem value="top-right">Haut droite</SelectItem>
-                        <SelectItem value="bottom-center">Bas centre</SelectItem>
-                        <SelectItem value="top-left">Haut gauche</SelectItem>
-                        <SelectItem value="bottom-right">Bas droite</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+              <CardContent className="space-y-6">
+                {/* Boutons pour ajouter des options */}
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addCustomizationOption}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Ajouter une option (taille, couleur, etc.)
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addEngravingOption}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Ajouter une gravure
+                  </Button>
                 </div>
-                
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    💡 <strong>Note :</strong> Le client pourra cliquer directement sur l'image du produit pour ajouter sa personnalisation. 
-                    Les zones de personnalisation seront automatiquement affichées selon votre configuration.
-                  </p>
-                </div>
+
+                {/* Liste des options configurées */}
+                {Object.entries(customizationOptions).map(([key, option]) => (
+                  <div key={key} className="border rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-medium text-gray-900">
+                        {option.type === 'name_engraving' ? 'Gravure' : 'Option de personnalisation'}
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeCustomizationOption(key)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Label de l'option */}
+                      <div>
+                        <Label>Nom de l'option</Label>
+                        <Input
+                          value={option.label}
+                          onChange={(e) => updateCustomizationOption(key, 'label', e.target.value)}
+                          placeholder="Ex: Taille, Couleur, Style, etc."
+                        />
+                      </div>
+
+                      {/* Type d'option */}
+                      <div>
+                        <Label>Type d'option</Label>
+                        <Select
+                          value={option.type || 'dropdown'}
+                          onValueChange={(value) => updateCustomizationOption(key, 'type', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="dropdown">Liste déroulante</SelectItem>
+                            <SelectItem value="checkbox">Case à cocher</SelectItem>
+                            <SelectItem value="text">Champ texte</SelectItem>
+                            <SelectItem value="textarea">Zone de texte</SelectItem>
+                            <SelectItem value="text_image_upload">Texte ou image</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Options pour les listes déroulantes */}
+                      {(option.type === 'dropdown' || option.type === 'checkbox') && (
+                        <div>
+                          <Label>Valeurs disponibles</Label>
+                          <div className="space-y-2">
+                            {option.values.map((value, index) => (
+                              <div key={index} className="flex items-center gap-2">
+                                <Input
+                                  value={value}
+                                  onChange={(e) => updateOptionValue(key, index, e.target.value)}
+                                  placeholder={`Valeur ${index + 1}`}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeOptionValue(key, index)}
+                                  disabled={option.values.length <= 1}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            ))}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => addOptionValue(key)}
+                              className="w-full"
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              Ajouter une valeur
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Options pour text_image_upload */}
+                      {option.type === 'text_image_upload' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label>Limite de caractères</Label>
+                            <Input
+                              type="number"
+                              value={option.maxLength || 50}
+                              onChange={(e) => updateCustomizationOption(key, 'maxLength', parseInt(e.target.value))}
+                              placeholder="50"
+                            />
+                          </div>
+                          <div>
+                            <Label>Taille max fichier (MB)</Label>
+                            <Input
+                              type="number"
+                              value={option.maxFileSize || 5}
+                              onChange={(e) => updateCustomizationOption(key, 'maxFileSize', parseInt(e.target.value))}
+                              placeholder="5"
+                            />
+                          </div>
+                          <div>
+                            <Label>Prix par caractère supplémentaire (€)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={option.pricePerCharacter || 0.1}
+                              onChange={(e) => updateCustomizationOption(key, 'pricePerCharacter', parseFloat(e.target.value))}
+                              placeholder="0.10"
+                            />
+                          </div>
+                          <div>
+                            <Label>Prix de base (€)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={option.basePrice || 0}
+                              onChange={(e) => updateCustomizationOption(key, 'basePrice', parseFloat(e.target.value))}
+                              placeholder="0"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Options pour les champs texte */}
+                      {(option.type === 'text' || option.type === 'textarea') && (
+                        <div>
+                          <Label>Limite de caractères</Label>
+                          <Input
+                            type="number"
+                            value={option.maxLength || 100}
+                            onChange={(e) => updateCustomizationOption(key, 'maxLength', parseInt(e.target.value))}
+                            placeholder="100"
+                          />
+                        </div>
+                      )}
+
+                      {/* Option obligatoire */}
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`required-${key}`}
+                          checked={option.required || false}
+                          onCheckedChange={(checked) => updateCustomizationOption(key, 'required', checked)}
+                        />
+                        <Label htmlFor={`required-${key}`}>Option obligatoire</Label>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Message d'aide */}
+                {Object.keys(customizationOptions).length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>Aucune option de personnalisation configurée</p>
+                    <p className="text-sm">Cliquez sur "Ajouter une option" pour commencer</p>
+                  </div>
+                )}
+
+                {/* Aperçu des options */}
+                {Object.keys(customizationOptions).length > 0 && (
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <h4 className="font-medium text-blue-900 mb-2">Aperçu des options configurées :</h4>
+                    <div className="space-y-1">
+                      {Object.entries(customizationOptions).map(([key, option]) => (
+                        <div key={key} className="flex items-center gap-2 text-sm">
+                          <Badge variant="outline">{option.type}</Badge>
+                          <span className="font-medium">{option.label}</span>
+                          {option.required && <Badge variant="destructive">Obligatoire</Badge>}
+                          {(option.type === 'dropdown' || option.type === 'checkbox') && (
+                            <span className="text-gray-600">
+                              ({option.values.filter(v => v.trim()).length} valeurs)
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

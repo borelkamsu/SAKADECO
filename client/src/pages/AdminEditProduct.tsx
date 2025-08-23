@@ -399,7 +399,10 @@ export default function AdminEditProduct() {
           {/* Customization Options */}
           <Card>
             <CardHeader>
-              <CardTitle>Options de Personnalisation</CardTitle>
+              <CardTitle>Options de personnalisation</CardTitle>
+              <p className="text-sm text-gray-600">
+                Configurez les options que le client pourra choisir pour personnaliser ce produit
+              </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-2">
@@ -413,6 +416,11 @@ export default function AdminEditProduct() {
 
               {formData.isCustomizable && (
                 <div className="space-y-4">
+                  <div className="text-sm text-gray-600">
+                    ⚠️ Interface de personnalisation simplifiée pour l'édition. 
+                    Pour une configuration complète, utilisez l'interface de création de produit.
+                  </div>
+                  
                   {/* Existing options */}
                   {customizationOptions.map((option, index) => (
                     <div key={index} className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
