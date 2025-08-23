@@ -71,7 +71,20 @@ const CartPage: React.FC = () => {
     localStorage.removeItem('cart');
   };
 
-  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const subtotal = cartItems.reduce((total, item) => {
+    let itemTotal = item.price * item.quantity;
+    
+    // Ajouter les prix de personnalisation
+    if (item.customizations) {
+      Object.values(item.customizations).forEach((customization: any) => {
+        if (typeof customization === 'object' && customization.price) {
+          itemTotal += customization.price * item.quantity;
+        }
+      });
+    }
+    
+    return total + itemTotal;
+  }, 0);
   const tax = subtotal * 0.20; // TVA 20%
   const shipping = 0; // Frais de livraison gratuits
   const total = subtotal + tax + shipping;
@@ -197,12 +210,43 @@ const CartPage: React.FC = () => {
                       />
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                        <p className="text-gray-600">{item.price.toFixed(2)}€</p>
+                        <p className="text-gray-600">
+                          {(() => {
+                            let totalPrice = item.price;
+                            if (item.customizations) {
+                              Object.values(item.customizations).forEach((customization: any) => {
+                                if (typeof customization === 'object' && customization.price) {
+                                  totalPrice += customization.price;
+                                }
+                              });
+                            }
+                            return `${totalPrice.toFixed(2)}€`;
+                          })()}
+                        </p>
                         {item.customizations && Object.keys(item.customizations).length > 0 && (
                           <div className="text-sm text-gray-500 mt-1">
-                            {Object.entries(item.customizations).map(([key, value]) => (
-                              <div key={key}>{key}: {value as string}</div>
-                            ))}
+                            {Object.entries(item.customizations).map(([key, value]) => {
+                              // Gérer les différents types de personnalisations
+                              if (typeof value === 'string') {
+                                return <div key={key}>{key}: {value}</div>;
+                              } else if (typeof value === 'object' && value !== null) {
+                                // Pour les objets de personnalisation {type, value, price}
+                                const customization = value as { type: string; value: string; price: number };
+                                return (
+                                  <div key={key} className="flex justify-between items-center">
+                                    <span>{key}: {customization.value}</span>
+                                    {customization.price > 0 && (
+                                      <span className="text-blue-600 font-medium">
+                                        +{customization.price.toFixed(2)}€
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              } else if (Array.isArray(value)) {
+                                return <div key={key}>{key}: {value.join(', ')}</div>;
+                              }
+                              return <div key={key}>{key}: {String(value)}</div>;
+                            })}
                           </div>
                         )}
                       </div>
@@ -224,7 +268,19 @@ const CartPage: React.FC = () => {
                         </Button>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-gray-900">{(item.price * item.quantity).toFixed(2)}€</p>
+                        <p className="font-semibold text-gray-900">
+                          {(() => {
+                            let totalPrice = item.price;
+                            if (item.customizations) {
+                              Object.values(item.customizations).forEach((customization: any) => {
+                                if (typeof customization === 'object' && customization.price) {
+                                  totalPrice += customization.price;
+                                }
+                              });
+                            }
+                            return `${(totalPrice * item.quantity).toFixed(2)}€`;
+                          })()}
+                        </p>
                         <Button
                           variant="ghost"
                           size="sm"
