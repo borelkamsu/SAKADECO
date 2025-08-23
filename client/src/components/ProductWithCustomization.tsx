@@ -4,7 +4,6 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Eye, Type, Image as ImageIcon, Plus, X } from 'lucide-react';
-import Product3DPreview from './Product3DPreview';
 
 interface CustomizationZone {
   id: string;
@@ -30,7 +29,6 @@ interface ProductWithCustomizationProps {
 
 export default function ProductWithCustomization({ product }: ProductWithCustomizationProps) {
   const [customizations, setCustomizations] = useState<Record<string, string>>({});
-  const [showPreview, setShowPreview] = useState(false);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [showCustomizationPanel, setShowCustomizationPanel] = useState(false);
 
@@ -99,12 +97,11 @@ export default function ProductWithCustomization({ product }: ProductWithCustomi
                 {customizations[zone.id]}
               </span>
             ) : (
-              <span className="bg-white bg-opacity-80 px-2 py-1 rounded">
+              <span className="block bg-white bg-opacity-80 px-2 py-1 rounded">
                 {zone.label}
               </span>
             )}
           </div>
-          {zone.required && <span className="text-red-500 text-xs font-bold">*</span>}
         </div>
       </div>
     );
@@ -153,9 +150,12 @@ export default function ProductWithCustomization({ product }: ProductWithCustomi
               {/* Instructions */}
               {product.isCustomizable && (
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    💡 <strong>Comment personnaliser :</strong> Cliquez sur les zones bleues pour ajouter votre texte ou image personnalisée.
-                  </p>
+                  <h4 className="font-medium text-blue-900 mb-2">Instructions de personnalisation</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• Cliquez sur les zones bleues pour ajouter du contenu</li>
+                    <li>• Vous pouvez ajouter du texte ou des images</li>
+                    <li>• Les personnalisations seront appliquées à votre produit</li>
+                  </ul>
                 </div>
               )}
             </div>
@@ -165,66 +165,54 @@ export default function ProductWithCustomization({ product }: ProductWithCustomi
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">{product.name}</h3>
                 <p className="text-gray-600 mt-2">{product.description}</p>
-              </div>
-              
-              <div className="text-2xl font-bold text-gray-900">
-                {product.price.toFixed(2)} €
+                <div className="mt-4">
+                  <span className="text-2xl font-bold text-green-600">
+                    {product.price.toFixed(2)}€
+                  </span>
+                </div>
               </div>
 
               {/* Résumé des personnalisations */}
-              {product.isCustomizable && (
-                <div className="space-y-3">
-                  <h4 className="font-medium text-gray-900">Vos personnalisations :</h4>
-                  {customizationZones.map(zone => {
-                    const value = customizations[zone.id];
-                    if (!value) return null;
-                    
-                    return (
-                      <div key={zone.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <span className="text-sm font-medium">{zone.label}:</span>
-                        <span className="text-sm text-gray-600 truncate max-w-[150px]">
-                          {zone.type === 'text' ? value : '✓ Image ajoutée'}
-                        </span>
-                      </div>
-                    );
-                  })}
-                  
-                  {!hasCustomizations && (
-                    <p className="text-sm text-gray-500 italic">
-                      Aucune personnalisation ajoutée
-                    </p>
-                  )}
+              {hasCustomizations && (
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <h4 className="font-medium text-green-900 mb-2">Personnalisations ajoutées</h4>
+                  <div className="space-y-2">
+                    {Object.entries(customizations).map(([zoneId, value]) => {
+                      if (!value.trim()) return null;
+                      const zone = customizationZones.find(z => z.id === zoneId);
+                      return (
+                        <div key={zoneId} className="flex items-center space-x-2">
+                          {zone?.type === 'text' ? (
+                            <Type className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <ImageIcon className="w-4 h-4 text-green-600" />
+                          )}
+                          <span className="text-sm text-green-800">
+                            <strong>{zone?.label}:</strong> {value}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
-              {/* Boutons d'action */}
-              <div className="space-y-2">
-                {product.isCustomizable && hasCustomizations && (
-                  <Button
-                    onClick={() => setShowPreview(true)}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Prévisualiser en 3D
-                  </Button>
-                )}
-                
-                <Button className="w-full">
-                  Ajouter au panier
-                </Button>
-              </div>
+              {/* Bouton d'action */}
+              <Button className="w-full bg-green-600 hover:bg-green-700">
+                Ajouter au panier
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Panel de personnalisation - Overlay */}
+      {/* Panel de personnalisation */}
       {showCustomizationPanel && selectedZone && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md mx-4">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                Personnaliser
+                Personnalisation
                 <Button
                   variant="ghost"
                   size="sm"
@@ -318,19 +306,6 @@ export default function ProductWithCustomization({ product }: ProductWithCustomi
             </CardContent>
           </Card>
         </div>
-      )}
-
-      {/* Modal de prévisualisation 3D */}
-      {showPreview && (
-        <Product3DPreview
-          productImage={product.mainImageUrl}
-          productName={product.name}
-          engravingText={customizations['main_text'] || ''}
-          engravingImage={customizations['main_image'] || ''}
-          engravingPosition="front"
-          engravingStyle="simple"
-          onClose={() => setShowPreview(false)}
-        />
       )}
     </div>
   );
