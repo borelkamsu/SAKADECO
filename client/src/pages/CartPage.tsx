@@ -85,9 +85,19 @@ const CartPage: React.FC = () => {
     
     return total + itemTotal;
   }, 0);
-  const tax = subtotal * 0.20; // TVA 20%
+  
+  // Calculer la TVA (20% sur le sous-total HT)
+  const tax = Math.round(subtotal * 0.20 * 100) / 100; // Arrondir à 2 décimales
   const shipping = 0; // Frais de livraison gratuits
-  const total = subtotal + tax + shipping;
+  const total = Math.round((subtotal + tax + shipping) * 100) / 100; // Arrondir le total
+  
+  // Log pour vérification
+  console.log('🛒 Calcul panier client:', {
+    subtotal: subtotal.toFixed(2),
+    tax: tax.toFixed(2),
+    shipping: shipping.toFixed(2),
+    total: total.toFixed(2)
+  });
 
   const handleCheckout = async () => {
     if (!customerEmail) {

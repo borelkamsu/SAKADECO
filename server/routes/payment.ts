@@ -122,9 +122,17 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
       });
     }
 
-    const tax = subtotal * 0.20; // TVA 20%
+    // Calculer la TVA (20% sur le sous-total HT)
+    const tax = Math.round(subtotal * 0.20 * 100) / 100; // Arrondir à 2 décimales
     const shipping = 0; // Frais de livraison gratuits pour l'instant
-    const total = subtotal + tax + shipping;
+    const total = Math.round((subtotal + tax + shipping) * 100) / 100; // Arrondir le total
+    
+    console.log('💰 Calcul des prix:', {
+      subtotal: subtotal.toFixed(2),
+      tax: tax.toFixed(2),
+      shipping: shipping.toFixed(2),
+      total: total.toFixed(2)
+    });
 
     // Créer la session Stripe
     const session = await stripe.checkout.sessions.create({
@@ -141,6 +149,14 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
         allowed_countries: ['FR', 'BE', 'CH', 'CA'],
       },
       customer_email: req.body.customerEmail,
+      // Désactiver le calcul automatique de TVA de Stripe
+      automatic_tax: {
+        enabled: false
+      },
+      // Spécifier que les prix incluent déjà la TVA
+      tax_id_collection: {
+        enabled: false
+      }
     });
 
     // Créer la commande en base de données
