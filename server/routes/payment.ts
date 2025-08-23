@@ -260,7 +260,9 @@ router.post('/webhook', async (req: Request, res: Response) => {
                   price: item.price
                 },
                 quantity: item.quantity,
-                price: item.price
+                price: item.price,
+                customizations: item.customizations,
+                customMessage: item.customMessage
               })),
               subtotal: order.subtotal,
               tax: order.tax,

@@ -1,6 +1,7 @@
 import { createTransport } from 'nodemailer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import pdfService from './pdfService';
 
 // Logo SKD GROUP en base64 (SVG)
 const SKD_LOGO_BASE64 = `data:image/svg+xml;base64,${Buffer.from(`<svg width="300" height="200" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
@@ -316,6 +317,10 @@ class EmailService {
     try {
       console.log('📧 Envoi email facture à:', invoice.user.email);
       
+      // Générer le PDF de la facture
+      console.log('📄 Génération du PDF de la facture...');
+      const pdfBuffer = await pdfService.generateInvoicePDF(invoice);
+      
       const mailOptions = {
         from: {
           name: "SakaDeco Group",
@@ -323,11 +328,50 @@ class EmailService {
         },
         to: invoice.user.email,
         subject: `Facture SakaDeco - Commande ${invoice.orderNumber}`,
-        html: this.generateInvoiceHTML(invoice),
+        html: `
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Facture ${invoice.orderNumber}</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { text-align: center; margin-bottom: 30px; }
+              .logo { color: #059669; font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <div class="logo">SakaDeco Group</div>
+                <h1>Votre facture</h1>
+              </div>
+              
+              <p>Bonjour ${invoice.user.firstName || 'Client'},</p>
+              
+              <p>Veuillez trouver ci-joint votre facture pour la commande <strong>${invoice.orderNumber}</strong>.</p>
+              
+              <div class="order-details">
+                <h3>Résumé de la commande</h3>
+                <p><strong>Numéro de commande:</strong> ${invoice.orderNumber}</p>
+                <p><strong>Date:</strong> ${format(new Date(invoice.createdAt), 'dd MMMM yyyy', { locale: fr })}</p>
+                <p><strong>Total:</strong> ${invoice.total.toFixed(2)}€</p>
+              </div>
+              
+              <p>La facture PDF est jointe à cet email pour votre référence.</p>
+              
+              <p>Cordialement,<br>L'équipe SakaDeco</p>
+            </div>
+          </body>
+          </html>
+        `,
         attachments: [
           {
-            filename: `facture-${invoice.orderNumber}.html`,
-            content: this.generateInvoiceHTML(invoice)
+            filename: `facture-${invoice.orderNumber}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf'
           }
         ],
         headers: {
@@ -336,7 +380,7 @@ class EmailService {
       };
 
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Email de facture envoyé:', info.messageId);
+      console.log('✅ Email de facture avec PDF envoyé:', info.messageId);
       return true;
     } catch (error) {
       console.error('❌ Erreur envoi email facture:', error);
@@ -424,6 +468,10 @@ class EmailService {
     try {
       const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
       console.log('📧 Envoi notification admin à:', adminEmail);
+      
+      // Générer le PDF de la facture pour l'admin
+      console.log('📄 Génération du PDF de la facture pour l\'admin...');
+      const pdfBuffer = await pdfService.generateInvoicePDF(invoice);
       
       const mailOptions = {
         from: {
@@ -521,15 +569,24 @@ class EmailService {
               <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}/admin/orders" 
                  class="button">Gérer les commandes</a>
               
+              <p>La facture PDF est jointe à cet email pour votre référence.</p>
+              
               <p>Cordialement,<br>Système SakaDeco</p>
             </div>
           </body>
           </html>
-        `
+        `,
+        attachments: [
+          {
+            filename: `facture-admin-${invoice.orderNumber}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf'
+          }
+        ]
       };
 
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Notification admin envoyée:', info.messageId);
+      console.log('✅ Notification admin avec PDF envoyée:', info.messageId);
       return true;
     } catch (error) {
       console.error('❌ Erreur envoi notification admin:', error);
