@@ -63,15 +63,17 @@ export default function ProductCustomization({
       };
       
       // Calculer le prix total
-      let totalPrice = option.basePrice || 0;
+      let totalPrice = 0;
       
+      // Prix pour le texte (seulement si du texte est saisi)
       if (newCustomization.textValue && newCustomization.textValue.length > 0) {
         const extraChars = Math.max(0, newCustomization.textValue.length - (option.maxLength || 0));
         totalPrice += extraChars * (option.pricePerCharacter || 0.1);
       }
       
+      // Prix pour l'image (seulement si une image est uploadée)
       if (newCustomization.imageValue) {
-        totalPrice += option.basePrice || 5; // Prix de base pour l'image
+        totalPrice += option.basePrice || 5;
       }
       
       newCustomization.price = totalPrice;
@@ -85,7 +87,7 @@ export default function ProductCustomization({
       onCustomizationChange(newCustomizations);
     } else {
       // Pour les autres types, comportement normal
-      let price = option.basePrice || 0;
+      let price = 0;
 
       if (type === 'text' && value.length > 0) {
         const extraChars = Math.max(0, value.length - (option.maxLength || 0));
@@ -102,6 +104,50 @@ export default function ProductCustomization({
           type,
           value,
           price
+        }
+      };
+      setCustomizations(newCustomizations);
+      onCustomizationChange(newCustomizations);
+    }
+  };
+
+  const removeImage = (key: string) => {
+    const option = customizationOptions[key];
+    const currentCustomization = customizations[key] || {};
+    
+    if (option.engravingType === 'both') {
+      const newCustomization = {
+        ...currentCustomization,
+        imageValue: '',
+        price: 0
+      };
+      
+      // Recalculer le prix sans l'image
+      if (newCustomization.textValue && newCustomization.textValue.length > 0) {
+        const extraChars = Math.max(0, newCustomization.textValue.length - (option.maxLength || 0));
+        newCustomization.price = extraChars * (option.pricePerCharacter || 0.1);
+      }
+      
+      setCustomizationPrice(newCustomization.price);
+      setCustomImage('');
+      
+      const newCustomizations = {
+        ...customizations,
+        [key]: newCustomization
+      };
+      setCustomizations(newCustomizations);
+      onCustomizationChange(newCustomizations);
+    } else {
+      // Pour les autres types
+      setCustomImage('');
+      setCustomizationPrice(0);
+      
+      const newCustomizations = {
+        ...customizations,
+        [key]: {
+          type: 'image',
+          value: '',
+          price: 0
         }
       };
       setCustomizations(newCustomizations);
@@ -184,127 +230,154 @@ export default function ProductCustomization({
             case 'text_image_upload':
         const engravingType = option.engravingType;
         
-        // Interface pour gravure texte uniquement
-        if (engravingType === 'text') {
-          return (
-            <div className="space-y-2">
-              <Label>Texte à graver</Label>
-              <Textarea
-                value={customText}
-                onChange={(e) => {
-                  setCustomText(e.target.value);
-                  handleTextImageUploadChange(key, 'text', e.target.value);
-                }}
-                placeholder="Entrez le texte à graver sur le produit"
-                maxLength={option.maxLength}
-                rows={3}
-              />
-              <div className="flex justify-between text-sm text-gray-500">
-                <span>{customText.length}/{option.maxLength || 50} caractères</span>
-                {customizationPrice > 0 && (
-                  <span className="text-blue-600 font-medium">
-                    +{customizationPrice.toFixed(2)}€
-                  </span>
-                )}
-              </div>
-              {option.maxLength && customText.length > option.maxLength && (
-                <p className="text-sm text-red-600">
-                  Limite de caractères dépassée. Prix supplémentaire appliqué.
-                </p>
-              )}
-            </div>
-          );
-        }
+                 // Interface pour gravure texte uniquement
+         if (engravingType === 'text') {
+           return (
+             <div className="space-y-2">
+               <Label>Texte à graver</Label>
+               <Textarea
+                 value={customText}
+                 onChange={(e) => {
+                   setCustomText(e.target.value);
+                   handleTextImageUploadChange(key, 'text', e.target.value);
+                 }}
+                 placeholder="Entrez le texte à graver sur le produit"
+                 maxLength={option.maxLength}
+                 rows={3}
+               />
+               <div className="flex justify-between text-sm text-gray-500">
+                 <span>{customText.length}/{option.maxLength || 50} caractères</span>
+                 <span className="text-blue-600 font-medium">
+                   {customText.length > 0 ? `+${customizationPrice.toFixed(2)}€` : '0.00€'}
+                 </span>
+               </div>
+               {option.maxLength && customText.length > option.maxLength && (
+                 <p className="text-sm text-red-600">
+                   Limite de caractères dépassée. Prix supplémentaire appliqué.
+                 </p>
+               )}
+             </div>
+           );
+         }
         
-        // Interface pour gravure image uniquement
-        if (engravingType === 'image') {
-          return (
-            <div className="space-y-2">
-              <Label>Image à graver</Label>
-              <ImageUpload
-                onImageUpload={(imageUrl) => {
-                  if (typeof handleImageUpload === 'function') {
-                    handleImageUpload(key, imageUrl);
-                  } else {
-                    console.error('handleImageUpload is not a function:', handleImageUpload);
-                  }
-                }}
-                maxFileSize={option.maxFileSize}
-                allowedFileTypes={option.allowedFileTypes}
-                placeholder="Téléchargez l'image à graver sur le produit"
-              />
-              {customizationPrice > 0 && (
-                <div className="text-sm text-blue-600 font-medium">
-                  Prix de gravure : +{customizationPrice.toFixed(2)}€
-                </div>
-              )}
-              {customImage && (
-                <div className="mt-2">
-                  <img
-                    src={customImage}
-                    alt="Image à graver"
-                    className="w-20 h-20 object-cover rounded border"
-                  />
-                </div>
-              )}
-            </div>
-          );
-        }
+                 // Interface pour gravure image uniquement
+         if (engravingType === 'image') {
+           return (
+             <div className="space-y-2">
+               <Label>Image à graver</Label>
+               <ImageUpload
+                 onImageUpload={(imageUrl) => {
+                   if (typeof handleImageUpload === 'function') {
+                     handleImageUpload(key, imageUrl);
+                   } else {
+                     console.error('handleImageUpload is not a function:', handleImageUpload);
+                   }
+                 }}
+                 maxFileSize={option.maxFileSize}
+                 allowedFileTypes={option.allowedFileTypes}
+                 placeholder="Téléchargez l'image à graver sur le produit"
+               />
+               <div className="flex justify-between text-sm text-gray-500">
+                 <span>Prix de gravure</span>
+                 <span className="text-blue-600 font-medium">
+                   {customImage ? `+${customizationPrice.toFixed(2)}€` : '0.00€'}
+                 </span>
+               </div>
+               {customImage && (
+                 <div className="mt-2 relative">
+                   <img
+                     src={customImage}
+                     alt="Image à graver"
+                     className="w-20 h-20 object-cover rounded border"
+                   />
+                   <Button
+                     type="button"
+                     variant="destructive"
+                     size="sm"
+                     onClick={() => removeImage(key)}
+                     className="absolute -top-2 -right-2 w-6 h-6 p-0"
+                   >
+                     <X className="w-3 h-3" />
+                   </Button>
+                 </div>
+               )}
+             </div>
+           );
+         }
         
-        // Interface pour gravure texte ET image
-        if (engravingType === 'both') {
-          return (
-            <div className="space-y-4">
-              <div>
-                <Label>Texte à graver (optionnel)</Label>
-                <Textarea
-                  value={customText}
-                  onChange={(e) => {
-                    setCustomText(e.target.value);
-                    handleTextImageUploadChange(key, 'text', e.target.value);
-                  }}
-                  placeholder="Entrez le texte à graver (optionnel)"
-                  maxLength={option.maxLength}
-                  rows={2}
-                />
-                <div className="flex justify-between text-sm text-gray-500 mt-1">
-                  <span>{customText.length}/{option.maxLength || 50} caractères</span>
-                </div>
-              </div>
+                 // Interface pour gravure texte ET image
+         if (engravingType === 'both') {
+           return (
+             <div className="space-y-4">
+               <div>
+                 <Label>Texte à graver (optionnel)</Label>
+                 <Textarea
+                   value={customText}
+                   onChange={(e) => {
+                     setCustomText(e.target.value);
+                     handleTextImageUploadChange(key, 'text', e.target.value);
+                   }}
+                   placeholder="Entrez le texte à graver (optionnel)"
+                   maxLength={option.maxLength}
+                   rows={2}
+                 />
+                 <div className="flex justify-between text-sm text-gray-500 mt-1">
+                   <span>{customText.length}/{option.maxLength || 50} caractères</span>
+                   <span className="text-blue-600 font-medium">
+                     {customText.length > 0 ? `+${(Math.max(0, customText.length - (option.maxLength || 0)) * (option.pricePerCharacter || 0.1)).toFixed(2)}€` : '0.00€'}
+                   </span>
+                 </div>
+               </div>
 
-              <div>
-                <Label>Image à graver (optionnel)</Label>
-                <ImageUpload
-                  onImageUpload={(imageUrl) => {
-                    if (typeof handleImageUpload === 'function') {
-                      handleImageUpload(key, imageUrl);
-                    } else {
-                      console.error('handleImageUpload is not a function:', handleImageUpload);
-                    }
-                  }}
-                  maxFileSize={option.maxFileSize}
-                  allowedFileTypes={option.allowedFileTypes}
-                  placeholder="Téléchargez l'image à graver (optionnel)"
-                />
-                {customImage && (
-                  <div className="mt-2">
-                    <img
-                      src={customImage}
-                      alt="Image à graver"
-                      className="w-20 h-20 object-cover rounded border"
-                    />
-                  </div>
-                )}
-              </div>
+               <div>
+                 <Label>Image à graver (optionnel)</Label>
+                 <ImageUpload
+                   onImageUpload={(imageUrl) => {
+                     if (typeof handleImageUpload === 'function') {
+                       handleImageUpload(key, imageUrl);
+                     } else {
+                       console.error('handleImageUpload is not a function:', handleImageUpload);
+                     }
+                   }}
+                   maxFileSize={option.maxFileSize}
+                   allowedFileTypes={option.allowedFileTypes}
+                   placeholder="Téléchargez l'image à graver (optionnel)"
+                 />
+                 <div className="flex justify-between text-sm text-gray-500 mt-1">
+                   <span>Prix image</span>
+                   <span className="text-blue-600 font-medium">
+                     {customImage ? `+${(option.basePrice || 5).toFixed(2)}€` : '0.00€'}
+                   </span>
+                 </div>
+                 {customImage && (
+                   <div className="mt-2 relative">
+                     <img
+                       src={customImage}
+                       alt="Image à graver"
+                       className="w-20 h-20 object-cover rounded border"
+                     />
+                     <Button
+                       type="button"
+                       variant="destructive"
+                       size="sm"
+                       onClick={() => removeImage(key)}
+                       className="absolute -top-2 -right-2 w-6 h-6 p-0"
+                     >
+                       <X className="w-3 h-3" />
+                     </Button>
+                   </div>
+                 )}
+               </div>
 
-              {(customText || customImage) && (
-                <div className="text-sm text-blue-600 font-medium">
-                  Prix de gravure : +{customizationPrice.toFixed(2)}€
-                </div>
-              )}
-            </div>
-          );
-        }
+               <div className="text-sm text-blue-600 font-medium border-t pt-2">
+                 <div className="flex justify-between">
+                   <span>Prix total de gravure:</span>
+                   <span>+{customizationPrice.toFixed(2)}€</span>
+                 </div>
+               </div>
+             </div>
+           );
+         }
         
         // Interface générique pour text_image_upload sans engravingType
         return (

@@ -322,31 +322,56 @@ const CartPage: React.FC = () => {
             {/* Checkout Form */}
             <div className="space-y-6">
               {/* Order Summary */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Récapitulatif</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-between">
-                    <span>Sous-total</span>
-                    <span>{subtotal.toFixed(2)}€</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>TVA (20%)</span>
-                    <span>{tax.toFixed(2)}€</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Livraison</span>
-                    <span>Gratuit</span>
-                  </div>
-                  <div className="border-t pt-4">
-                    <div className="flex justify-between font-bold text-lg">
-                      <span>Total</span>
-                      <span>{total.toFixed(2)}€</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                             <Card>
+                 <CardHeader>
+                   <CardTitle>Récapitulatif</CardTitle>
+                 </CardHeader>
+                 <CardContent className="space-y-4">
+                   <div className="flex justify-between">
+                     <span>Sous-total produits</span>
+                     <span>{cartItems.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2)}€</span>
+                   </div>
+                   
+                   {/* Prix de personnalisation */}
+                   {(() => {
+                     const customizationTotal = cartItems.reduce((total, item) => {
+                       if (item.customizations) {
+                         Object.values(item.customizations).forEach((customization: any) => {
+                           if (typeof customization === 'object' && customization.price) {
+                             total += customization.price * item.quantity;
+                           }
+                         });
+                       }
+                       return total;
+                     }, 0);
+                     
+                     if (customizationTotal > 0) {
+                       return (
+                         <div className="flex justify-between">
+                           <span>Personnalisations</span>
+                           <span className="text-blue-600">+{customizationTotal.toFixed(2)}€</span>
+                         </div>
+                       );
+                     }
+                     return null;
+                   })()}
+                   
+                   <div className="flex justify-between">
+                     <span>TVA (20%)</span>
+                     <span>{tax.toFixed(2)}€</span>
+                   </div>
+                   <div className="flex justify-between">
+                     <span>Livraison</span>
+                     <span>Gratuit</span>
+                   </div>
+                   <div className="border-t pt-4">
+                     <div className="flex justify-between font-bold text-lg">
+                       <span>Total</span>
+                       <span>{total.toFixed(2)}€</span>
+                     </div>
+                   </div>
+                 </CardContent>
+               </Card>
 
               {/* Customer Information */}
               <Card>
