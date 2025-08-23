@@ -75,6 +75,11 @@ export default function ProductCustomization({
     onCustomizationChange(newCustomizations);
   };
 
+  const handleImageUpload = (key: string, imageUrl: string) => {
+    setCustomImage(imageUrl);
+    handleTextImageUploadChange(key, 'image', imageUrl);
+  };
+
   const renderCustomizationField = (key: string, option: CustomizationOption) => {
     switch (option.type) {
       case 'dropdown':
@@ -182,10 +187,7 @@ export default function ProductCustomization({
             <div className="space-y-2">
               <Label>Image à graver</Label>
               <ImageUpload
-                onImageUpload={(imageUrl) => {
-                  setCustomImage(imageUrl);
-                  handleTextImageUploadChange(key, 'image', imageUrl);
-                }}
+                onImageUpload={(imageUrl) => handleImageUpload(key, imageUrl)}
                 maxFileSize={option.maxFileSize}
                 allowedFileTypes={option.allowedFileTypes}
                 placeholder="Téléchargez l'image à graver sur le produit"
@@ -223,10 +225,7 @@ export default function ProductCustomization({
               <div>
                 <Label>Image à graver (optionnel)</Label>
                 <ImageUpload
-                  onImageUpload={(imageUrl) => {
-                    setCustomImage(imageUrl);
-                    handleTextImageUploadChange(key, 'image', imageUrl);
-                  }}
+                  onImageUpload={(imageUrl) => handleImageUpload(key, imageUrl)}
                   maxFileSize={option.maxFileSize}
                   allowedFileTypes={option.allowedFileTypes}
                   placeholder="Téléchargez l'image à graver (optionnel)"
@@ -300,10 +299,7 @@ export default function ProductCustomization({
             {customizationType === 'image' && (
               <div className="space-y-2">
                 <ImageUpload
-                  onImageUpload={(imageUrl) => {
-                    setCustomImage(imageUrl);
-                    handleTextImageUploadChange(key, 'image', imageUrl);
-                  }}
+                  onImageUpload={(imageUrl) => handleImageUpload(key, imageUrl)}
                   maxFileSize={option.maxFileSize || 5}
                   allowedFileTypes={option.allowedFileTypes || ['image/jpeg', 'image/png']}
                   placeholder="Glissez-déposez votre image ou cliquez pour sélectionner"
