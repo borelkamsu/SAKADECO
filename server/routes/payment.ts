@@ -63,7 +63,19 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
         description = `${product.name} (Location - ${item.rentalDays} jour(s))`;
       }
 
-      subtotal += price * item.quantity;
+      // Calculer le prix de base du produit
+      let itemTotal = price * item.quantity;
+      
+      // Ajouter les prix de personnalisation
+      if (item.customizations) {
+        Object.values(item.customizations).forEach((customization: any) => {
+          if (typeof customization === 'object' && customization.price) {
+            itemTotal += customization.price * item.quantity;
+          }
+        });
+      }
+      
+      subtotal += itemTotal;
 
       // Préparer l'image pour Stripe - Stripe nécessite des URLs HTTPS valides
       let imageUrl = null;
@@ -77,14 +89,34 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
         }
       }
 
+      // Calculer le prix unitaire total (produit + personnalisations)
+      let unitPrice = price;
+      let customizationDescription = '';
+      
+      if (item.customizations) {
+        Object.entries(item.customizations).forEach(([key, customization]: [string, any]) => {
+          if (typeof customization === 'object' && customization.price) {
+            unitPrice += customization.price;
+            if (customizationDescription) customizationDescription += ', ';
+            customizationDescription += `${key}: ${customization.type || 'personnalisation'}`;
+          }
+        });
+      }
+      
+      // Créer la description avec les personnalisations
+      let finalDescription = description;
+      if (customizationDescription) {
+        finalDescription += ` (${customizationDescription})`;
+      }
+      
       lineItems.push({
         price_data: {
           currency: 'eur',
           product_data: {
-            name: description,
+            name: finalDescription,
             images: imageUrl ? [imageUrl] : [],
           },
-          unit_amount: Math.round(price * 100), // Stripe utilise les centimes
+          unit_amount: Math.round(unitPrice * 100), // Stripe utilise les centimes
         },
         quantity: item.quantity,
       });
@@ -114,17 +146,29 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
     // Créer la commande en base de données
     const order = new Order({
       user: req.body.userId || null,
-      items: items.map((item: any) => ({
-        product: item.productId,
-        quantity: item.quantity,
-        price: item.price,
-        isRental: isRental,
-        rentalStartDate: item.rentalStartDate,
-        rentalEndDate: item.rentalEndDate,
-        rentalDays: item.rentalDays,
-        customizations: item.customizations,
-        customMessage: item.customMessage,
-      })),
+      items: items.map((item: any) => {
+        // Calculer le prix total de l'article (produit + personnalisations)
+        let itemPrice = item.price;
+        if (item.customizations) {
+          Object.values(item.customizations).forEach((customization: any) => {
+            if (typeof customization === 'object' && customization.price) {
+              itemPrice += customization.price;
+            }
+          });
+        }
+        
+        return {
+          product: item.productId,
+          quantity: item.quantity,
+          price: itemPrice, // Prix total incluant les personnalisations
+          isRental: isRental,
+          rentalStartDate: item.rentalStartDate,
+          rentalEndDate: item.rentalEndDate,
+          rentalDays: item.rentalDays,
+          customizations: item.customizations,
+          customMessage: item.customMessage,
+        };
+      }),
       status: 'pending',
       paymentStatus: 'pending',
       paymentMethod: 'stripe',
