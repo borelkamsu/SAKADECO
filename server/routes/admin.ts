@@ -472,8 +472,8 @@ router.post('/upload-images', (req: Request, res: Response, next) => {
 // Test upload directory
 router.get('/test-upload-dir', adminAuth, async (req: AdminRequest, res: Response) => {
   try {
-    const fs = require('fs');
-    const path = require('path');
+    const fs = await import('fs');
+    const path = await import('path');
     
     const uploadDir = 'uploads/products/';
     const exists = fs.existsSync(uploadDir);
@@ -663,8 +663,8 @@ router.put('/orders/:orderId/status', adminAuth, async (req: AdminRequest, res: 
 // Test image access
 router.get('/test-image/:filename', adminAuth, async (req: AdminRequest, res: Response) => {
   try {
-    const fs = require('fs');
-    const path = require('path');
+    const fs = await import('fs');
+    const path = await import('path');
     
     const filename = req.params.filename;
     const imagePath = path.join('uploads/products', filename);

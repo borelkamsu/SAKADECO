@@ -11,6 +11,12 @@ import invoiceRoutes from "./routes/invoice";
 import multer from "multer";
 import path from "path";
 import express from "express";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Obtenir __dirname pour ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Configuration multer pour l'upload d'images
 const upload = multer({
@@ -948,8 +954,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Déplacer le fichier vers le dossier uploads
       const uploadPath = `uploads/customizations/${fileName}`;
-      const fs = require('fs');
-      const path = require('path');
+      const fs = await import('fs');
 
       // Créer le dossier s'il n'existe pas
       const uploadDir = path.join(__dirname, '..', 'uploads', 'customizations');
