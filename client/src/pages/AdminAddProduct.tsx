@@ -15,10 +15,22 @@ import ImageUpload from "@/components/ImageUpload";
 interface CustomizationOption {
   label: string;
   values: string[];
-  type?: 'dropdown' | 'checkbox' | 'text' | 'textarea' | 'name_engraving' | 'image_upload';
+  type?: 'dropdown' | 'checkbox' | 'text' | 'textarea' | 'text_image_upload';
   required?: boolean;
-  engravingPosition?: 'front' | 'back' | 'side' | 'top' | 'bottom';
-  engravingStyle?: 'simple' | 'elegant' | 'bold' | 'script' | 'decorative';
+  maxLength?: number;
+  maxFileSize?: number;
+  pricePerCharacter?: number;
+  basePrice?: number;
+}
+
+interface EngravingOption {
+  type: 'text' | 'image' | 'both';
+  label: string;
+  required?: boolean;
+  maxLength?: number;
+  maxFileSize?: number;
+  pricePerCharacter?: number;
+  basePrice?: number;
 }
 
 export default function AdminAddProduct() {
@@ -27,8 +39,7 @@ export default function AdminAddProduct() {
   const [mainImageUrl, setMainImageUrl] = useState("");
   const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const [customizationOptions, setCustomizationOptions] = useState<Record<string, CustomizationOption>>({});
-  const [customizationType, setCustomizationType] = useState<'text' | 'image' | 'both'>('text');
-  const [customizationPosition, setCustomizationPosition] = useState<'center' | 'top-right' | 'bottom-center' | 'top-left' | 'bottom-right'>('center');
+  const [engravingOptions, setEngravingOptions] = useState<Record<string, EngravingOption>>({});
 
   const [formData, setFormData] = useState({
     name: "",
@@ -72,16 +83,17 @@ export default function AdminAddProduct() {
   };
 
   const addEngravingOption = () => {
-    const optionKey = `engraving_${Date.now()}`;
-    setCustomizationOptions(prev => ({
+    const optionKey = `gravure_${Date.now()}`;
+    setEngravingOptions(prev => ({
       ...prev,
       [optionKey]: {
-        label: 'Nom à graver',
-        values: [],
-        type: 'name_engraving',
+        type: 'text',
+        label: 'Gravure personnalisée',
         required: false,
-        engravingPosition: 'front',
-        engravingStyle: 'simple'
+        maxLength: 50,
+        maxFileSize: 5,
+        pricePerCharacter: 0.1,
+        basePrice: 5
       }
     }));
     
@@ -95,32 +107,36 @@ export default function AdminAddProduct() {
   const transformCustomizationOptions = () => {
     const transformed: any = {};
     
+    // Add regular customization options
     Object.entries(customizationOptions).forEach(([key, option]) => {
       if (option.label.trim()) {
-        // Use the label as the key for better readability
         const optionKey = option.label.toLowerCase().replace(/\s+/g, '_');
-        
-        if (option.type === 'name_engraving' || option.type === 'image_upload') {
-          // Options de gravure
+        const validValues = option.values.filter(value => value.trim() !== '');
+        if (validValues.length > 0) {
           transformed[optionKey] = {
-            type: option.type,
+            type: option.type || 'dropdown',
             label: option.label,
             required: option.required || false,
-            engravingPosition: option.engravingPosition || 'front',
-            engravingStyle: option.engravingStyle || 'simple'
+            options: validValues
           };
-        } else {
-          // Options standard
-          const validValues = option.values.filter(value => value.trim() !== '');
-          if (validValues.length > 0) {
-            transformed[optionKey] = {
-              type: option.type || 'dropdown',
-              label: option.label,
-              required: false,
-              options: validValues
-            };
-          }
         }
+      }
+    });
+    
+    // Add engraving options
+    Object.entries(engravingOptions).forEach(([key, option]) => {
+      if (option.label.trim()) {
+        const optionKey = option.label.toLowerCase().replace(/\s+/g, '_');
+        transformed[optionKey] = {
+          type: 'text_image_upload',
+          label: option.label,
+          required: option.required || false,
+          engravingType: option.type, // 'text', 'image', or 'both'
+          maxLength: option.maxLength || 50,
+          maxFileSize: option.maxFileSize || 5,
+          pricePerCharacter: option.pricePerCharacter || 0.1,
+          basePrice: option.basePrice || 0
+        };
       }
     });
     
@@ -137,8 +153,26 @@ export default function AdminAddProduct() {
     }));
   };
 
+  const updateEngravingOption = (key: string, field: keyof EngravingOption, value: any) => {
+    setEngravingOptions(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [field]: value
+      }
+    }));
+  };
+
   const removeCustomizationOption = (key: string) => {
     setCustomizationOptions(prev => {
+      const newOptions = { ...prev };
+      delete newOptions[key];
+      return newOptions;
+    });
+  };
+
+  const removeEngravingOption = (key: string) => {
+    setEngravingOptions(prev => {
       const newOptions = { ...prev };
       delete newOptions[key];
       return newOptions;
@@ -474,13 +508,11 @@ export default function AdminAddProduct() {
                   </Button>
                 </div>
 
-                {/* Liste des options configurées */}
+                {/* Liste des options de personnalisation */}
                 {Object.entries(customizationOptions).map(([key, option]) => (
                   <div key={key} className="border rounded-lg p-4 bg-gray-50">
                     <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-medium text-gray-900">
-                        {option.type === 'name_engraving' ? 'Gravure' : 'Option de personnalisation'}
-                      </h4>
+                      <h4 className="font-medium text-gray-900">Option de personnalisation</h4>
                       <Button
                         type="button"
                         variant="ghost"
@@ -503,120 +535,41 @@ export default function AdminAddProduct() {
                         />
                       </div>
 
-                      {/* Type d'option */}
-                      <div>
-                        <Label>Type d'option</Label>
-                        <Select
-                          value={option.type || 'dropdown'}
-                          onValueChange={(value) => updateCustomizationOption(key, 'type', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="dropdown">Liste déroulante</SelectItem>
-                            <SelectItem value="checkbox">Case à cocher</SelectItem>
-                            <SelectItem value="text">Champ texte</SelectItem>
-                            <SelectItem value="textarea">Zone de texte</SelectItem>
-                            <SelectItem value="text_image_upload">Texte ou image</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
                       {/* Options pour les listes déroulantes */}
-                      {(option.type === 'dropdown' || option.type === 'checkbox') && (
-                        <div>
-                          <Label>Valeurs disponibles</Label>
-                          <div className="space-y-2">
-                            {option.values.map((value, index) => (
-                              <div key={index} className="flex items-center gap-2">
-                                <Input
-                                  value={value}
-                                  onChange={(e) => updateOptionValue(key, index, e.target.value)}
-                                  placeholder={`Valeur ${index + 1}`}
-                                />
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => removeOptionValue(key, index)}
-                                  disabled={option.values.length <= 1}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            ))}
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => addOptionValue(key)}
-                              className="w-full"
-                            >
-                              <Plus className="w-4 h-4 mr-2" />
-                              Ajouter une valeur
-                            </Button>
-                          </div>
+                      <div>
+                        <Label>Valeurs disponibles</Label>
+                        <div className="space-y-2">
+                          {option.values.map((value, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <Input
+                                value={value}
+                                onChange={(e) => updateOptionValue(key, index, e.target.value)}
+                                placeholder={`Valeur ${index + 1}`}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeOptionValue(key, index)}
+                                disabled={option.values.length <= 1}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addOptionValue(key)}
+                            className="w-full"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Ajouter une valeur
+                          </Button>
                         </div>
-                      )}
-
-                      {/* Options pour text_image_upload */}
-                      {option.type === 'text_image_upload' && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <Label>Limite de caractères</Label>
-                            <Input
-                              type="number"
-                              value={option.maxLength || 50}
-                              onChange={(e) => updateCustomizationOption(key, 'maxLength', parseInt(e.target.value))}
-                              placeholder="50"
-                            />
-                          </div>
-                          <div>
-                            <Label>Taille max fichier (MB)</Label>
-                            <Input
-                              type="number"
-                              value={option.maxFileSize || 5}
-                              onChange={(e) => updateCustomizationOption(key, 'maxFileSize', parseInt(e.target.value))}
-                              placeholder="5"
-                            />
-                          </div>
-                          <div>
-                            <Label>Prix par caractère supplémentaire (€)</Label>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={option.pricePerCharacter || 0.1}
-                              onChange={(e) => updateCustomizationOption(key, 'pricePerCharacter', parseFloat(e.target.value))}
-                              placeholder="0.10"
-                            />
-                          </div>
-                          <div>
-                            <Label>Prix de base (€)</Label>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={option.basePrice || 0}
-                              onChange={(e) => updateCustomizationOption(key, 'basePrice', parseFloat(e.target.value))}
-                              placeholder="0"
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Options pour les champs texte */}
-                      {(option.type === 'text' || option.type === 'textarea') && (
-                        <div>
-                          <Label>Limite de caractères</Label>
-                          <Input
-                            type="number"
-                            value={option.maxLength || 100}
-                            onChange={(e) => updateCustomizationOption(key, 'maxLength', parseInt(e.target.value))}
-                            placeholder="100"
-                          />
-                        </div>
-                      )}
+                      </div>
 
                       {/* Option obligatoire */}
                       <div className="flex items-center space-x-2">
@@ -631,29 +584,135 @@ export default function AdminAddProduct() {
                   </div>
                 ))}
 
+                {/* Liste des options de gravure */}
+                {Object.entries(engravingOptions).map(([key, option]) => (
+                  <div key={key} className="border rounded-lg p-4 bg-blue-50">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-medium text-blue-900">Gravure personnalisée</h4>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeEngravingOption(key)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Type de gravure */}
+                      <div>
+                        <Label>Type de gravure</Label>
+                        <Select
+                          value={option.type}
+                          onValueChange={(value) => updateEngravingOption(key, 'type', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="text">Texte uniquement</SelectItem>
+                            <SelectItem value="image">Image uniquement</SelectItem>
+                            <SelectItem value="both">Texte et image</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Options pour les champs texte */}
+                      {(option.type === 'text' || option.type === 'both') && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label>Limite de caractères</Label>
+                            <Input
+                              type="number"
+                              value={option.maxLength || 50}
+                              onChange={(e) => updateEngravingOption(key, 'maxLength', parseInt(e.target.value))}
+                              placeholder="50"
+                            />
+                          </div>
+                          <div>
+                            <Label>Prix par caractère supplémentaire (€)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={option.pricePerCharacter || 0.1}
+                              onChange={(e) => updateEngravingOption(key, 'pricePerCharacter', parseFloat(e.target.value))}
+                              placeholder="0.10"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Options pour les images */}
+                      {(option.type === 'image' || option.type === 'both') && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label>Taille max fichier (MB)</Label>
+                            <Input
+                              type="number"
+                              value={option.maxFileSize || 5}
+                              onChange={(e) => updateEngravingOption(key, 'maxFileSize', parseInt(e.target.value))}
+                              placeholder="5"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Prix de base */}
+                      <div>
+                        <Label>Prix de base (€)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={option.basePrice || 0}
+                          onChange={(e) => updateEngravingOption(key, 'basePrice', parseFloat(e.target.value))}
+                          placeholder="0"
+                        />
+                      </div>
+
+                      {/* Option obligatoire */}
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`engraving-required-${key}`}
+                          checked={option.required || false}
+                          onCheckedChange={(checked) => updateEngravingOption(key, 'required', checked)}
+                        />
+                        <Label htmlFor={`engraving-required-${key}`}>Option obligatoire</Label>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
                 {/* Message d'aide */}
-                {Object.keys(customizationOptions).length === 0 && (
+                {Object.keys(customizationOptions).length === 0 && Object.keys(engravingOptions).length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     <p>Aucune option de personnalisation configurée</p>
-                    <p className="text-sm">Cliquez sur "Ajouter une option" pour commencer</p>
+                    <p className="text-sm">Cliquez sur "Ajouter une option" ou "Ajouter une gravure" pour commencer</p>
                   </div>
                 )}
 
                 {/* Aperçu des options */}
-                {Object.keys(customizationOptions).length > 0 && (
+                {(Object.keys(customizationOptions).length > 0 || Object.keys(engravingOptions).length > 0) && (
                   <div className="mt-6 p-4 bg-blue-50 rounded-lg">
                     <h4 className="font-medium text-blue-900 mb-2">Aperçu des options configurées :</h4>
                     <div className="space-y-1">
                       {Object.entries(customizationOptions).map(([key, option]) => (
                         <div key={key} className="flex items-center gap-2 text-sm">
-                          <Badge variant="outline">{option.type}</Badge>
+                          <Badge variant="outline">Option</Badge>
                           <span className="font-medium">{option.label}</span>
                           {option.required && <Badge variant="destructive">Obligatoire</Badge>}
-                          {(option.type === 'dropdown' || option.type === 'checkbox') && (
-                            <span className="text-gray-600">
-                              ({option.values.filter(v => v.trim()).length} valeurs)
-                            </span>
-                          )}
+                          <span className="text-gray-600">
+                            ({option.values.filter(v => v.trim()).length} valeurs)
+                          </span>
+                        </div>
+                      ))}
+                      {Object.entries(engravingOptions).map(([key, option]) => (
+                        <div key={key} className="flex items-center gap-2 text-sm">
+                          <Badge variant="outline" className="bg-blue-100 text-blue-800">Gravure</Badge>
+                          <span className="font-medium">{option.label}</span>
+                          <Badge variant="outline" className="bg-green-100 text-green-800">{option.type}</Badge>
+                          {option.required && <Badge variant="destructive">Obligatoire</Badge>}
                         </div>
                       ))}
                     </div>

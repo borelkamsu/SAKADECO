@@ -19,6 +19,7 @@ interface CustomizationOption {
   allowedFileTypes?: string[];
   pricePerCharacter?: number;
   basePrice?: number;
+  engravingType?: 'text' | 'image' | 'both'; // Nouveau champ pour les gravures
 }
 
 interface ProductCustomizationProps {
@@ -140,7 +141,108 @@ export default function ProductCustomization({
           />
         );
 
-      case 'text_image_upload':
+            case 'text_image_upload':
+        const engravingType = option.engravingType;
+        
+        // Interface pour gravure texte uniquement
+        if (engravingType === 'text') {
+          return (
+            <div className="space-y-2">
+              <Label>Texte à graver</Label>
+              <Textarea
+                value={customText}
+                onChange={(e) => {
+                  setCustomText(e.target.value);
+                  handleTextImageUploadChange(key, 'text', e.target.value);
+                }}
+                placeholder="Entrez le texte à graver sur le produit"
+                maxLength={option.maxLength}
+                rows={3}
+              />
+              <div className="flex justify-between text-sm text-gray-500">
+                <span>{customText.length}/{option.maxLength || 50} caractères</span>
+                {customizationPrice > 0 && (
+                  <span className="text-blue-600 font-medium">
+                    +{customizationPrice.toFixed(2)}€
+                  </span>
+                )}
+              </div>
+              {option.maxLength && customText.length > option.maxLength && (
+                <p className="text-sm text-red-600">
+                  Limite de caractères dépassée. Prix supplémentaire appliqué.
+                </p>
+              )}
+            </div>
+          );
+        }
+        
+        // Interface pour gravure image uniquement
+        if (engravingType === 'image') {
+          return (
+            <div className="space-y-2">
+              <Label>Image à graver</Label>
+              <ImageUpload
+                onImageUpload={(imageUrl) => {
+                  setCustomImage(imageUrl);
+                  handleTextImageUploadChange(key, 'image', imageUrl);
+                }}
+                maxFileSize={option.maxFileSize}
+                allowedFileTypes={option.allowedFileTypes}
+                placeholder="Téléchargez l'image à graver sur le produit"
+              />
+              {customizationPrice > 0 && (
+                <div className="text-sm text-blue-600 font-medium">
+                  Prix de gravure : +{customizationPrice.toFixed(2)}€
+                </div>
+              )}
+            </div>
+          );
+        }
+        
+        // Interface pour gravure texte ET image
+        if (engravingType === 'both') {
+          return (
+            <div className="space-y-4">
+              <div>
+                <Label>Texte à graver (optionnel)</Label>
+                <Textarea
+                  value={customText}
+                  onChange={(e) => {
+                    setCustomText(e.target.value);
+                    handleTextImageUploadChange(key, 'text', e.target.value);
+                  }}
+                  placeholder="Entrez le texte à graver (optionnel)"
+                  maxLength={option.maxLength}
+                  rows={2}
+                />
+                <div className="flex justify-between text-sm text-gray-500 mt-1">
+                  <span>{customText.length}/{option.maxLength || 50} caractères</span>
+                </div>
+              </div>
+
+              <div>
+                <Label>Image à graver (optionnel)</Label>
+                <ImageUpload
+                  onImageUpload={(imageUrl) => {
+                    setCustomImage(imageUrl);
+                    handleTextImageUploadChange(key, 'image', imageUrl);
+                  }}
+                  maxFileSize={option.maxFileSize}
+                  allowedFileTypes={option.allowedFileTypes}
+                  placeholder="Téléchargez l'image à graver (optionnel)"
+                />
+              </div>
+
+              {(customText || customImage) && (
+                <div className="text-sm text-blue-600 font-medium">
+                  Prix de gravure : +{customizationPrice.toFixed(2)}€
+                </div>
+              )}
+            </div>
+          );
+        }
+        
+        // Interface générique pour text_image_upload sans engravingType
         return (
           <div className="space-y-4">
             {/* Sélection du type de personnalisation */}
@@ -197,17 +299,15 @@ export default function ProductCustomization({
             {/* Interface pour l'image */}
             {customizationType === 'image' && (
               <div className="space-y-2">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                  <ImageUpload
-                    onImageUpload={(imageUrl) => {
-                      setCustomImage(imageUrl);
-                      handleTextImageUploadChange(key, 'image', imageUrl);
-                    }}
-                    maxFileSize={option.maxFileSize || 5}
-                    allowedFileTypes={option.allowedFileTypes || ['image/jpeg', 'image/png']}
-                    placeholder="Glissez-déposez votre image ou cliquez pour sélectionner"
-                  />
-                </div>
+                <ImageUpload
+                  onImageUpload={(imageUrl) => {
+                    setCustomImage(imageUrl);
+                    handleTextImageUploadChange(key, 'image', imageUrl);
+                  }}
+                  maxFileSize={option.maxFileSize || 5}
+                  allowedFileTypes={option.allowedFileTypes || ['image/jpeg', 'image/png']}
+                  placeholder="Glissez-déposez votre image ou cliquez pour sélectionner"
+                />
                 <div className="flex justify-between text-sm text-gray-500">
                   <span>Taille max: {option.maxFileSize || 5}MB</span>
                   {customizationPrice > 0 && (
