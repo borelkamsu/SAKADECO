@@ -278,16 +278,14 @@ router.post('/webhook', async (req: Request, res: Response) => {
             console.log('📧 Session customer_email:', session.customer_email);
             console.log('📧 Order user email:', order.user?.email);
             
-            // Envoyer l'email de confirmation et la facture
+            // Envoyer l'email de confirmation avec facture PDF incluse
             const confirmationResult = await emailService.sendOrderConfirmationEmail(invoiceData);
-            const invoiceResult = await emailService.sendInvoiceEmail(invoiceData);
             
             // Envoyer notification à l'admin
             const adminResult = await emailService.sendAdminNotificationEmail(invoiceData);
             
             console.log('📧 Résultats envoi emails:');
-            console.log('  - Confirmation client:', confirmationResult ? '✅' : '❌');
-            console.log('  - Facture client:', invoiceResult ? '✅' : '❌');
+            console.log('  - Confirmation client (avec PDF):', confirmationResult ? '✅' : '❌');
             console.log('  - Notification admin:', adminResult ? '✅' : '❌');
             
             console.log(`✅ Facture envoyée automatiquement pour la commande ${order._id}`);

@@ -401,6 +401,11 @@ class EmailService {
     try {
       console.log('📧 Envoi email confirmation à:', invoice.user.email);
       
+      // Générer le PDF de la facture pour l'email de confirmation
+      console.log('📄 Génération du PDF de la facture pour confirmation...');
+      const pdfBuffer = await pdfService.generateInvoicePDF(invoice);
+      console.log('📄 PDF généré pour confirmation, taille:', pdfBuffer.length, 'bytes');
+      
       const mailOptions = {
         from: {
           name: "SakaDeco Group",
@@ -420,6 +425,8 @@ class EmailService {
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
               .header { text-align: center; margin-bottom: 30px; }
               .success { color: #059669; font-size: 24px; margin-bottom: 10px; }
+              .button { display: inline-block; background-color: #059669; color: white; padding: 12px 24px; 
+                        text-decoration: none; border-radius: 6px; margin: 20px 0; }
             </style>
           </head>
           <body>
@@ -440,10 +447,12 @@ class EmailService {
                 <p><strong>Total:</strong> ${invoice.total.toFixed(2)}€</p>
               </div>
               
-              <p>Vous pouvez consulter votre facture en cliquant sur le bouton ci-dessous :</p>
+              <p><strong>Votre facture PDF est jointe à cet email.</strong></p>
+              
+              <p>Vous pouvez également consulter votre facture en ligne :</p>
               
               <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}/invoice/${invoice.orderNumber}" 
-                 class="button">Voir ma facture</a>
+                 class="button">Voir ma facture en ligne</a>
               
               <p>Nous vous tiendrons informé du statut de votre commande.</p>
               
@@ -451,11 +460,18 @@ class EmailService {
             </div>
           </body>
           </html>
-        `
+        `,
+        attachments: [
+          {
+            filename: `facture-${invoice.orderNumber}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf'
+          }
+        ]
       };
 
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Email de confirmation envoyé:', info.messageId);
+      console.log('✅ Email de confirmation avec PDF envoyé:', info.messageId);
       return true;
     } catch (error) {
       console.error('❌ Erreur envoi email confirmation:', error);
