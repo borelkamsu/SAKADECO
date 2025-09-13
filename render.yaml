@@ -3,40 +3,14 @@ services:
     name: sakadeco-api
     env: node
     plan: free
-    buildCommand: npm install --include=dev && npm run build && mkdir -p uploads/products uploads/customizations uploads/temp
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DATABASE_URL
-        sync: false
-      - key: SESSION_SECRET
-        sync: false
       - key: PORT
         value: 10000
-      - key: STRIPE_PUBLIC_KEY
-        sync: false
-      - key: VITE_STRIPE_PUBLIC_KEY
-        sync: false
-      - key: STRIPE_SECRET_KEY
-        sync: false
-      - key: STRIPE_WEBHOOK_SECRET
-        sync: false
-      - key: CLOUDINARY_CLOUD_NAME
-        sync: false
-      - key: CLOUDINARY_API_KEY
-        sync: false
-      - key: CLOUDINARY_API_SECRET
-        sync: false
-      - key: EMAIL_HOST
-        value: smtp.gmail.com
-      - key: EMAIL_PORT
-        value: 587
-      - key: EMAIL_USER
-        value: lamawaffo11@gmail.com
-      - key: EMAIL_PASS
-        sync: false
-      - key: FRONTEND_URL
-        value: https://sakadeco-api.onrender.com
-      - key: ADMIN_EMAIL
-        value: lamawaffo11@gmail.com
+    buildpacks:
+      - https://github.com/jontewks/puppeteer-heroku-buildpack
+      - heroku/nodejs

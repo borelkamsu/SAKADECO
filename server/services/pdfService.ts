@@ -49,14 +49,56 @@ class PDFService {
     if (!this.browser) {
       try {
         console.log('📄 Lancement du navigateur Puppeteer...');
-        this.browser = await puppeteer.launch({
+        
+        // Configuration pour Render et autres plateformes cloud
+        const launchOptions: any = {
           headless: 'new',
-          args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-        });
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu'
+          ]
+        };
+
+        // Configuration spécifique pour Render
+        if (process.env.RENDER) {
+          console.log('📄 Configuration Render détectée');
+          launchOptions.executablePath = '/opt/render/.cache/puppeteer/chrome/linux-139.0.7258.138/chrome-linux64/chrome';
+          launchOptions.args.push('--disable-background-timer-throttling');
+          launchOptions.args.push('--disable-backgrounding-occluded-windows');
+          launchOptions.args.push('--disable-renderer-backgrounding');
+        }
+
+        // Configuration pour d'autres plateformes cloud
+        if (process.env.NODE_ENV === 'production') {
+          console.log('📄 Configuration production détectée');
+          launchOptions.args.push('--disable-extensions');
+          launchOptions.args.push('--disable-plugins');
+          launchOptions.args.push('--disable-images');
+        }
+
+        this.browser = await puppeteer.launch(launchOptions);
         console.log('📄 Navigateur Puppeteer lancé avec succès');
       } catch (error) {
         console.error('❌ Erreur lancement navigateur Puppeteer:', error);
-        throw error;
+        
+        // Fallback: essayer avec une configuration plus simple
+        try {
+          console.log('📄 Tentative de fallback avec configuration simplifiée...');
+          this.browser = await puppeteer.launch({
+            headless: 'new',
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+          });
+          console.log('📄 Navigateur Puppeteer lancé avec fallback');
+        } catch (fallbackError) {
+          console.error('❌ Erreur fallback Puppeteer:', fallbackError);
+          throw fallbackError;
+        }
       }
     }
     return this.browser;

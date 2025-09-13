@@ -401,12 +401,21 @@ class EmailService {
     try {
       console.log('📧 Envoi email confirmation à:', invoice.user.email);
       
-      // Générer le PDF de la facture pour l'email de confirmation
-      console.log('📄 Génération du PDF de la facture pour confirmation...');
-      const pdfBuffer = await pdfService.generateInvoicePDF(invoice);
-      console.log('📄 PDF généré pour confirmation, taille:', pdfBuffer.length, 'bytes');
+      let pdfBuffer: Buffer | null = null;
+      let hasPDF = false;
       
-      const mailOptions = {
+      // Essayer de générer le PDF
+      try {
+        console.log('📄 Génération du PDF de la facture pour confirmation...');
+        pdfBuffer = await pdfService.generateInvoicePDF(invoice);
+        console.log('📄 PDF généré pour confirmation, taille:', pdfBuffer.length, 'bytes');
+        hasPDF = true;
+      } catch (pdfError) {
+        console.warn('⚠️  Impossible de générer le PDF, envoi email sans PDF:', pdfError.message);
+        hasPDF = false;
+      }
+      
+      const mailOptions: any = {
         from: {
           name: "SakaDeco Group",
           address: process.env.EMAIL_USER || ''
@@ -427,6 +436,7 @@ class EmailService {
               .success { color: #059669; font-size: 24px; margin-bottom: 10px; }
               .button { display: inline-block; background-color: #059669; color: white; padding: 12px 24px; 
                         text-decoration: none; border-radius: 6px; margin: 20px 0; }
+              .warning { background-color: #fef3cd; border: 1px solid #fecaca; padding: 10px; border-radius: 6px; margin: 20px 0; }
             </style>
           </head>
           <body>
@@ -447,9 +457,12 @@ class EmailService {
                 <p><strong>Total:</strong> ${invoice.total.toFixed(2)}€</p>
               </div>
               
-              <p><strong>Votre facture PDF est jointe à cet email.</strong></p>
+              ${hasPDF ? 
+                '<p><strong>Votre facture PDF est jointe à cet email.</strong></p>' :
+                '<div class="warning"><p><strong>Note:</strong> La facture PDF sera disponible en ligne. Veuillez consulter le lien ci-dessous.</p></div>'
+              }
               
-              <p>Vous pouvez également consulter votre facture en ligne :</p>
+              <p>Vous pouvez consulter votre facture en ligne :</p>
               
               <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}/invoice/${invoice.orderNumber}" 
                  class="button">Voir ma facture en ligne</a>
@@ -460,18 +473,22 @@ class EmailService {
             </div>
           </body>
           </html>
-        `,
-        attachments: [
+        `
+      };
+
+      // Ajouter le PDF en pièce jointe seulement s'il a été généré avec succès
+      if (hasPDF && pdfBuffer) {
+        mailOptions.attachments = [
           {
             filename: `facture-${invoice.orderNumber}.pdf`,
             content: pdfBuffer,
             contentType: 'application/pdf'
           }
-        ]
-      };
+        ];
+      }
 
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Email de confirmation avec PDF envoyé:', info.messageId);
+      console.log(`✅ Email de confirmation ${hasPDF ? 'avec PDF' : 'sans PDF'} envoyé:`, info.messageId);
       return true;
     } catch (error) {
       console.error('❌ Erreur envoi email confirmation:', error);
@@ -489,11 +506,21 @@ class EmailService {
       const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
       console.log('📧 Envoi notification admin à:', adminEmail);
       
-      // Générer le PDF de la facture pour l'admin
-      console.log('📄 Génération du PDF de la facture pour l\'admin...');
-      const pdfBuffer = await pdfService.generateInvoicePDF(invoice);
+      let pdfBuffer: Buffer | null = null;
+      let hasPDF = false;
       
-      const mailOptions = {
+      // Essayer de générer le PDF pour l'admin
+      try {
+        console.log('📄 Génération du PDF de la facture pour l\'admin...');
+        pdfBuffer = await pdfService.generateInvoicePDF(invoice);
+        console.log('📄 PDF généré pour admin, taille:', pdfBuffer.length, 'bytes');
+        hasPDF = true;
+      } catch (pdfError) {
+        console.warn('⚠️  Impossible de générer le PDF pour admin, envoi email sans PDF:', pdfError.message);
+        hasPDF = false;
+      }
+      
+      const mailOptions: any = {
         from: {
           name: "SakaDeco Group",
           address: process.env.EMAIL_USER || ''
@@ -589,24 +616,31 @@ class EmailService {
               <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}/admin/orders" 
                  class="button">Gérer les commandes</a>
               
-              <p>La facture PDF est jointe à cet email pour votre référence.</p>
+              ${hasPDF ? 
+                '<p>La facture PDF est jointe à cet email pour votre référence.</p>' :
+                '<p><strong>Note:</strong> La facture PDF sera disponible via le lien ci-dessus.</p>'
+              }
               
               <p>Cordialement,<br>Système SakaDeco</p>
             </div>
           </body>
           </html>
-        `,
-        attachments: [
+        `
+      };
+
+      // Ajouter le PDF en pièce jointe seulement s'il a été généré avec succès
+      if (hasPDF && pdfBuffer) {
+        mailOptions.attachments = [
           {
             filename: `facture-admin-${invoice.orderNumber}.pdf`,
             content: pdfBuffer,
             contentType: 'application/pdf'
           }
-        ]
-      };
+        ];
+      }
 
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Notification admin avec PDF envoyée:', info.messageId);
+      console.log(`✅ Notification admin ${hasPDF ? 'avec PDF' : 'sans PDF'} envoyée:`, info.messageId);
       return true;
     } catch (error) {
       console.error('❌ Erreur envoi notification admin:', error);
